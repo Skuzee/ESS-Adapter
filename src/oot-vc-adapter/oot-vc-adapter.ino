@@ -211,12 +211,17 @@ void normalize_origin(Gamecube_Data_t &data) {
   }
 }
 
-void checkStartButton(Gamecube_Data_t data) {  //Resets the program if the Start button is pressed for ~6 seconds.
+void checkStartButton(Gamecube_Data_t &data) {  //Resets the program if the Start button is pressed for ~6 seconds.
   static unsigned long timeStamp = millis();
   
   if (data.report.start) {
-    if (millis() - timeStamp > 600)  //If the time since the last press has been 6 seconds, reset.
+    if (millis() - timeStamp > 600) { //If the time since the last press has been 6 seconds, reset.
+      digitalWrite(13, HIGH);
+      delay(500);
+      digitalWrite(13, LOW);
+      delay(500);
       asm volatile ("  jmp 0"); //Assembly command that jumps to the start of the reset vector. Thank You to https://forum.mysensors.org/user/koresh for this solution.
+    }
   }
   else {
     timeStamp = millis();
@@ -224,6 +229,16 @@ void checkStartButton(Gamecube_Data_t data) {  //Resets the program if the Start
 }
 
 void setup() {
+  pinMode(13, OUTPUT);  //Sets pin 13 red led for testing/signaling purposes. Blips twice on startup/restart..
+  digitalWrite(13, HIGH);
+  delay(100);
+  digitalWrite(13, LOW);
+  delay(100);
+  digitalWrite(13, HIGH);
+  delay(100);
+  digitalWrite(13, LOW);
+  
+  
 }
 
 
