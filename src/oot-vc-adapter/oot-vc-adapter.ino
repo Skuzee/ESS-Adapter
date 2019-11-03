@@ -229,7 +229,7 @@ void checkStartButton(Gamecube_Data_t &data) {  //Resets the program if the Star
 }
 
 void setup() {
-  pinMode(13, OUTPUT);  //Sets pin 13 red led for testing/signaling purposes. Blips twice on startup/restart..
+  pinMode(13, OUTPUT);  //Sets pin 13 red led for debug/status indicating. Blips twice on startup/restart..
   digitalWrite(13, HIGH);
   delay(100);
   digitalWrite(13, LOW);
