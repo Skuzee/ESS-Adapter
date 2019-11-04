@@ -1,8 +1,12 @@
 /* Adapter to make the analog stick on WiiVC Ocarina of Time feel like N64 */
 #include "Nintendo.h"
 
-CGamecubeController controller(6); //sets D2 on arduino to read from controller
-CGamecubeConsole console(8);       //sets D3 on arduino to write data to console
+#define DEBUG 0 // Unused, will be implimented for debugging code.
+#define TRIGGER_THRESHOLD 40 // Smaller = more sensitive.
+#define RST_PIN 4
+
+CGamecubeController controller(6); // Sets D6 on arduino to read from controller.
+CGamecubeConsole console(8); // Sets D8 on arduino to write data to console.
 
 void gc_to_n64(uint8_t coords[2]) {
   /* Assume 0 <= y <= x <= 127
@@ -51,10 +55,10 @@ void gc_to_n64(uint8_t coords[2]) {
   // So our final multiplication factor is 525^3 / 1.2 / 2 / 2^24 ~= 32 / 115
   scale = scale * 2 / 115; // we already multiplied by an extra *16 above
 
-  // constants chosen so rounding errors don't affect the end result
+  // Constants chosen so rounding errors don't affect the end result.
   scale += 25565300; // ~= 2 * 80/105 * 2^24
 
-  // add a bit less than 2^24 so we round up by truncating.
+  // Add a bit less than 2^24 so we round up by truncating.
   // n-0.5 < box[2n]   <= n
   // n     < box[2n+1] <= n+0.5
   coords[0] = (coords[0] * scale + 16774000) >> 24;
@@ -73,11 +77,11 @@ uint8_t triangular_to_linear_index(uint8_t row, uint8_t col, uint8_t size) {
   return (size*(size-1)/2) - (size-row)*((size-row)-1)/2 + col;
 }
 
-# define OOT_MAX 67
-# define BOUNDARY 51
+# define OOT_MAX 80
+# define BOUNDARY 39
 
-const char PROGMEM one_dimensional_map[] = "\x00\x00\x10\x10\x11\x11\x12\x12\x13\x13\x14\x14\x15\x15\x16\x16\x16\x17\x17\x17\x18\x18\x19\x19\x1a\x1a\x1a\x1b\x1b\x1b\x1c\x1c\x1d\x1d\x1d\x1e\x1e\x1e\x1f\x1f  !!!\"\"\"###$$$%%%&&&'''((()))***+++,,,,---...///00001111222333344445555666677778888899999::::;;;";
-const char PROGMEM triangular_map[] = "3343435353636373738383939393:3:3;344445454646474748484949494:4:4;3445454646474748484949494:4:4:45555656575758585959595:4:4:45565657575858595959595:4:46666767686868695959595:4667676868686959595959577777786868695959595777777868686959595777777868695959577777786869595777777868695777777869577777786777777777777";
+const PROGMEM char one_dimensional_map[] = "\x00\x00\x10\x10\x11\x11\x12\x12\x13\x13\x14\x14\x15\x15\x16\x16\x16\x17\x17\x17\x18\x18\x19\x19\x1a\x1a\x1a\x1b\x1b\x1b\x1c\x1c\x1d\x1d\x1d\x1e\x1e\x1e\x1f\x1f  !!!\"\"\"###$$$%%%&&&'''((()))***+++,,,,---...///00001111222333344445555666677778888899999::::;;;;;<<<<<=====>>>>>??????@@@";
+const PROGMEM char triangular_map[] = ",,-,.,.,/,0,0,1,1,2,2,3,3,4,4,5,5,6,6,7,7,8,8,9,9,9,:,:,;,;,<,<,<,=,=,>,>,>,?,?,?,@,--.-.-/-0-0-1-1-2-2-3-3-4-4-5-5-6-6-7-7-8-8-9-9-9-:-:-;-;-<-<-<-=-=->->->-?-?-?-@,..../.0.0.1.1.2.2.3.3.4.4.5.5.6.6.7.7.8.8.9.9.9.:.:.;.;.<.<.<.=.=.>.>.>.?-?-?-?-../.0.0.1.1.2.2.3.3.4.4.5.5.6.6.7.7.8.8.9.9.9.:.:.;.;.<.<.<.=.=.>.>.>.?-?-?-?-//0/0/1/1/2/2/3/3/4/4/5/5/6/6/7/7/8/8/9/9/9/:/:/;/;/</</</=/=/>/>/>/>/>/?-?-000010102020303040405050606070708080909090:0:0;0;0<0<0<0=0=0>/>/>/>/>/>/?-0010102020303040405050606070708080909090:0:0;0;0<0<0<0=0=0=0>/>/>/>/>/>/11112121313141415151616171718181919191:1:1;1;1<1<1<1=0=0=0>/>/>/>/>/>/112121313141415151616171718181919191:1:1;1;1<1<1<1<1<1=0>/>/>/>/>/>/2222323242425252626272728282929292:2:2;2;2<1<1<1<1<1<1=0>/>/>/>/>/22323242425252626272728282929292:2:2;2;2;2<1<1<1<1<1<1>/>/>/>/>/333343435353636373738383939393:3:3;3;3;3;3<1<1<1<1<1<1>/>/>/>/3343435353636373738383939393:3:3;3;3;3;3;3<1<1<1<1<1<1>/>/>/44445454646474748484949494:4:4;3;3;3;3;3;3<1<1<1<1<1<1>/>/445454646474748484949494:4:4:4:4;3;3;3;3;3<1<1<1<1<1>/>/555565657575858595959595:4:4:4:4;3;3;3;3;3<1<1<1<1<1>/556565757585859595959595:4:4:4:4;3;3;3;3;3<1<1<1<1<1666676768686869595959595:4:4:4:4;3;3;3;3;3<1<1<1<1667676868686959595959595:4:4:4:4;3;3;3;3;3<1<1<1777777868686959595959595:4:4:4:4;3;3;3;3;3<1<1777777868686959595959595:4:4:4:4;3;3;3;3;3<1777777868695959595959595:4:4:4:4;3;3;3;3;3777777868695959595959595:4:4:4:4;3;3;3;3777777868695959595959595:4:4:4:4;3;3;3777777869595959595959595:4:4:4:4;3;3777777869595959595959595:4:4:4:4;3777777869595959595959595:4:4:4:4777777959595959595959595:4:4:4777777959595959595959595:4:4777777959595959595959595:4777795959595959595959595777795959595959595959577779595959595959595777795959595959595777795959595959577959595959595779595959595779595959577959595779595599559";
 
 void invert_vc(uint8_t coords[2]) {
   /* Assume 0 <= y <= x <= 2*127 - double resolution */
@@ -199,9 +203,11 @@ void invert_vc_n64(int8_t coords[2], uint8_t ucoords[2]) {
   else ucoords[1] = 128 - ucoords[1];
 }
 
-void normalize_origin(Gamecube_Data_t &data) {
-  uint8_t *coords = &data.report.xAxis;
-  uint8_t *origin = &data.origin.inititalData.xAxis;
+void normalize_origin(uint8_t coords[2], uint8_t origin[2]) {
+  /* Gamecube controllers store the position of the analog stick when it is powered on.
+     Coordinates range from 0 to 255 and are centered at 128.
+     This function interprets coordinates relative to the origin, then centers the origin.
+  */
   for (int i = 0; i < 2; ++i) {
     int16_t normalized = (coords[i] - 128) - (origin[i] - 128);
     if (normalized > 127) normalized = 127;
@@ -211,16 +217,17 @@ void normalize_origin(Gamecube_Data_t &data) {
   }
 }
 
-void checkStartButton(Gamecube_Data_t &data) {  //Resets the program if the Start button is pressed for ~6 seconds.
+void checkStartButton(Gamecube_Data_t &data) { // Resets the program if the Start button is pressed for ~6 seconds.
   static unsigned long timeStamp = millis();
   
   if (data.report.start) {
-    if (millis() - timeStamp > 600) { //If the time since the last press has been 6 seconds, reset.
+    if (millis() - timeStamp > 600) { // If the time since the last press has been 6 seconds, reset.
       digitalWrite(13, HIGH);
       delay(500);
       digitalWrite(13, LOW);
       delay(500);
-      asm volatile ("  jmp 0"); //Assembly command that jumps to the start of the reset vector. Thank You to https://forum.mysensors.org/user/koresh for this solution.
+      // asm volatile ("  jmp 0"); // Soft-reset, Assembly command that jumps to the start of the reset vector. Thank You to Koresh, for this solution. https://forum.mysensors.org/user/koresh
+      digitalWrite(RST_PIN, LOW); // Hard-reset, Pin 4 to RST.
     }
   }
   else {
@@ -228,27 +235,31 @@ void checkStartButton(Gamecube_Data_t &data) {  //Resets the program if the Star
   }
 }
 
-void setup() {
-  pinMode(13, OUTPUT);  //Sets pin 13 red led for debug/status indicating. Blips twice on startup/restart..
-  digitalWrite(13, HIGH);
-  delay(100);
-  digitalWrite(13, LOW);
-  delay(100);
-  digitalWrite(13, HIGH);
-  delay(100);
-  digitalWrite(13, LOW);
-  
-  
+void analogTriggerToDigitalPress(Gamecube_Data_t &data) { // The following 2 if statments map analog L and R presses to digital presses. The range is 0-255. Thank You to "vacuous_occupant" for this code. <url unknown> 
+  if (data.report.left > TRIGGER_asTHRESHOLD)
+    data.report.l = 1;
+  if (data.report.right > TRIGGER_THRESHOLD)
+    data.report.r = 1;
 }
 
+void setup() {
+  digitalWrite(RST_PIN, HIGH);  // digital pin 4 "Reset" must be set HIGH before!! pinMode is set to OUTPUT, or the processor will get stuck in a (non-harmful) boot loop.
+  pinMode(RST_PIN, OUTPUT);
+  
+  pinMode(13, OUTPUT);  // Sets pin 13, red led, for debug/status indicating. Blips on startup/restart..
+  digitalWrite(13, HIGH);
+  delay(100);
+  digitalWrite(13, LOW);
+}
 
 void loop()
 {
   noInterrupts();
   controller.read();
   auto data = controller.getData();
-  normalize_origin(data);
+  normalize_origin(&data.report.xAxis, &data.origin.inititalData.xAxis);
   invert_vc_gc(&data.report.xAxis);
+  analogTriggerToDigitalPress(data);
   console.write(data);
   controller.setRumble(data.status.rumble);
   interrupts();
