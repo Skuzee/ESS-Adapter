@@ -5,7 +5,7 @@ import sys
 import numpy as np
 
 from scipy.spatial.distance import euclidean as euclidean_distance
-from scipy.spatial import KDTree
+from scipy.spatial import cKDTree as KDTree
 sys.setrecursionlimit(10000)
 
 
@@ -169,7 +169,6 @@ class GCN64Map:
 class OOTVCMap:
     """ Implementation of VC's mapping algorithm """
     deadzone = 15
-    ingame_deadzone = 7
     max_length = 56
     n64_max = 80 # Full N64 range so the adapter works in menus as well
 
@@ -227,8 +226,8 @@ class OOTVCMap:
             this function expects signed input from -128 to 127
             Use umap for unsigned input.
         """
-        x_coord = self.subtract_deadzone(x_coord)
-        y_coord = self.subtract_deadzone(y_coord)
+        x_coord = self.subtract_deadzone(int(x_coord))
+        y_coord = self.subtract_deadzone(int(y_coord))
 
         length = np.sqrt(x_coord**2 + y_coord**2)
         x_coord = self.clamp_absolute_length(x_coord, length)
@@ -308,30 +307,37 @@ class OOTVCMap:
         # If the nearest neighbor is too far away, move closer to origin
         # This prevents flickering between two neighbors that are nearly
         # equidistant to P, but very far apart from each other.
-        if distance > 2.0:
-            length = point[0] * point[0] + point[1] * point[1]
-            scale = (length - distance) / length
+        if distance > 2.5:
+            length = np.sqrt(point[0] * point[0] + point[1] * point[1])
+            scale = (length - distance + 2.5) / length
             point = (point[0] * scale, point[1] * scale)
             distance, _ = self.neighbor_finder.query(point)
 
-        # Multiple inputs map to the same output. Let's see what our options are.
-        options = self.neighbor_finder.query_ball_point(point, distance+0.001)
-
-        # Due to clamping to n64_max, these might not all map to the same values.
-        distances_from_original_input = np.empty(len(options), dtype="float")
-        for opt_index, option in enumerate(options):
-            inverted_x = option % 128 # column of vc_map
-            inverted_y = option // 128 # row of vc_map
-            distances_from_original_input[opt_index] = euclidean_distance(
-                self.map(inverted_x, inverted_y),
-                np.abs([x_coord, y_coord])
-            )
-
-        best_option = options[distances_from_original_input.argmin()]
-        inverted_x = best_option % 128
-        inverted_y = best_option // 128
+        inverted_x, inverted_y = self.best_inversion(abs(x_coord), abs(y_coord), point, distance)
 
         return inverted_x * x_sign + 128, inverted_y * y_sign + 128
+
+    def best_inversion(self, original_x, original_y, point, distance):
+        """ Multiple inputs map to the same output.
+            Return the input that is closest to the original.
+            If equally close, bias towards bottom left (origin).
+        """
+        options = self.neighbor_finder.query_ball_point(point, distance+0.001)
+
+        def distance_length_tuple(option):
+            """ Return distance, length tuple for easy of sorting """
+            inverted_x = option % 128 # column of vc_map
+            inverted_y = option // 128 # row of vc_map
+            return (
+                euclidean_distance(
+                    self.map(inverted_x, inverted_y),
+                    (original_x, original_y)
+                ),
+                np.sqrt(inverted_x ** 2 + inverted_y ** 2),
+                (inverted_x, inverted_y)
+            )
+
+        return sorted([distance_length_tuple(x) for x in options])[0][2]
 
     @staticmethod
     def triangular_to_linear_index(row, col, size):
@@ -358,7 +364,8 @@ class OOTVCMap:
                 inverted_i = self.invert(i, 0)[0]
                 inverted_j = self.invert(j, 0)[0]
                 if self.invert(i, j) != (inverted_i, inverted_j):
-                    print(inverted_i, inverted_j, self.invert(i, j))
+                    if self.verbose:
+                        print(inverted_i, inverted_j, self.invert(i, j))
                     return i - 1 # Start one lower for rounding
         return self.n64_max
 
@@ -444,8 +451,8 @@ class OOTVCMap:
             clamped_y = abs(clamped_y)
 
         boundary = self.one_dimensional_boundary
-        used_one_dimensional_map = False
-        if clamped_x >= boundary and clamped_y >= boundary:
+        remainder = None
+        if clamped_x > boundary-0.5 and clamped_y > boundary-0.5:
             # Outside the one dimensional range
             remainder = self.n64_max + 1 - boundary
 
@@ -462,7 +469,6 @@ class OOTVCMap:
                 index = self.triangular_to_linear_index(clamped_y, clamped_x, remainder)
                 inverted_x, inverted_y = self.triangular_map[index]
         else:
-            used_one_dimensional_map = True
             inverted_x = self.one_dimensional_map[int(np.ceil(clamped_x*2))]
             inverted_y = self.one_dimensional_map[int(np.ceil(clamped_y*2))]
 
@@ -470,16 +476,26 @@ class OOTVCMap:
         inverted_y = y_sign * inverted_y + 128
 
         # Check how accurate factorized_invert is vs the canonical self.invert
-        distance = euclidean_distance(
-            self.clamp_to_max(*self.umap(inverted_x, inverted_y)),
-            self.clamp_to_max(*self.umap(*self.invert(x_coord, y_coord)))
-        )
-        if used_one_dimensional_map:
-            assert distance == 0
-        else:
+        factorized = self.clamp_to_max(*self.umap(inverted_x, inverted_y))
+        canonical = self.clamp_to_max(*self.umap(*self.invert(x_coord, y_coord)))
+        distance = euclidean_distance(factorized, canonical)
+
+        if remainder:
+            # Used triangular map (upper right corner of the range)
             # We care less about accuracy in the far ranges
             # There might be a small rounding error in the 2D lookup
-            assert distance <= 4.0
+            if distance > 5:
+                print("d>5: {}, x, y: {} {}, ix, iy: {} {}, r: {}, six, siy: {} {}, r: {}".format(
+                    distance, x_coord, y_coord, inverted_x, inverted_y, factorized,
+                    *self.invert(x_coord, y_coord), canonical), file=sys.stderr, flush=True)
+            assert distance <= 5
+        else:
+            # Used one dimensional map
+            if distance != 0:
+                print("d>0: {}, x, y: {} {}, ix, iy: {} {}, r: {}, six, siy: {} {}, r: {}".format(
+                    distance, x_coord, y_coord, inverted_x, inverted_y, factorized,
+                    *self.invert(x_coord, y_coord), canonical), file=sys.stderr, flush=True)
+            assert distance == 0
 
         return inverted_x, inverted_y
 
@@ -505,10 +521,10 @@ def main():
     gcmapper = GCN64Map()
     vcmapper = OOTVCMap(verbose=True)
     vcmapper.print_factorized_tables()
-    print("\nInverting 10 random values")
-    for _ in range(10):
-        x_coord = np.random.randint(256)
-        y_coord = np.random.randint(256)
+    print("\nEnter two coordinates to invert.")
+    while True:
+        x_coord = int(input("Enter x: "))
+        y_coord = int(input("Enter y: "))
         n64_x, n64_y = gcmapper.umap(x_coord, y_coord)
         inverted_x, inverted_y = vcmapper.factorized_invert(n64_x, n64_y)
         mapped_x, mapped_y = vcmapper.umap(inverted_x, inverted_y)
