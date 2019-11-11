@@ -1,5 +1,5 @@
 /* Adapter to make the analog stick on WiiVC Ocarina of Time feel like N64 */
-#include "Nintendo.h"
+#include "src/Nintendo/src/Nintendo.h"
 
 #define DEBUG 0 // Unused, will be implimented for debugging code.
 #define TRIGGER_THRESHOLD 40 // Smaller = more sensitive.
@@ -10,36 +10,36 @@ CGamecubeConsole console(8); // Sets D8 on arduino to write data to console.
 
 void gc_to_n64(uint8_t coords[2]) {
   /* Assume 0 <= y <= x <= 127
-   * 
-   * Converts Gamecube analog stick coordinates to N64 analog stick coordinates
-   *
-   * Achievable range on a gamecube controller is 75 in corners and 105 straight
-   * N64 ranges from 70 in the corners to 80 straight. The shape is different.
-   * To maximize precision while allowing full range, we need to scale:
-   *   - Straight directions to 80/105
-   *   - Corner directions to 70/75
-   * Because this stretching effect warps the shape of the controller,
-   * we'd like to minimize our warping in the center and scale it up near edge.
-   * 
-   * First we try to find the intersection point with the edge of the range.
-   *   distance = (5x+2y) / 525
-   *   closeness_to_corner = 7y / 5x+2y
-   * These range from 0 to 1 and derive from the formula for line intersection: 
-   *   https://gamedev.stackexchange.com/questions/44720/
-   *
-   * Our conversion formula becomes:
-   *   extra_corner_scaling = 70/75-80/105
-   *   scale = distance^3 * closeness_to_corner * extra_corner_scaling + 80/105
-   *   return x * scale, y * scale
-   * The cubing of distance means we warp very little in the center.
-   *
-   * We implement the below formula in uint32 integer math:
-   *   ((5x + 2y) / 525)^2 * (7y / 525) * (70/75-80/105) + 80/105
-   * Notice that the multiplication cancels out one factor of 5x+2y
-   *
-   * Writes back converted N64 coordinates to x and y on a scale of 0-255
-   * The doubled resolution is to help rounding when inverting the VC mapping
-   */
+
+     Converts Gamecube analog stick coordinates to N64 analog stick coordinates
+
+     Achievable range on a gamecube controller is 75 in corners and 105 straight
+     N64 ranges from 70 in the corners to 80 straight. The shape is different.
+     To maximize precision while allowing full range, we need to scale:
+       - Straight directions to 80/105
+       - Corner directions to 70/75
+     Because this stretching effect warps the shape of the controller,
+     we'd like to minimize our warping in the center and scale it up near edge.
+
+     First we try to find the intersection point with the edge of the range.
+       distance = (5x+2y) / 525
+       closeness_to_corner = 7y / 5x+2y
+     These range from 0 to 1 and derive from the formula for line intersection:
+       https://gamedev.stackexchange.com/questions/44720/
+
+     Our conversion formula becomes:
+       extra_corner_scaling = 70/75-80/105
+       scale = distance^3 * closeness_to_corner * extra_corner_scaling + 80/105
+       return x * scale, y * scale
+     The cubing of distance means we warp very little in the center.
+
+     We implement the below formula in uint32 integer math:
+       ((5x + 2y) / 525)^2 * (7y / 525) * (70/75-80/105) + 80/105
+     Notice that the multiplication cancels out one factor of 5x+2y
+
+     Writes back converted N64 coordinates to x and y on a scale of 0-255
+     The doubled resolution is to help rounding when inverting the VC mapping
+  */
   uint32_t scale = 5L * coords[0] + 2L * coords[1];
   if (scale > 525) {
     // Multiply by 16 here to reduce precision loss from dividing by scale
@@ -67,14 +67,14 @@ void gc_to_n64(uint8_t coords[2]) {
 
 uint16_t triangular_to_linear_index(uint8_t row, uint8_t col, uint8_t size) {
   /* Adapted from https://math.stackexchange.com/questions/2134011
-   *
-   * Given index i,j of a triangular array stored as a linear 1d array
-   * Returns the index of the linear 1d array. Assumes col >= row (!)
-   *
-   * Since X and Y are symmetrical (reflected),
-   * we only want to store half the values.
-   */
-  return (size*(size-1)/2) - (size-row)*((size-row)-1)/2 + col;
+
+     Given index i,j of a triangular array stored as a linear 1d array
+     Returns the index of the linear 1d array. Assumes col >= row (!)
+
+     Since X and Y are symmetrical (reflected),
+     we only want to store half the values.
+  */
+  return (size * (size - 1) / 2) - (size - row) * ((size - row) - 1) / 2 + col;
 }
 
 # define OOT_MAX 80
@@ -86,10 +86,10 @@ const PROGMEM char triangular_map[] = ",,-,.,.,/,0,0,1,1,2,2,3,3,4,4,5,5,6,6,7,7
 void invert_vc(uint8_t coords[2]) {
   /* Assume 0 <= y <= x <= 2*127 - double resolution */
   /* Approach is documented in the python implementation */
-  if (coords[0] > 2*OOT_MAX) coords[0] = 2*OOT_MAX;
-  if (coords[1] > 2*OOT_MAX) coords[1] = 2*OOT_MAX;
+  if (coords[0] > 2 * OOT_MAX) coords[0] = 2 * OOT_MAX;
+  if (coords[1] > 2 * OOT_MAX) coords[1] = 2 * OOT_MAX;
 
-  if (coords[0] >= 2*BOUNDARY && coords[1] >= 2*BOUNDARY) {
+  if (coords[0] >= 2 * BOUNDARY && coords[1] >= 2 * BOUNDARY) {
     uint8_t remainder = OOT_MAX + 1 - BOUNDARY;
     coords[0] = (coords[0] / 2) - BOUNDARY;
     coords[1] = (coords[1] / 2) - BOUNDARY;
@@ -170,7 +170,7 @@ void invert_vc_n64(int8_t coords[2], uint8_t ucoords[2]) {
     x_positive = 1;
     ucoords[0] = 2 * coords[0];
   } else {
-    if (coords[0] == -128) ucoords[0] = 2*127;
+    if (coords[0] == -128) ucoords[0] = 2 * 127;
     else ucoords[0] = -2 * coords[0];
   }
 
@@ -178,7 +178,7 @@ void invert_vc_n64(int8_t coords[2], uint8_t ucoords[2]) {
     y_positive = 1;
     ucoords[1] = 2 * coords[1];
   } else {
-    if (coords[1] == -128) ucoords[1] = 2*127;
+    if (coords[1] == -128) ucoords[1] = 2 * 127;
     else ucoords[1] = -2 * coords[1];
   }
 
@@ -219,7 +219,7 @@ void normalize_origin(uint8_t coords[2], uint8_t origin[2]) {
 
 void checkStartButton(Gamecube_Data_t &data) { // Resets the program if the Start button is pressed for ~6 seconds.
   static unsigned long timeStamp = millis();
-  
+
   if (data.report.start) {
     if (millis() - timeStamp > 600) { // If the time since the last press has been 6 seconds, reset.
       digitalWrite(13, HIGH);
@@ -235,7 +235,7 @@ void checkStartButton(Gamecube_Data_t &data) { // Resets the program if the Star
   }
 }
 
-void analogTriggerToDigitalPress(Gamecube_Data_t &data) { // The following 2 if statments map analog L and R presses to digital presses. The range is 0-255. Thank You to "vacuous_occupant" for this code. <url unknown> 
+void analogTriggerToDigitalPress(Gamecube_Data_t &data) { // The following 2 if statments map analog L and R presses to digital presses. The range is 0-255. Thank You to "vacuous_occupant" for this code. <url unknown>
   if (data.report.left > TRIGGER_THRESHOLD)
     data.report.l = 1;
   if (data.report.right > TRIGGER_THRESHOLD)
@@ -245,16 +245,16 @@ void analogTriggerToDigitalPress(Gamecube_Data_t &data) { // The following 2 if 
 void setup() {
   digitalWrite(RST_PIN, HIGH);  // digital pin 4 "Reset" must be set HIGH before!! pinMode is set to OUTPUT, or the processor will get stuck in a (non-harmful) boot loop.
   pinMode(RST_PIN, OUTPUT);
-  
+
   pinMode(13, OUTPUT);  // Sets pin 13, red led, for debug/status indicating. Blips on startup/restart..
   digitalWrite(13, HIGH);
-  delay(100);
+  delay(300);
   digitalWrite(13, LOW);
 }
 
 void loop()
 {
-  noInterrupts();
+  //noInterrupts();
   controller.read();
   auto data = controller.getData();
   normalize_origin(&data.report.xAxis, &data.origin.inititalData.xAxis);
@@ -262,6 +262,6 @@ void loop()
   analogTriggerToDigitalPress(data);
   console.write(data);
   controller.setRumble(data.status.rumble);
-  interrupts();
+  //interrupts();
   checkStartButton(data);
 }
