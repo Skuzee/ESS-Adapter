@@ -182,9 +182,9 @@ nopManual(N) /* N % 3 manual nops */
 void gc_n64_send(const uint8_t* buff, uint8_t len,
     volatile uint8_t* modePort, volatile uint8_t* outPort, uint8_t bitMask)
 {
-    // set pin to output, default high
-    *outPort |= bitMask;
-    *modePort |= bitMask;
+    // set pin to input, default high (due to pullup at console end)
+    *outPort &= ~bitMask;
+    *modePort &= ~bitMask;
 
     // temporary register values used as "clobbers"
     register uint8_t bitCount;
@@ -215,9 +215,9 @@ void gc_n64_send(const uint8_t* buff, uint8_t len,
 
         // This label starts the inner loop, which sends a single bit
         ".L%=_bit_loop:\n"
-        "st %a[outPort],%[low]\n" // (2) pull the line low
+        "st %a[modePort],%[output]\n" // (2) pull the line low
 
-        // line needs to stay low for 1�s for a 1 bit, 3�s for a 0 bit
+        // line needs to stay low for 1uS for a 1 bit, 3uS for a 0 bit
         // this block figures out if the next bit is a 0 or a 1
         // the strategy here is to shift the register left, then test and
         // branch on the carry flag
@@ -225,34 +225,34 @@ void gc_n64_send(const uint8_t* buff, uint8_t len,
         "brcc .L%=_zero_bit\n" // (1/2) branch if carry is cleared
 
 
-        // this block is the timing for a 1 bit (1�s low, 3�s high)
-        // Stay low for 2uS: 16 - 2 (above lsl,brcc) - 2 (below st) = 12 cycles
+        // this block is the timing for a 1 bit (1uS low, 3uS high)
+        // Stay low for 1uS: 16 - 2 (above lsl,brcc) - 2 (below st) = 12 cycles
         nop_block(1, 12) // nop block 1, 12 cycles
 
-        "st %a[outPort],%[high]\n" // (2) set the line high again
-        // Now stay high for 2�s of the 3�s to sync up with the branch below
+        "st %a[modePort],%[input]\n" // (2) set the line high again
+        // Now stay high for 2uS of the 3uS to sync up with the branch below
         // 2*16 - 2 (for the rjmp) = 30 cycles
         nop_block(2, 30) // nop block 2, 30 cycles
         "rjmp .L%=_finish_bit\n" // (2)
 
 
-        // this block is the timing for a 0 bit (3�s low, 1�s high)
+        // this block is the timing for a 0 bit (3uS low, 1uS high)
         // Need to go high in 3*16 - 3 (above lsl,brcc) - 2 (below st) = 43 cycles
         ".L%=_zero_bit:\n"
         nop_block(3, 43) // nop block 3, 43 cycles
-        "st %a[outPort],%[high]\n" // (2) set the line high again
+        "st %a[modePort],%[input]\n" // (2) set the line high again
 
 
         // The two branches meet up here.
-        // We are now *exactly* 3�s into the sending of a bit, and the line
-        // is high again. We have 1�s to do the looping and iteration
+        // We are now *exactly* 3uS into the sending of a bit, and the line
+        // is high again. We have 1uS to do the looping and iteration
         // logic.
         ".L%=_finish_bit:\n"
         "dec %[bitCount]\n" // (1) subtract 1 from our bit counter
         "breq .L%=_load_next_byte\n" // (1/2) branch if we've sent all the bits of this byte
 
         // At this point, we have more bits to send in this byte, but the
-        // line must remain high for another 1�s (minus the above
+        // line must remain high for another 1uS (minus the above
         // instructions and the jump below and the st instruction at the
         // top of the loop)
         // 16 - 2(above) - 2 (rjmp below) - 2 (st after jump) = 10
@@ -260,14 +260,14 @@ void gc_n64_send(const uint8_t* buff, uint8_t len,
         "rjmp .L%=_bit_loop\n" // (2)
 
 
-        // This block starts 3 cycles into the last 1�s of the line being high
+        // This block starts 3 cycles into the last 1uS of the line being high
         // We need to decrement the byte counter. If it's 0, that's our exit condition.
         // If not we need to load the next byte and go to the top of the byte loop
         ".L%=_load_next_byte:\n"
         "dec %[len]\n" // (1) len--
         "breq .L%=_loop_exit\n" // (1/2) if the byte counter is 0, exit
         // delay block:
-        // needs to go high after 1�s or 16 cycles
+        // needs to go high after 1uS or 16 cycles
         // 16 - 5 (above) - 2 (the jump itself) - 5 (after jump) = 4
         nop_block(5, 4) // nop block 5, 4 cycles
         "rjmp .L%=_byte_loop\n" // (2)
@@ -276,29 +276,29 @@ void gc_n64_send(const uint8_t* buff, uint8_t len,
         // Loop exit
         ".L%=_loop_exit:\n"
 
-        // final task: send the stop bit, which is a 1 (1�s low 3�s high)
+        // final task: send the stop bit, which is a 1 (1uS low 3uS high)
         // the line goes low in:
         // 16 - 6 (above since line went high) - 2 (st instruction below) = 8 cycles
         nop_block(6, 8) // nop block 6, 8 cycles
-        "st %a[outPort],%[low]\n" // (2) pull the line low
-        // stay low for 1�s
+        "st %a[modePort],%[output]\n" // (2) pull the line low
+        // stay low for 1uS
         // 16 - 2 (below st) = 14
         nop_block(7, 14) // nop block 7, 14 cycles
-        "st %a[outPort],%[high]\n" // (2) set the line high again
-        // just stay high. no need to wait 3�s before returning
+        "st %a[modePort],%[input]\n" // (2) set the line high again
+        // just stay high. no need to wait 3uS before returning
 
         // ----------
         // outputs:
         : [buff] "+e" (buff), // (read and write)
-        [outPort] "+e" (outPort), // (read and write)
+        [modePort] "+e" (modePort), // (read and write)
         [bitCount] "=&d" (bitCount), // (output only, ldi needs the upper registers)
         [data] "=&r" (data), // (output only)
         [nop] "=&d" (nop) // (output only, ldi needs the upper registers)
 
         // inputs:
         : [len] "r" (len),
-        [high] "r" (*outPort | bitMask), // precalculate new pin states
-        [low] "r" (*outPort & ~bitMask) // this works because we turn interrupts off
+        [output] "r" (*modePort | bitMask), // precalculate new pin states
+        [input] "r" (*modePort & ~bitMask) // this works because we turn interrupts off
 
         // no clobbers
         ); // end of asm volatile
@@ -313,9 +313,9 @@ void gc_n64_send(const uint8_t* buff, uint8_t len,
 uint8_t gc_n64_get(uint8_t* buff, uint8_t len,
     volatile uint8_t* modePort, volatile uint8_t* outPort, volatile uint8_t * inPort, uint8_t bitMask)
 {
-    // prepare pin for input with pullup
+    // prepare pin for input with no pullup
+    *outPort &= ~bitMask;
     *modePort &= ~bitMask;
-    *outPort |= bitMask;
 
     // temporary register values used as "clobbers"
     register uint8_t timeoutCount; // counts down the timeout
@@ -389,8 +389,8 @@ uint8_t gc_n64_get(uint8_t* buff, uint8_t len,
         "rjmp .L%=_exit\n" // (2) timeout, jump to the end
 
 
-        // Next block. The line has just gone low. Wait approx 2�s
-        // each cycle is 1/16 �s on a 16Mhz processor
+        // Next block. The line has just gone low. Wait approx 2uS
+        // each cycle is 1/16 uS on a 16Mhz processor
         // best case: 32 - 5 (above) - 1 (below) = 26 nops
         // worst case: 32 - 5 (above) - 6 (above, worst case) - 1 (below) = 20 nops
         // --> 23 nops
