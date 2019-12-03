@@ -1,5 +1,32 @@
-/* Adapter to make the analog stick on WiiVC Ocarina of Time feel like N64 */
+/* Adapter to make the analog stick on WiiVC Ocarina of Time feel like N64 
+   For the latest version and additional information: https://github.com/Skuzee/ESS-Adapter */
+
+/* Basic Wiring Information:
+   Pin 6 --> DATA wire to Controller
+   Pin 6 --> 750ohm Pull-up Resistor --> 3.3v supply wire from Console
+   Pin 8 --> DATA wire to Console
+   Vin Pin --> 5v supply wire from Console
+   GND Pin --> Ground wires 
+   (connect the two ground wires to each other as well.)
+   optional: Pin 4 --> RST Pin (used to reset adapter via Controller. Only Used for debugging and programming.
+   
+   If You've cut the Controller wire to install this adapter, 
+   make sure the Controller is still powered by insuring the following connections:
+   5v supply wire from Console --> 5v wire to Controller Rumble Motor 
+   3.3v supply from Console --> 3.3v wire to Controller
+   Ground wires from Console --> Ground wire(s) to Controller
+   
+   If your cable has a braided metal shieding, don't connect it to anything. 
+   (Best practice for shielding is to connect it only at one end. 
+   Since the shielding is grounded internally to the controller and the console 
+   it's best to leave it disconnected inside the adapter.) */
+
+
 #include "src/Nintendo/src/Nintendo.h"
+
+#if NINTENDO_VERSION != 1337
+#error 'Incorrect Nintendo.h library! Compiling with the inccrect version WILL result in 5 volts being output to your controller/console! (Not good.) Make sure the custom Nintendo library (version 1337) is included in the ESS-Adapter/src folder and try again.
+#endif
 
 #define DEBUG 0 // Unused, will be implimented for debugging code.
 #define TRIGGER_THRESHOLD 40 // Smaller = more sensitive.
@@ -226,7 +253,7 @@ void checkStartButton(Gamecube_Data_t &data) { // Resets the program if the Star
       delay(500);
       digitalWrite(13, LOW);
       delay(500);
-      // asm volatile ("  jmp 0"); // Soft-reset, Assembly command that jumps to the start of the reset vector. Thank You to Koresh, for this solution. https://forum.mysensors.org/user/koresh
+      // asm volatile ("  jmp 0"); // Soft-reset, Assembly command that jumps to the start of the reset vector. 
       digitalWrite(RST_PIN, LOW); // Hard-reset, Pin 4 to RST.
     }
   }
@@ -235,7 +262,7 @@ void checkStartButton(Gamecube_Data_t &data) { // Resets the program if the Star
   }
 }
 
-void analogTriggerToDigitalPress(Gamecube_Data_t &data) { // The following 2 if statments map analog L and R presses to digital presses. The range is 0-255. Thank You to "vacuous_occupant" for this code. <url unknown>
+void analogTriggerToDigitalPress(Gamecube_Data_t &data) { // The following 2 if statments map analog L and R presses to digital presses. The range is 0-255. 
   if (data.report.left > TRIGGER_THRESHOLD)
     data.report.l = 1;
   if (data.report.right > TRIGGER_THRESHOLD)
