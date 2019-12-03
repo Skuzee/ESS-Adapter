@@ -13,14 +13,15 @@ Currently this code only works with 16MHz Atmel AVR boards due to some of the su
 
 The following wiring information will reference Nintendo's Gamecube coloring scheme!
 Be warned, most gamecube extension cables are different.
-Color | Use | Notes
---- | --- | ---
-Red | Data 3.3v
-Green | Ground
-White | Ground | (Shown as Grey in schematic)
-Blue | 3.3v Supply
-Yellow | 5v Supply
-Black | Shielding | (May not be present on some cables)
+
+|Color | Use | Notes|
+|--- | --- | ---|
+|Red | Data 3.3v | |
+|Green | Ground | |
+|White | Ground | (Shown as Grey in schematic) |
+|Blue | 3.3v Supply | |
+|Yellow | 5v Supply | |
+|Black | Shielding | (May not be present on some cables) |
 
  ### Parts & Tools
  At a minimum you'll need:
