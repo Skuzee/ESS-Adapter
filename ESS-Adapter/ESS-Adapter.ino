@@ -25,7 +25,7 @@
 #include "src/Nintendo/src/Nintendo.h"
 
 #if NINTENDO_VERSION != 1337
-#error 'Incorrect Nintendo.h library! Compiling with the inccrect version WILL result in 5 volts being output to your controller/console! (Not good.) Make sure the custom Nintendo library (version 1337) is included in the ESS-Adapter/src folder and try again.
+#error 'Incorrect Nintendo.h library! Compiling with the incorrect version WILL result in 5 volts being output to your controller/console! (Not good.) Make sure the custom Nintendo library (version 1337) is included in the ESS-Adapter/src folder and try again.
 #endif
 
 #define DEBUG 0 // Unused, will be implimented for debugging code.
