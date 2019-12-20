@@ -1,7 +1,7 @@
 /* Adapter to make the analog stick on WiiVC Ocarina of Time feel like N64 
    For the latest version and additional information: https://github.com/Skuzee/ESS-Adapter */
 
-/* Basic Wiring Information:
+/* Basic Wiring Information: Pins 4 & 6 & 8 are default, but any digital pin will work.
    Pin 6 --> DATA wire to Controller
    Pin 6 --> 750ohm Pull-up Resistor --> 3.3v supply wire from Console
    Pin 8 --> DATA wire to Console
@@ -20,20 +20,47 @@
    (Best practice for shielding is to connect it only at one end. 
    Since the shielding is grounded internally to the controller and the console 
    it's best to leave it disconnected inside the adapter.) */
-
-
+#include <avr/power.h>
 #include "src/Nintendo/src/Nintendo.h"
-
 #if NINTENDO_VERSION != 1337
 #error 'Incorrect Nintendo.h library! Compiling with the incorrect version WILL result in 5 volts being output to your controller/console! (Not good.) Make sure the custom Nintendo library (version 1337) is included in the ESS-Adapter/src folder and try again.
 #endif
 
-#define DEBUG 0 // Unused, will be implimented for debugging code.
-#define TRIGGER_THRESHOLD 40 // Smaller = more sensitive.
-#define RST_PIN 4
+#define ATTINY
+#define USE_RST_PIN
+#define USE_LED_PIN
+#define FIX_TRIGGERS
+//#define DEBUG
 
-CGamecubeController controller(6); // Sets D6 on arduino to read from controller.
-CGamecubeConsole console(8); // Sets D8 on arduino to write data to console.
+
+#ifdef ATTINY
+  #define CONT_PIN 0  // Controller DATA Pin
+  #define CONS_PIN 2  // Console DATA Pin
+  
+  #ifdef USE_LED_PIN
+    #define LED_PIN 1  // LED Pin used for indicating status (OPTIONAL)
+  #endif
+#else
+  #define CONT_PIN 6  // Controller DATA Pin
+  #define CONS_PIN 8  // Console DATA Pin
+  
+  #ifdef USE_RST_PIN
+    #define RST_PIN 4   // External hard reset pin (OPTIONAL)
+  #endif
+  
+  #ifdef USE_LED_PIN
+    #define LED_PIN 13  // LED Pin used for indicating status (OPTIONAL)
+  #endif
+#endif
+
+#ifdef FIX_TRIGGERS
+  #define TRIGGER_THRESHOLD 40 // Smaller = more sensitive.
+#endif
+
+
+CGamecubeController controller(CONT_PIN); // Sets Controller Pin on arduino to read from controller.
+CGamecubeConsole console(CONS_PIN); // Sets D8 on arduino to write data to console.
+
 
 void gc_to_n64(uint8_t coords[2]) {
   /* Assume 0 <= y <= x <= 127
@@ -244,15 +271,14 @@ void normalize_origin(uint8_t coords[2], uint8_t origin[2]) {
   }
 }
 
-void checkStartButton(Gamecube_Data_t &data) { // Resets the program if the Start button is pressed for ~6 seconds.
+void startButtonResets(Gamecube_Data_t &data) { // Resets the program if the Start button is pressed for ~6 seconds.
+#ifdef RST_PIN
+
   static unsigned long timeStamp = millis();
 
   if (data.report.start) {
     if (millis() - timeStamp > 600) { // If the time since the last press has been 6 seconds, reset.
-      digitalWrite(13, HIGH);
-      delay(500);
-      digitalWrite(13, LOW);
-      delay(500);
+      blinkLED(3,100);
       // asm volatile ("  jmp 0"); // Soft-reset, Assembly command that jumps to the start of the reset vector. 
       digitalWrite(RST_PIN, LOW); // Hard-reset, Pin 4 to RST.
     }
@@ -260,35 +286,59 @@ void checkStartButton(Gamecube_Data_t &data) { // Resets the program if the Star
   else {
     timeStamp = millis();
   }
+
+#endif  
 }
 
-void analogTriggerToDigitalPress(Gamecube_Data_t &data) { // The following 2 if statments map analog L and R presses to digital presses. The range is 0-255. 
-  if (data.report.left > TRIGGER_THRESHOLD)
+void analogTriggerToDigitalPress(Gamecube_Data_t &data) { // The following 2 if statments map analog L and R presses to digital presses. The range is 0-255.   
+#ifdef FIX_TRIGGERS   
+
+if (data.report.left > TRIGGER_THRESHOLD)
     data.report.l = 1;
   if (data.report.right > TRIGGER_THRESHOLD)
     data.report.r = 1;
+    
+#endif
 }
 
-void setup() {
-  digitalWrite(RST_PIN, HIGH);  // digital pin 4 "Reset" must be set HIGH before!! pinMode is set to OUTPUT, or the processor will get stuck in a (non-harmful) boot loop.
-  pinMode(RST_PIN, OUTPUT);
+void blinkLED(int blinks, int blinkTime) { //blink time in Milliseconds, be warned millis() is not accurate becuase of all the nointerupts() so 100mS = 1 second.
+#ifdef LED_PIN
 
-  pinMode(13, OUTPUT);  // Sets pin 13, red led, for debug/status indicating. Blips on startup/restart..
-  digitalWrite(13, HIGH);
-  delay(300);
-  digitalWrite(13, LOW);
+  for (blinks; blinks>0; blinks--) {
+    digitalWrite(LED_PIN, HIGH);
+    delay(blinkTime);
+    digitalWrite(LED_PIN, LOW);
+    delay(blinkTime);
+  }
+
+#endif
+}
+
+
+void setup() {
+  if (F_CPU == 16000000) clock_prescale_set(clock_div_1);
+  #ifdef RST_PIN
+    digitalWrite(RST_PIN, HIGH);  // digital pin 4 "Reset" must be set HIGH before!! pinMode is set to OUTPUT, or the processor will get stuck in a (non-harmful) boot loop.
+    pinMode(RST_PIN, OUTPUT);
+  #endif
+
+  #ifdef LED_PIN
+    pinMode(LED_PIN, OUTPUT);  // Sets LED Pin for debug/status indicating.
+    blinkLED(5,10);
+  #endif
 }
 
 void loop()
 {
-  //noInterrupts();
   controller.read();
-  auto data = controller.getData();
+  Gamecube_Data_t data = controller.getData();
+  
   normalize_origin(&data.report.xAxis, &data.origin.inititalData.xAxis);
   invert_vc_gc(&data.report.xAxis);
+
+  startButtonResets(data);
   analogTriggerToDigitalPress(data);
+
   console.write(data);
   controller.setRumble(data.status.rumble);
-  //interrupts();
-  checkStartButton(data);
 }

@@ -22,6 +22,8 @@ THE SOFTWARE.
 */
 
 #include "Gamecube.h"
+#include "stdbool.h"
+
 
 //================================================================================
 // Gamecube Controller
