@@ -326,7 +326,7 @@ void setup() {
 
   #ifdef LED_PIN
     pinMode(LED_PIN, OUTPUT);  // Sets LED Pin for debug/status indicating.
-    blinkLED(5,10);
+    blinkLED(5,100);
   #endif
 }
 
