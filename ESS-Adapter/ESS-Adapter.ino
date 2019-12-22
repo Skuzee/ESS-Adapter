@@ -1,7 +1,7 @@
 /* Adapter to make the analog stick on WiiVC Ocarina of Time feel like N64 
    For the latest version and additional information: https://github.com/Skuzee/ESS-Adapter */
 
-/* Basic Wiring Information: Pins 4 & 6 & 8 are default, but any digital pin will work.
+/* Basic Wiring Information for ATMEGA: Pins 6 & 8 are default DATA Pins, but any digital pin will work. (ATTINY uses Pins 0 & 2)
    Pin 6 --> DATA wire to Controller
    Pin 6 --> 750ohm Pull-up Resistor --> 3.3v supply wire from Console
    Pin 8 --> DATA wire to Console
@@ -27,7 +27,7 @@
 #endif
 
 
-//#define ATTINY // Uncomment this line if using an ATTINY85
+//#define ATTINY // Uncomment this line if using an ATTINY85 use pins 0 and 2, or change them below
 #define USE_RST_PIN // Uncomment to enable the use of a hard reset pin
 #define USE_LED_PIN // Uncomment to enable the use of the onboard LED indicator
 #define FIX_TRIGGERS // Uncomment to enable function of analog trigger support
@@ -49,13 +49,13 @@
   #define CONT_PIN 6  // Controller DATA Pin
   #define CONS_PIN 8  // Console DATA Pin
   
-  #ifdef USE_RST_PIN
-    #define RST_PIN 4   // External hard reset pin (OPTIONAL)
-  #endif
-  
   #ifdef USE_LED_PIN
     #define LED_PIN 13  // LED Pin used for indicating status (OPTIONAL)
   #endif
+#endif
+
+#ifdef USE_RST_PIN
+  #define RST_PIN 4   // External hard reset pin (OPTIONAL)
 #endif
 
 
@@ -335,11 +335,11 @@ void loop()
   controller.read();
   Gamecube_Data_t data = controller.getData();
   
- // normalize_origin(&data.report.xAxis, &data.origin.inititalData.xAxis);
- // invert_vc_gc(&data.report.xAxis);
+  normalize_origin(&data.report.xAxis, &data.origin.inititalData.xAxis);
+  invert_vc_gc(&data.report.xAxis);
 
- // startButtonResets(data);
- // analogTriggerToDigitalPress(data);
+   startButtonResets(data);
+   analogTriggerToDigitalPress(data);
 
   console.write(data);
   controller.setRumble(data.status.rumble);
