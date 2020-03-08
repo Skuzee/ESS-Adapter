@@ -1,4 +1,5 @@
-/* Adapter to make the analog stick on WiiVC Ocarina of Time feel like N64 
+/* master
+ *  Adapter to make the analog stick on WiiVC Ocarina of Time feel like N64
    For the latest version and additional information: https://github.com/Skuzee/ESS-Adapter */
 
 /* Basic Wiring Information for ATMEGA: Pins 6 & 8 are default DATA Pins, but any digital pin will work. (ATTINY uses Pins 0 & 2)
@@ -6,19 +7,19 @@
    Pin 6 --> 750ohm Pull-up Resistor --> 3.3v supply wire from Console
    Pin 8 --> DATA wire to Console
    5v Pin --> Regulated 5v supply wire from Console (If you are powering the adapter from an unregulated power source use the VIN Pin. If it is regulated, use the 5v Pin to skip the boards onboard regulator and prevent excess voltage drop.)
-   GND Pin --> Ground wires 
+   GND Pin --> Ground wires
    (connect the two ground wires to each other as well.)
    optional: Pin 4 --> RST Pin (used to reset adapter via Controller by holding the start button for ~6 seconds. Only Used for debugging and programming.)
-   
-   If You've cut the Controller wire to install this adapter, 
+
+   If You've cut the Controller wire to install this adapter,
    make sure the Controller is still powered by insuring the following connections:
-   5v supply wire from Console --> 5v wire to Controller Rumble Motor 
+   5v supply wire from Console --> 5v wire to Controller Rumble Motor
    3.3v supply from Console --> 3.3v wire to Controller
    Ground wires from Console --> Ground wire(s) to Controller
-   
-   If your cable has a braided metal shieding, don't connect it to anything. 
-   (Best practice for shielding is to connect it only at one end. 
-   Since the shielding is grounded internally to the controller and the console 
+
+   If your cable has a braided metal shieding, don't connect it to anything.
+   (Best practice for shielding is to connect it only at one end.
+   Since the shielding is grounded internally to the controller and the console
    it's best to leave it disconnected inside the adapter.) */
 #include <avr/power.h>
 #include "src/Nintendo/src/Nintendo.h"
@@ -41,14 +42,14 @@
 #ifdef ATTINY
   #define CONT_PIN 0  // Controller DATA Pin
   #define CONS_PIN 2  // Console DATA Pin
-  
+
   #ifdef USE_LED_PIN
     #define LED_PIN 1  // LED Pin used for indicating status (OPTIONAL)
   #endif
 #else
   #define CONT_PIN 6  // Controller DATA Pin
   #define CONS_PIN 8  // Console DATA Pin
-  
+
   #ifdef USE_LED_PIN
     #define LED_PIN 13  // LED Pin used for indicating status (OPTIONAL)
   #endif
@@ -137,7 +138,7 @@ uint16_t triangular_to_linear_index(uint8_t row, uint8_t col, uint8_t size) {
 
 const PROGMEM char one_dimensional_map[] = "\x00\x00\x10\x10\x11\x11\x12\x12\x13\x13\x14\x14\x15\x15\x16\x16\x16\x17\x17\x17\x18\x18\x19\x19\x1a\x1a\x1a\x1b\x1b\x1b\x1c\x1c\x1d\x1d\x1d\x1e\x1e\x1e\x1f\x1f  !!!\"\"\"###$$$%%%&&&'''((()))***+++,,,,---...///00001111222333344445555666677778888899999::::;;;;;<<<<<=====>>>>>??????@@@";
 const PROGMEM char triangular_map[] = ",,-,.,.,/,0,0,1,1,2,2,3,3,4,4,5,5,6,6,7,7,8,8,9,9,9,:,:,;,;,<,<,<,=,=,>,>,>,?,?,?,@,--.-.-/-0-0-1-1-2-2-3-3-4-4-5-5-6-6-7-7-8-8-9-9-9-:-:-;-;-<-<-<-=-=->->->-?-?-?-@,..../.0.0.1.1.2.2.3.3.4.4.5.5.6.6.7.7.8.8.9.9.9.:.:.;.;.<.<.<.=.=.>.>.>.?-?-?-?-../.0.0.1.1.2.2.3.3.4.4.5.5.6.6.7.7.8.8.9.9.9.:.:.;.;.<.<.<.=.=.>.>.>.?-?-?-?-//0/0/1/1/2/2/3/3/4/4/5/5/6/6/7/7/8/8/9/9/9/:/:/;/;/</</</=/=/>/>/>/>/>/?-?-000010102020303040405050606070708080909090:0:0;0;0<0<0<0=0=0>/>/>/>/>/>/>/0010102020303040405050606070708080909090:0:0;0;0<0<0<0=0=0=0>/>/>/>/>/>/11112121313141415151616171718181919191:1:1;1;1<1<1<1=0=0=0>/>/>/>/>/>/112121313141415151616171718181919191:1:1;1;1<1<1<1<1<1=0=0>/>/>/>/>/2222323242425252626272728282929292:2:2;2;2<1<1<1<1<1<1=0=0>/>/>/>/22323242425252626272728282929292:2:2;2;2;2<1<1<1<1<1<1<1=0=0>/>/333343435353636373738383939393:3:3;3;3;3;3<1<1<1<1<1<1<1=0=0>/3343435353636373738383939393:3:3;3;3;3;3;3<1<1<1<1<1<1<1<1=044445454646474748484949494:4:4:4;3;3;3;3;3<1<1<1<1<1<1<1<1445454646474748484949494:4:4:4:4;3;3;3;3;3;3<1<1<1<1<1<1555565657575858595959595:4:4:4:4;3;3;3;3;3;3<1<1<1<1<1556565757585859595959595:4:4:4:4;3;3;3;3;3;3<1<1<1<1666676768686869595959595:4:4:4:4;3;3;3;3;3;3;3<1<1667676868686959595959595:4:4:4:4:4;3;3;3;3;3;3<1777777868686959595959595:4:4:4:4:4;3;3;3;3;3;3777777868686869595959595:4:4:4:4:4;3;3;3;3;377777786868686959595959595:4:4:4:4:4;3;3;377777786868686959595959595:4:4:4:4:4;3;377777786868686959595959595:4:4:4:4:4;377777786868686959595959595:4:4:4:4:477777786868686959595959595:4:4:4:47777778686868695959595959595:4:47777778686868695959595959595:4777777868686869595959595959577777786868686959595959595777777868686869595959595777777868686869595959577777786868686869595777777868686868695777777868686868677777786868686777777868686777777868677777786777777777777";
-//smaller sized map that only goes to 67, but takes less PROGMEM 
+//smaller sized map that only goes to 67, but takes less PROGMEM
 // const PROGMEM char triangular_map[] = "3343435353636373738383939393:3:3;344445454646474748484949494:4:4:4445454646474748484949494:4:4:4555565657575858595959595:4:4556565757585859595959595:4666676768686869595959595667676868686959595959577777786868695959595777777868686869595777777868686869577777786868686777777868686777777868677777786777777777777";
 void invert_vc(uint8_t coords[2]) {
   /* Assume 0 <= y <= x <= 2*127 - double resolution */
@@ -273,7 +274,7 @@ void normalize_origin(uint8_t coords[2], uint8_t origin[2]) {
   }
 }
 
-void startButtonResets(Gamecube_Data_t &data) { // Resets the program if the Start button is pressed for ~6 seconds.
+void startButtonResets(Gamecube_Data_t& data) { // Resets the program if the Start button is pressed for ~6 seconds.
 #ifdef RST_PIN
 
   static unsigned long timeStamp = millis();
@@ -281,7 +282,7 @@ void startButtonResets(Gamecube_Data_t &data) { // Resets the program if the Sta
   if (data.report.start) {
     if (millis() - timeStamp > 600) { // If the time since the last press has been 6 seconds, reset.
       blinkLED(3,100);
-      // asm volatile ("  jmp 0"); // Soft-reset, Assembly command that jumps to the start of the reset vector. 
+      // asm volatile ("  jmp 0"); // Soft-reset, Assembly command that jumps to the start of the reset vector.
       digitalWrite(RST_PIN, LOW); // Hard-reset, Pin 4 to RST.
     }
   }
@@ -289,17 +290,17 @@ void startButtonResets(Gamecube_Data_t &data) { // Resets the program if the Sta
     timeStamp = millis();
   }
 
-#endif  
+#endif
 }
 
-void analogTriggerToDigitalPress(Gamecube_Data_t &data) { // The following 2 if statments map analog L and R presses to digital presses. The range is 0-255.   
-#ifdef FIX_TRIGGERS   
+void analogTriggerToDigitalPress(Gamecube_Data_t& data) { // The following 2 if statments map analog L and R presses to digital presses. The range is 0-255.
+#ifdef FIX_TRIGGERS
 
 if (data.report.left > TRIGGER_THRESHOLD)
     data.report.l = 1;
   if (data.report.right > TRIGGER_THRESHOLD)
     data.report.r = 1;
-    
+
 #endif
 }
 
@@ -316,8 +317,32 @@ void blinkLED(int blinks, int blinkTime) { //blink time in Milliseconds, be warn
 #endif
 }
 
+#define ASCII_0 '\0'
+#define ASCII_1 '1'
+#define NEWLINE '\n'
+
+void writeToUSB_BYTE(Gamecube_Data_t& data) {
+
+	Serial.write(data.report.raw8, sizeof(data.report.raw8));
+  Serial.write(NEWLINE);
+}
+
+
+
+void writeToUSB_BIT(Gamecube_Report_t &GC_report) {
+
+  for (uint8_t byteCounter = 0; byteCounter < 8; byteCounter++) {
+
+    for (uint8_t bitCounter = 0; bitCounter < 8; bitCounter++) {
+      //Masks off one bit at a time and sends an ascii 1 or 0 to serial console.
+      Serial.write(GC_report.raw8[byteCounter]&(0x80>>bitCounter) ? ASCII_1 : ASCII_0);
+    }
+  }
+  Serial.write(NEWLINE);
+}
 
 void setup() {
+  Serial.begin(115200);
   if (F_CPU == 16000000) clock_prescale_set(clock_div_1);
   #ifdef RST_PIN
     digitalWrite(RST_PIN, HIGH);  // digital pin 4 "Reset" must be set HIGH before!! pinMode is set to OUTPUT, or the processor will get stuck in a (non-harmful) boot loop.
@@ -334,12 +359,13 @@ void loop()
 {
   controller.read();
   Gamecube_Data_t data = controller.getData();
-  
+
   normalize_origin(&data.report.xAxis, &data.origin.inititalData.xAxis);
   invert_vc_gc(&data.report.xAxis);
 
-   startButtonResets(data);
-   analogTriggerToDigitalPress(data);
+  startButtonResets(data);
+  analogTriggerToDigitalPress(data);
+  writeToUSB_BYTE(data);
 
   console.write(data);
   controller.setRumble(data.status.rumble);
