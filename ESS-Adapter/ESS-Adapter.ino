@@ -23,12 +23,9 @@
    it's best to leave it disconnected inside the adapter.) */
 #include <avr/power.h>
 #include "src/Nintendo/src/Nintendo.h"
-#if NINTENDO_VERSION != 1337
-#error "Incorrect Nintendo.h library! Compiling with the incorrect version WILL result in 5 volts being output to your controller/console! (Not good.) Make sure the custom Nintendo library (version 1337) is included in the ESS-Adapter/src folder and try again."
-#endif
-
 
 //#define ATTINY // Uncomment this line if using an ATTINY85 use pins 0 and 2, or change them below
+//#define INPUT_DISPLAY // Uncomment for input display. currently might not work on all devices. works on my atmega32u4
 #define USE_RST_PIN // Uncomment to enable the use of a hard reset pin
 #define USE_LED_PIN // Uncomment to enable the use of the onboard LED indicator
 #define FIX_TRIGGERS // Uncomment to enable function of analog trigger support
@@ -59,9 +56,8 @@
   #define RST_PIN 4   // External hard reset pin (OPTIONAL)
 #endif
 
-
-CGamecubeController controller(CONT_PIN); // Sets Controller Pin on arduino to read from controller.
-CGamecubeConsole console(CONS_PIN); // Sets D8 on arduino to write data to console.
+int controller_pin;
+int console_pin;
 
 
 void gc_to_n64(uint8_t coords[2]) {
@@ -341,6 +337,17 @@ void writeToUSB_BIT(Gamecube_Report_t &GC_report) {
   Serial.write(NEWLINE);
 }
 
+
+int dataPulseCounter = 0;
+
+void addOne() {
+	dataPulseCounter++;
+}
+
+void subOne() {
+	dataPulseCounter--;
+}
+
 void setup() {
   Serial.begin(115200);
   if (F_CPU == 16000000) clock_prescale_set(clock_div_1);
@@ -353,10 +360,30 @@ void setup() {
     pinMode(LED_PIN, OUTPUT);  // Sets LED Pin for debug/status indicating.
     blinkLED(5,100);
   #endif
+
+
+	attachInterrupt(digitalPinToInterrupt(CONS_PIN), addOne, FALLING);
+	attachInterrupt(digitalPinToInterrupt(CONT_PIN), subOne, FALLING);
+
+			while (!console_pin) {
+				if (dataPulseCounter>10)
+					console_pin = 8, controller_pin = 6;
+				else if (dataPulseCounter<-10)
+					console_pin = 6, controller_pin = 8;
+			}
+
+	detachInterrupt(digitalPinToInterrupt(8));
+	detachInterrupt(digitalPinToInterrupt(6));
 }
+
+
 
 void loop()
 {
+	  CGamecubeController controller(controller_pin); // Sets Controller Pin on arduino to read from controller.
+	  CGamecubeConsole console(console_pin); // Sets D8 on arduino to write data to console.
+
+
   controller.read();
   Gamecube_Data_t data = controller.getData();
 
@@ -365,8 +392,11 @@ void loop()
 
   startButtonResets(data);
   analogTriggerToDigitalPress(data);
-  writeToUSB_BYTE(data);
-
+  
+  #ifdef INPUT_DISPLAY
+    writeToUSB_BYTE(data);
+  #endif
+  
   console.write(data);
   controller.setRumble(data.status.rumble);
 }
