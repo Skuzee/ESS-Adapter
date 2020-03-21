@@ -23,11 +23,17 @@
    it's best to leave it disconnected inside the adapter.) */
 #include <avr/power.h>
 #include "src/Nintendo/src/Nintendo.h"
+#if NINTENDO_VERSION != 1337
+#error "Incorrect Nintendo.h library! Compiling with the incorrect version WILL result in 5 volts being output to your controller/console! (Not good.) Make sure the custom Nintendo library (version 1337) is included in the ESS-Adapter/src folder and try again."
+#endif
+
 
 //#define ATTINY // Uncomment this line if using an ATTINY85 use pins 0 and 2, or change them below
 #define USE_RST_PIN // Uncomment to enable the use of a hard reset pin
 #define USE_LED_PIN // Uncomment to enable the use of the onboard LED indicator
 #define FIX_TRIGGERS // Uncomment to enable function of analog trigger support
+//#define DEBUG
+
 
 #ifdef FIX_TRIGGERS
   #define TRIGGER_THRESHOLD 40 // This is the sensitivity of the analog triggers 0-125, lower = more sensitive
@@ -317,7 +323,7 @@ void blinkLED(int blinks, int blinkTime) { //blink time in Milliseconds, be warn
 
 void writeToUSB_BYTE(Gamecube_Data_t& data) {
 
-	Serial.write(data.report.raw8, sizeof(data.report.raw8));
+  Serial.write(data.report.raw8, sizeof(data.report.raw8));
   Serial.write(NEWLINE);
 }
 
