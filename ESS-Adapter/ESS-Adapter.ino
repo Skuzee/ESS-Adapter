@@ -359,7 +359,7 @@ void loop()
 
   startButtonResets(data);
   analogTriggerToDigitalPress(data);
-  writeToUSB_BYTE(data);
+  //writeToUSB_BYTE(data);
 
   console.write(data);
   controller.setRumble(data.status.rumble);
