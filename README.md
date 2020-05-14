@@ -11,6 +11,13 @@ Currently this code only works with 16MHz Atmel AVR boards due to some of the su
 
 ## Wiring
 ![alt text](https://raw.githubusercontent.com/Skuzee/ESS-Adapter/master/ESS-Adapter-Schematic.png " Logo Title Text 1")
+note 1: There are too many variations for me to correctly suggest how to hook power to the arduino directly from the Wii. 
+each Arduino has different mosfets/diodes/regulators/wiring. The absolute SAFEST way to power your arduino is from USB only!
+That means using a short usb cord to one of the wii usb ports, or to your PC (for use with the input display function.)
+Alternativly, you could wire the 5v wire from the controller cable to the VIN or 5v pin of your arduino...
+IF YOU DO THAT THEN YOU CANT PLUG IN USB AND WII AT THE SAME TIME!!!! You could always cut the 5v wire in your usb cable if you wanted to use the input display option while powering it from the wii.
+I'm really sorry this is how it is.
+I've been researching a simple way to fix this issue, but it's not as easy as it seems. 
 
 The following wiring information will reference Nintendo's Gamecube coloring scheme!
 Be warned, most gamecube extension cables are different.
@@ -42,7 +49,7 @@ Depending on what components you use, you may want:
 - Kaptop tape.
 
 ## 3D Printing
- I've designed an enclosure for the trinket pro, and I'm working on one for the Digispark attiny85. Stay tuned for links and info!
+ I've designed an enclosure for the trinket pro, and I'm working on one for the sparkfun pro micro now. Stay tuned for links and info!
  
 ## Community
 Join our [Ocarina of Time Speedrunning Discord](https://discord.gg/EYU785K) to chat and ask any questions: Contact Angst in the #adapters-and-inputdisplays channel.
