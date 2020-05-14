@@ -32,6 +32,7 @@
 #define USE_RST_PIN // Uncomment to enable the use of a hard reset pin
 #define USE_LED_PIN // Uncomment to enable the use of the onboard LED indicator
 #define FIX_TRIGGERS // Uncomment to enable function of analog trigger support
+//#define INPUT_DISPLAY // Uncomment for input display. currently might not work on all devices. works on my atmega32u4
 //#define DEBUG
 
 
@@ -365,7 +366,12 @@ void loop()
 
   startButtonResets(data);
   analogTriggerToDigitalPress(data);
-  //writeToUSB_BYTE(data);
+
+  
+  #ifdef INPUT_DISPLAY
+    writeToUSB_BYTE(data);
+  #endif
+
 
   console.write(data);
   controller.setRumble(data.status.rumble);

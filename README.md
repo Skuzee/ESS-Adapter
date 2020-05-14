@@ -1,6 +1,7 @@
-# Introduction
+﻿# Introduction
 This adapter modifies analog stick input values. For use with Legend of Zelda: Ocarina of Time. 
-Currently works only with Gamecube controllers!  Support N64 controllers coming soon.
+This version is for Gamecube controllers!  I have a dev version that supports N64 controllers here:
+[N64-Dev](https://github.com/Skuzee/ESS-Adapter/tree/n64-dev)
 
 ## About
 Ocarina of Time (OOT) on Gamecube (GC) and Wii run on Nintendo’s emulator called Virtual Console (VC). VC maps the GC controller values to certain in-game values. The algorithm poorly recreates the feel of the N64 version of OOT. This ESS-Adapter interprets controller input and scales/maps it to compensate for the VC map. The end result is hopefully an analog stick with a more traditional feel. 
