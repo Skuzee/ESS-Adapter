@@ -13,7 +13,7 @@ There are some limitations on how some boards can be powered directly from the W
 I suggest the Sparkfun Pro Micro 5v 16MHz (or a clone). 
 
 ## Wiring
-![Wiring](https://raw.githubusercontent.com/Skuzee/ESS-Adapter/master/ESS-Adapter-Schematic.png "Basic Pro Micro Schematic")
+![Wiring](https://raw.githubusercontent.com/Skuzee/ESS-Adapter/master/GC-Schematic.png "Basic Pro Micro Schematic")
 
 There are too many variations for me to correctly suggest how to hook power to the Arduino directly from the Wii for each type. 
 Each Arduino/variant has different mosfets/diodes/regulators/wiring; it is not always safe to power the board from the Wii and the USB simultaniously. 
@@ -33,6 +33,7 @@ This can usually be prevented with a step-up booster board, diodes, relays, or o
  At a minimum you'll need:
 - A 16MHz Atmel AVR Arduino/Clone. I suggest a sparkfun Pro Micro or similar 32u4 clone with USB port.
 - A 740ohm Resistor (500ohm-1000ohm would work in a pinch.)
+- A Schottky diode. (anything 10v 500mA would work fine. THT style.)
 - A soldering iron.
 - Tools to cut and strip wire.
 
