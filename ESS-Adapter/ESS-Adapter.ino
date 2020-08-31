@@ -56,7 +56,7 @@ void loop() {
   controller.read();
   Gamecube_Data_t data = controller.getData();
   Gamecube_Data_t data_original;	
-  memcpy((void)&data_original, (void)&data, sizeof(Gamecube_Data_t));	
+  memcpy((void*)&data_original, (void*)&data, sizeof(Gamecube_Data_t));	
 	
   normalize_origin(&data.report.xAxis, &data.origin.inititalData.xAxis);
   invert_vc_gc(&data.report.xAxis);
