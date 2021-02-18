@@ -205,3 +205,26 @@ void normalize_origin(uint8_t coords[2], uint8_t origin[2]) {
     origin[i] = 128;
   }
 }
+
+void convertToGC(const N64_Report_t& N64_report, Gamecube_Report_t& GC_report) {
+
+  GC_report.a = N64_report.a;
+  GC_report.b = N64_report.b;
+	GC_report.start = N64_report.start;
+	GC_report.z = N64_report.cdown; // OOT z is also cdown
+	GC_report.r = N64_report.r;
+  GC_report.right = N64_report.r * 127;
+	GC_report.l = N64_report.z;
+	GC_report.left = N64_report.z * 127;
+
+	GC_report.x = N64_report.cright; // OOT x is also cleft
+	GC_report.y = N64_report.cleft; // OOT y is also cright
+	GC_report.cyAxis = 127 + (N64_report.cup*127) - (N64_report.l*127); // set cyAxis to c-up button
+
+	GC_report.dleft = N64_report.dleft;
+	GC_report.dright = N64_report.dright;
+	GC_report.ddown = N64_report.ddown;
+	GC_report.dup = N64_report.dup;
+
+  invert_vc_n64(&N64_report.xAxis, &GC_report.xAxis);
+}

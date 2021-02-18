@@ -79,6 +79,8 @@ bool CN64Controller::read(void)
         {
             return false;
         }
+				
+				delayMicroseconds(100);
     }
 
     // Read the controller, abort if it fails.

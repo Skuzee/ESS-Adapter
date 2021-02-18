@@ -39,3 +39,27 @@ void analogTriggerToDigitalPress(Gamecube_Data_t& data, int Threshold) { // The 
 
 #endif
 }*/
+
+
+//#ifdef DEBUG
+  void initializeDebug() {
+    pinMode(DEBUG_READ, OUTPUT);
+    pinMode(DEBUG_ESS, OUTPUT);
+    pinMode(DEBUG_INPUT, OUTPUT);
+    pinMode(DEBUG_WRITE, OUTPUT); 
+    pinMode(DEBUG_GND, OUTPUT);
+    digitalWrite(DEBUG_GND, LOW);
+  }
+  
+  void debugOutput(uint8_t pin, uint8_t state) {
+    digitalWrite(pin, state);
+  }
+//#endif
+
+/*#else
+  void initializeDebug() {
+  }
+  
+  void debugOutput(uint8_t pin, uint8_t state) {
+  }
+#endif*/
