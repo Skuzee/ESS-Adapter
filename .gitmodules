@@ -1,0 +1,3 @@
+[submodule "ESS-Adapter/src/Nintendo"]
+	path = ESS-Adapter/src/Nintendo
+	url = https://github.com/Skuzee/Nintendo
