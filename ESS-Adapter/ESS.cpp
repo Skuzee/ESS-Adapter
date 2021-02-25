@@ -208,19 +208,21 @@ void normalize_origin(uint8_t coords[2], uint8_t origin[2]) {
 
 void convertToGC(const N64_Report_t& N64_report, Gamecube_Report_t& GC_report) {
 
-  GC_report.a = N64_report.a;
-  GC_report.b = N64_report.b;
+	GC_report.a = N64_report.a;
+	GC_report.b = N64_report.b;
 	GC_report.start = N64_report.start;
-	GC_report.z = N64_report.cdown; // OOT z is also cdown
+	GC_report.z = N64_report.cdown; // OOT GC z is also cdown
 	GC_report.r = N64_report.r;
-  GC_report.right = N64_report.r * 127;
-	GC_report.l = N64_report.z;
+	GC_report.right = N64_report.r * 127;
+	GC_report.l = N64_report.z; // OOT GC l is N64 z
 	GC_report.left = N64_report.z * 127;
 
-	GC_report.x = N64_report.cright; // OOT x is also cleft
-	GC_report.y = N64_report.cleft; // OOT y is also cright
-	GC_report.cyAxis = 127 + (N64_report.cup*127) - (N64_report.l*127); // set cyAxis to c-up button
+	GC_report.x = N64_report.cright; // OOT GC x is also cleft
+	GC_report.y = N64_report.cleft; // OOT GC y is also cright
+	GC_report.cyAxis = 127 + (N64_report.cup*127) - (N64_report.l*127); // set cyAxis(up) to N64 cup, set cyAxis(down) to N64 l for flying in GZ.
 
+	
+	//CG_report.dpad = N64_report.dpad	// does this work?
 	GC_report.dleft = N64_report.dleft;
 	GC_report.dright = N64_report.dright;
 	GC_report.ddown = N64_report.ddown;
