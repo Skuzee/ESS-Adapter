@@ -221,12 +221,7 @@ void convertToGC(const N64_Report_t& N64_report, Gamecube_Report_t& GC_report) {
 	GC_report.y = N64_report.cleft; // OOT GC y is also cright
 	GC_report.cyAxis = 127 + (N64_report.cup*127) - (N64_report.l*127); // set cyAxis(up) to N64 cup, set cyAxis(down) to N64 l for flying in GZ.
 
-	
-	//CG_report.dpad = N64_report.dpad	// does this work?
-	GC_report.dleft = N64_report.dleft;
-	GC_report.dright = N64_report.dright;
-	GC_report.ddown = N64_report.ddown;
-	GC_report.dup = N64_report.dup;
-
+	GC_report.dpad = N64_report.dpad;
+ 
   invert_vc_n64(&N64_report.xAxis, &GC_report.xAxis);
 }

@@ -18,13 +18,11 @@
   }
 }*/
 
-void analogTriggerToDigitalPress(Gamecube_Data_t& data, int Threshold) { // The following 2 if statments map analog L and R presses to digital presses. The range is 0-255.
-
-  if (data.report.left > Threshold)
-    data.report.l = 1;
-  if (data.report.right > Threshold)
-    data.report.r = 1;
-
+void analogTriggerToDigitalPress(Gamecube_Report_t& GCreport, uint8_t Threshold) { // Maps analog L and R presses to digital presses. Range of sensitivity from 0 to 255. 0 being most sensitive. My controller has a range of ~30 to 240.
+  if (GCreport.left > Threshold)
+    GCreport.l = 1;
+  if (GCreport.right > Threshold)
+    GCreport.r = 1;
 }
 
 /*void blinkLED(int blinks, int blinkTime) { //blink time in Milliseconds, be warned millis() is not accurate becuase of all the interupts so 100mS is ~ 1 second.
@@ -46,20 +44,16 @@ void analogTriggerToDigitalPress(Gamecube_Data_t& data, int Threshold) { // The 
     pinMode(DEBUG_READ, OUTPUT);
     pinMode(DEBUG_ESS, OUTPUT);
     pinMode(DEBUG_INPUT, OUTPUT);
-    pinMode(DEBUG_WRITE, OUTPUT); 
+    pinMode(DEBUG_WRITE, OUTPUT);
     pinMode(DEBUG_GND, OUTPUT);
     digitalWrite(DEBUG_GND, LOW);
-  }
-  
-  void debugOutput(uint8_t pin, uint8_t state) {
-    digitalWrite(pin, state);
   }
 //#endif
 
 /*#else
   void initializeDebug() {
   }
-  
+
   void debugOutput(uint8_t pin, uint8_t state) {
   }
 #endif*/
