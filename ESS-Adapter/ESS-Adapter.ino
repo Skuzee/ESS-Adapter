@@ -9,7 +9,6 @@
    -Pin 8 --> DATA to Console
    -5v supply from console --> schottky diode --> Vcc/Vin
    -GND Pin --> Ground wires
-   -optional: Pin 4 --> RST Pin (used to reset adapter via Controller by holding the start button for ~6 seconds. Only Used for debugging and programming.)
 
 	Make sure the Controller is still connected: insuring the following:
 	 -5v supply from Console --> 5v to Controller (Rumble Motor)
@@ -40,31 +39,38 @@ CGamecubeController GCcontroller(CONT_PIN); // Sets Gamecube Controller Pin on a
 CN64Controller N64controller(CONT_PIN); // Sets N64 Controller Pin on arduino to read from controller.
 CGamecubeConsole console(CONS_PIN); // Sets D8 on arduino to write data to console.
 Gamecube_Data_t data = defaultGamecubeData; // initilize Gamecube data. Default needed for N64 data to convert correctly.
-uint8_t failedReadCounter; // after 20 failed read attempts, program will attempt to reinitialize controller to check for N64 or GC controller.
-uint8_t readDelayFlipFlop;
+//extern EEPROM_settings settings;
 
 void setup() {
-
   Serial.begin(115200);
-	failedReadCounter = 69; // nice
-	readDelayFlipFlop = 0;
+	loadSettings();
 
 #ifdef DEBUG
   initializeDebug();
 #endif
 }
 
-
 void loop() {
- 	uint8_t deviceID;
+ 	static uint16_t deviceID = 0;
 
-	if (failedReadCounter >= 20) // a failed read in GCloop or N64loop will increment the counter.
-  	deviceID = checkConnection(); // if it does not detect a controller. check device ID.
+	switch(deviceID) {
+		case 0:
+			deviceID = checkConnection();
+			break;
 
+		case 5:
+			deviceID = N64loop();
+			break;
+
+		default:
+			deviceID = GCloop();
+	}
+
+/*
 	if(deviceID == 5)
 		N64loop();
 	else if (deviceID != 0)
-    GCloop(); // standard controller is 0009, but attempt to read any non-0 device ID as a gamecube controller.
+    deviceID = GCloop(); // standard controller is 0009, but attempt to read any non-0 device ID as a gamecube controller.*/
 
 	// idea; instead of using failedReadCounter:
 	// deviceID = GCloop();
@@ -75,38 +81,44 @@ void loop() {
 	//prehaps still account for failed reads?
 }
 
-uint8_t checkConnection() {
+uint16_t checkConnection() {
 
   N64_Status_t connectionStatus; // create a generic Status (N64 and GC status are the same)
   connectionStatus.device = 0; // reset device ID
+
   n64_init(CONT_PIN, &connectionStatus); // initilize controller to update device ID
-	//char device = connectionStatus.device;
   Serial.print("Searching... Device ID:");
   Serial.println(char(connectionStatus.device), DEC);
 	delay(1000);
+
 	return connectionStatus.device;
-
-
-
 }
 
 void delayRead() {
+		static uint8_t readDelayFlipFlop = 0;
+
 		if(readDelayFlipFlop)
 			delay(14);	// waits 14ms every other read cycle. Prevents the arduino from reading the controller data too early and then having to wait 15ms to send it to the wii. Delay added to controller is between 0.635ms and 1.225ms. (average of 0.930ms)
 	  readDelayFlipFlop=!readDelayFlipFlop;
 }
 
-void GCloop() { // Wii vc version of OOT updates controller twice every ~16.68ms (with 1.04ms between the two rapid updates.)
+uint16_t GCloop() { // Wii vc version of OOT updates controller twice every ~16.68ms (with 1.04ms between the two rapid updates.)
+	static uint8_t firstRead = 1;
+
   delayRead();
 
-	if (!GCcontroller.read()) {
-		failedReadCounter++;
-		Serial.print("GCfailedReadCounter:");
-		Serial.println(failedReadCounter);
+	if (!GCcontroller.read()) { // failed read: increase failedReadCounter
+		Serial.println("Failed to read GC controller:");
+		data.status.device = 0;
+		firstRead = 1;
 	}
 	else {
-  	data = GCcontroller.getData(); // Copy controller data to access.
-		failedReadCounter = 0;
+  	data = GCcontroller.getData(); // successful read: copy controller data to access.
+		if(firstRead) { // special case: first read: change settings.
+			changeSettings(data.report);
+			if(data.report.l==0 || data.report.r==0)
+				firstRead = 0;
+		}
 	}
 
 #ifdef TRIGGER_THRESHOLD // If defined, makes Gamecube controller triggers act more like GC collectors edition. Analog press instead of having to click them all the way down.
@@ -114,7 +126,7 @@ void GCloop() { // Wii vc version of OOT updates controller twice every ~16.68ms
 #endif
 
 #ifdef INPUT_DISPLAY // Copies data to serial buffer and sends to NintendoSpy. Data format is from Nicohood's Nintendo Library and only works with the newest version of Nintendospy. (It's a different data order than the NintendoSpy uses by default.)
-  writeToUSB_BYTE(data);
+		writeToUSB_BYTE(data);
 #endif
 
   normalize_origin(&data.report.xAxis, &data.origin.inititalData.xAxis);
@@ -122,25 +134,34 @@ void GCloop() { // Wii vc version of OOT updates controller twice every ~16.68ms
 
   console.write(data); // Loop waits here until console requests an update.
   GCcontroller.setRumble(data.status.rumble); // Set controller rumble status.
+
+	return data.status.device;
 }
 
+uint16_t N64loop() { // Wii vc version of OOT updates controller twice every ~16.68ms (with 1.04ms between the two rapid updates.)
+	static uint8_t firstRead = 1;
 
-void N64loop() { // Wii vc version of OOT updates controller twice every ~16.68ms (with 1.04ms between the two rapid updates.)
   delayRead();
 
 	if (!N64controller.read()) {
-		failedReadCounter++;
-		Serial.print("N64failedReadCounter:");
-		Serial.println(failedReadCounter);
+		Serial.println("Failed to read N64 controller:");
+		data.status.device = 0;
+		firstRead = 1;
 	}
 	else {
     convertToGC(N64controller.getReport(), data.report);
-		failedReadCounter = 0;
+		if(firstRead) { // special case: first read: change settings.
+			changeSettings(data.report);
+			if(data.report.l==0 || data.report.r==0)
+				firstRead = 0;
+		}
 	}
 
 #ifdef INPUT_DISPLAY
-  writeToUSB_BYTE(data);
+  	writeToUSB_BYTE(data);
 #endif
 
   console.write(data);
+
+	return data.status.device;
 }
