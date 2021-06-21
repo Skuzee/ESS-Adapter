@@ -7,7 +7,7 @@
    -Pin 6 --> DATA to Controller
    -Pin 6 --> 750ohm Pull-up Resistor --> 3.3v supply from Console
    -Pin 8 --> DATA to Console
-   -5v supply from console --> schottky diode --> Vcc/Vin
+   -5v supply from console --> schottky diode --> Vcc/Vin Unregulated Voltage pin.
    -GND Pin --> Ground wires
 
 	Make sure the Controller is still connected: insuring the following:
@@ -20,8 +20,8 @@
 
 //Options
 #define INPUT_DISPLAY // - works on 32u4, needs newest compiled version of NintendoSpy (not the old release from 2014).
-#define CONT_PIN 6  // Controller DATA Pin
-#define CONS_PIN 8  // Console DATA Pin
+#define CONT_PIN 6  // Controller DATA Pin: 4 dev1, 6 master
+#define CONS_PIN 8  // Console DATA Pin: 2 dev1, 8 master
 #define TRIGGER_THRESHOLD 100 // Makes the L and R triggers act like Gamecube version of OOT. range of sensitivity from 0 to 255. 0 being most sensitive. My controller has a range of ~30 to 240. Comment out to disable.
 //#define DEBUG
 
@@ -51,7 +51,7 @@ void setup() {
 }
 
 void loop() {
- 	static uint16_t deviceID = 0;
+ 	static uint8_t deviceID = 0;
 
 	switch(deviceID) {
 		case 0:
@@ -65,33 +65,19 @@ void loop() {
 		default:
 			deviceID = GCloop();
 	}
-
-/*
-	if(deviceID == 5)
-		N64loop();
-	else if (deviceID != 0)
-    deviceID = GCloop(); // standard controller is 0009, but attempt to read any non-0 device ID as a gamecube controller.*/
-
-	// idea; instead of using failedReadCounter:
-	// deviceID = GCloop();
-	// GCloop returns data.status.device.
-	// might need to reset device ID every loop or on failed read?
-	// if deviceID is 0, then deviceID = checkConnection() to get new id.
-	// case select deviceID
-	//prehaps still account for failed reads?
 }
 
-uint16_t checkConnection() {
+uint8_t checkConnection() { // tests connection and gets device ID. returns Device ID.
 
   N64_Status_t connectionStatus; // create a generic Status (N64 and GC status are the same)
   connectionStatus.device = 0; // reset device ID
 
   n64_init(CONT_PIN, &connectionStatus); // initilize controller to update device ID
   Serial.print("Searching... Device ID:");
-  Serial.println(char(connectionStatus.device), DEC);
-	delay(1000);
+  Serial.println(connectionStatus.device);
+	delay(500);
 
-	return connectionStatus.device;
+	return char(connectionStatus.device);
 }
 
 void delayRead() {
@@ -102,22 +88,26 @@ void delayRead() {
 	  readDelayFlipFlop=!readDelayFlipFlop;
 }
 
-uint16_t GCloop() { // Wii vc version of OOT updates controller twice every ~16.68ms (with 1.04ms between the two rapid updates.)
+uint8_t GCloop() { // Wii vc version of OOT updates controller twice every ~16.68ms (with 1.04ms between the two rapid updates.)
 	static uint8_t firstRead = 1;
 
   delayRead();
 
 	if (!GCcontroller.read()) { // failed read: increase failedReadCounter
 		Serial.println("Failed to read GC controller:");
-		data.status.device = 0;
 		firstRead = 1;
 	}
 	else {
   	data = GCcontroller.getData(); // successful read: copy controller data to access.
+
 		if(firstRead) { // special case: first read: change settings.
-			changeSettings(data.report);
-			if(data.report.l==0 || data.report.r==0)
-				firstRead = 0;
+			firstRead = 0;
+			firstRead = changeSettings_GC(data.report);
+		}
+		else {
+			#ifdef INPUT_DISPLAY
+				writeToUSB_BYTE(data);
+			#endif
 		}
 	}
 
@@ -125,43 +115,50 @@ uint16_t GCloop() { // Wii vc version of OOT updates controller twice every ~16.
   analogTriggerToDigitalPress(data.report, TRIGGER_THRESHOLD);
 #endif
 
-#ifdef INPUT_DISPLAY // Copies data to serial buffer and sends to NintendoSpy. Data format is from Nicohood's Nintendo Library and only works with the newest version of Nintendospy. (It's a different data order than the NintendoSpy uses by default.)
-		writeToUSB_BYTE(data);
-#endif
-
   normalize_origin(&data.report.xAxis, &data.origin.inititalData.xAxis);
-  invert_vc_gc(&data.report.xAxis);
+	if(settings.ess_and_button_map) // Does ESS conversion on all settings except off right now.
+  	invert_vc_gc(&data.report.xAxis);
 
   console.write(data); // Loop waits here until console requests an update.
   GCcontroller.setRumble(data.status.rumble); // Set controller rumble status.
 
-	return data.status.device;
+	return GCcontroller.getDevice();
 }
 
-uint16_t N64loop() { // Wii vc version of OOT updates controller twice every ~16.68ms (with 1.04ms between the two rapid updates.)
+uint8_t N64loop() { // Wii vc version of OOT updates controller twice every ~16.68ms (with 1.04ms between the two rapid updates.)
 	static uint8_t firstRead = 1;
 
   delayRead();
 
 	if (!N64controller.read()) {
 		Serial.println("Failed to read N64 controller:");
-		data.status.device = 0;
-		firstRead = 1;
+		firstRead = 1; // if it fails to read, assume next successful read will be the first.
 	}
 	else {
-    convertToGC(N64controller.getReport(), data.report);
-		if(firstRead) { // special case: first read: change settings.
-			changeSettings(data.report);
-			if(data.report.l==0 || data.report.r==0)
-				firstRead = 0;
+		switch(settings.ess_and_button_map) {
+
+      case 0:
+			case 1:
+			convertToGC_OOT(N64controller.getReport(), data.report);
+			break;
+
+			case 2:
+			convertToGC_Yoshi(N64controller.getReport(), data.report);
+			break;
+		}
+
+
+		if(firstRead || enterSettingsMenuN64Controller(N64controller.getReport())) { // special case: first read: change settings.
+			firstRead = changeSettings_N64(N64controller.getReport());
+		}
+		else {
+			#ifdef INPUT_DISPLAY
+				writeToUSB_BYTE(data);
+			#endif
 		}
 	}
 
-#ifdef INPUT_DISPLAY
-  	writeToUSB_BYTE(data);
-#endif
-
   console.write(data);
 
-	return data.status.device;
+	return N64controller.getDevice();
 }

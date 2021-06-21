@@ -212,22 +212,59 @@ void normalize_origin(uint8_t coords[2], uint8_t origin[2]) {
   }
 }
 
-void convertToGC(const N64_Report_t& N64_report, Gamecube_Report_t& GC_report) {
+void convertToGC_OOT(const N64_Report_t& N64report, Gamecube_Report_t& GCreport) { // Converts N64 controller data to Gamecube data. Button Mapping is for VC OOT / GZ Practice ROM. N64 Cbuttons mapped to Gamecube X Y Z because Practice rom uses Gamecube cdown / N64 L to fly.
 
-	GC_report.a = N64_report.a;
-	GC_report.b = N64_report.b;
-	GC_report.start = N64_report.start;
-	GC_report.z = N64_report.cdown; // OOT GC z is also cdown
-	GC_report.r = N64_report.r;
-	GC_report.right = N64_report.r * 127;
-	GC_report.l = N64_report.z; // OOT GC l is N64 z
-	GC_report.left = N64_report.z * 127;
+	GCreport.a = N64report.a;
+	GCreport.b = N64report.b;
+	GCreport.start = N64report.start;
+	GCreport.z = N64report.cdown; // Gamecube Z same as cdown.
+	GCreport.r = N64report.r;
+	GCreport.right = N64report.r * 127;
+	GCreport.l = N64report.z;
+	GCreport.left = N64report.z * 127;
 
-	GC_report.x = N64_report.cright; // OOT GC x is also cleft
-	GC_report.y = N64_report.cleft; // OOT GC y is also cright
-	GC_report.cyAxis = 127 + (N64_report.cup*127) - (N64_report.l*127); // set cyAxis(up) to N64 cup, set cyAxis(down) to N64 l for flying in GZ.
+	GCreport.x = N64report.cright; // Gamecube X same as cleft
+	GCreport.y = N64report.cleft; // Camecube Y same as cright
+	GCreport.cyAxis = 127 + (N64report.cup*127) - (N64report.l*127); // set cyAxis(up) to N64 cup, set cyAxis(down) to N64 l for flying in GZ.
 
-	GC_report.dpad = N64_report.dpad;
+	GCreport.dleft = N64report.dleft;
+	GCreport.dright = N64report.dright;
+	GCreport.dup = N64report.dup;
+	GCreport.ddown = N64report.ddown;
 
-  invert_vc_n64(&N64_report.xAxis, &GC_report.xAxis);
+  invert_vc_n64(&N64report.xAxis, &GCreport.xAxis);
+}
+
+void convertToGC_Yoshi(const N64_Report_t& N64report, Gamecube_Report_t& GCreport) {
+
+	GCreport.a = N64report.a;
+	GCreport.b = N64report.b;
+	GCreport.start = N64report.start;
+	GCreport.z = N64report.l;
+	GCreport.r = N64report.r;
+	GCreport.right = N64report.r * 127;
+	GCreport.l = N64report.z;
+	GCreport.left = N64report.z * 127;
+
+	// Map N64 cbuttons to Gamecube Dpad
+	GCreport.dleft = N64report.cleft;
+	GCreport.dright = N64report.cright;
+	GCreport.dup = N64report.cup;
+	GCreport.ddown = N64report.cdown;
+
+	// Scale and convert N64 analog stick to work with Yoshi Story menu and gameplay. Does not contain an ESS map at this point. Just simple scaling.
+	GCreport.xAxis = N64report.xAxis*1.2;
+	GCreport.yAxis = N64report.yAxis*1.2;
+  GCreport.xAxis+=127;
+  GCreport.yAxis+=127;
+
+  if (GCreport.xAxis > 255)
+  	GCreport.xAxis = 255;
+  else if (GCreport.xAxis < 0)
+  	GCreport.xAxis =0;
+
+  if (GCreport.yAxis > 255)
+  	GCreport.yAxis = 255;
+  else if (GCreport.yAxis < 0)
+  	GCreport.yAxis =0;
 }
