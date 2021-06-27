@@ -17,170 +17,107 @@ void analogTriggerToDigitalPress(Gamecube_Report_t& GCreport, uint8_t Threshold)
 }
 
 uint8_t enterSettingsMenuN64Controller(const N64_Report_t& N64report) {
-
-	if(N64report.z==1 && N64report.start==1 && N64report.cup==1 && N64report.cdown==1 && N64report.cright==1 && N64report.cleft==1)
+	if(N64report.l && N64report.r && N64report.cup && N64report.cdown && N64report.cright && N64report.cleft)
 		return 1;
 	else
 		return 0;
 }
 
+uint8_t changeSettings(Gamecube_Report_t& GCreport) { // read the initial buttons of the controller and set EEPROM accordingly.
 
-uint8_t changeSettings_N64(const N64_Report_t& N64report) { // read the initial buttons of the controller and set EEPROM accordingly.
+	if(GCreport.l && GCreport.r) {
 
-	if(N64report.z==1 && N64report.start==1) {
-
-		if(N64report.r==1) { // Press R to reset settings to default.
-			EEPROM.update(0,!EEPROM.read(0));
-			Serial.println(".");
-			Serial.println(EEPROM.read(0) ? "Restoring Factory Settings... Press R to undo." : "Factory Reset Canceled.");
-			delay(500);
-		}
-
-		if(N64report.dleft==1) { // ESS Map 0: No ESS
-			settings.ess_and_button_map = 0;
-			Serial.println(".");
-			Serial.println("ESS Disabled.");
-			EEPROM.put(1, settings);
-			delay(500);
-		}
-
-		if(N64report.dup==1) { // ESS Map 1: OOT
-			settings.ess_and_button_map = 1;
-			Serial.println(".");
-			Serial.println("OOT Map Selected.");
-			EEPROM.put(1, settings);
-			delay(500);
-		}
-
-		if(N64report.dright==1) { // ESS Map 2: Yoshi Story
-			settings.ess_and_button_map = 2;
-			Serial.println(".");
-			Serial.println("YOSHI Map Selected.");
-			EEPROM.put(1, settings);
-			delay(500);
-		}
-
-		// if(N64report.ddown==1) { // ESS Map: 3 NA
-		// 	settings.ess_and_button_map = 3;
-		// 	Serial.println(".");
-		// 	Serial.println("Map 3 Selected.");
-		// 	EEPROM.put(1, settings);
-		// 	delay(500);
-		// }
-
-		if(N64report.a==1) { // Input Display Toggle.
-			settings.input_display_enabled = !settings.input_display_enabled;
-			Serial.println(".");
-			Serial.print("Input Display ");
-      Serial.println(settings.input_display_enabled ? "Enabled" : "Disabled");
-			EEPROM.put(1, settings);
-			delay(500);
-		}
-
-		if(N64report.b==1) { // 14ms Read Delay Toggle. Enabled = less controller input lag. Disable if there is connection issues. Game Dependant.
-			settings.read_delay_enabled = !settings.read_delay_enabled;
-			Serial.println(".");
-			Serial.print("14ms Read Delay ");
-      Serial.println(settings.read_delay_enabled ? "Enabled" : "Disabled");
-			EEPROM.put(1, settings);
-			delay(500);
-		}
-
-		// if(N64report.cleft==1) { // N64 Stick Range Toggle. Not implimented. Used on controllers with worn analog stick.
-		// 	settings.n64_extended_range_enabled = !settings.n64_extended_range_enabled;
-		// 	Serial.println(".");
-		// 	Serial.print("N64 Extended Range (120) ");
-    //   Serial.println(settings.n64_extended_range_enabled ? "Enabled" : "Disabled");
-		// 	EEPROM.put(1, settings);
-		// 	delay(500);
-		// }
-
-
-		Serial.print(".");
-		delay(50);
-		return 1; //if settings are being changed, continue to loop.
-	}
-	else {
-		loadSettings();
-		return 0; // else return 0, read controller normally now.
-	}
-}
-
-uint8_t changeSettings_GC(const Gamecube_Report_t& GCreport) { // read the initial buttons of the controller and set EEPROM accordingly.
-
-		if(GCreport.l==1 && GCreport.r==1) {
-
-		if(GCreport.z==1) { // Press Z to reset settings to default.
+		if(GCreport.z) { // Press Z to reset settings to default.
 			EEPROM.update(0,!EEPROM.read(0));
 			Serial.println(".");
 			Serial.println(EEPROM.read(0) ? "Restoring Factory Settings... Press Z to undo." : "Factory Reset Canceled.");
 			delay(500);
 		}
 
+		if(GCreport.dright || GCreport.dleft) { // Cycle n64 game button maps
 
-		if(GCreport.dleft==1) { // ESS Map 0: No ESS
-			settings.ess_and_button_map = 0;
-			Serial.println(".");
-			Serial.println("ESS Disabled???");
-			EEPROM.put(1, settings);
+			settings.game_selection += GCreport.dright - GCreport.dleft + 3;
+			settings.game_selection %= 3;
+
+			Serial.println("");
+
+			switch(settings.game_selection) {
+
+				case 0:
+				Serial.println("Game: Yoshi Story.");
+				break;
+
+				case 1:
+				Serial.println("Game: OOT.");
+				break;
+
+				case 2:
+				Serial.println("Simple Button Map: No ESS");
+				break;
+			}
+
 			delay(500);
 		}
 
-		if(GCreport.dup==1) { // ESS Map 1: OOT
-			settings.ess_and_button_map = 1;
-			Serial.println(".");
-			Serial.println("OOT Map Selected.");
-			EEPROM.put(1, settings);
+		if(GCreport.dup || GCreport.ddown) { // Cycle n64 game button maps
+
+			settings.ess_map += GCreport.dup - GCreport.ddown + 3;
+			settings.ess_map %= 3;
+
+			Serial.println("");
+
+			switch(settings.ess_map) {
+
+				case 0:
+				Serial.println("ESS Map: OFF/BYPASS.");
+				break;
+
+				case 1:
+				Serial.println("ESS Map: ON.");
+				break;
+
+				case 2:
+				Serial.println("ESS Map: 3rd Option NO USE.");
+				break;
+			}
+
 			delay(500);
 		}
 
-		if(GCreport.dright==1) {  // ESS Map 2: Yoshi Story
-			settings.ess_and_button_map = 2;
-			Serial.println(".");
-			Serial.println("Yoshi Map Selected.");
-			EEPROM.put(1, settings);
-			delay(500);
-		}
-
-		// if(GCreport.ddown==1) { // ESS Map: 3 NA
-		// 	settings.ess_and_button_map = 3;
-		// 	Serial.println(".");
-		// 	Serial.println("??? Map Selected.");
-		// 	EEPROM.put(1, settings);
-		// 	delay(500);
-		// }
-
-		if(GCreport.a==1) { // Input Display Toggle.
+		if(GCreport.a) { // Input Display Toggle.
 			settings.input_display_enabled = !settings.input_display_enabled;
-			Serial.println(".");
+			Serial.println("");
 			Serial.print("Input Display ");
       Serial.println(settings.input_display_enabled ? "Enabled" : "Disabled");
-			EEPROM.put(1, settings);
 			delay(500);
 		}
 
-		if(GCreport.b==1) {  // 14ms Read Delay Toggle. Enabled = less controller input lag. Disable if there is connection issues. Game Dependant.
+		if(GCreport.b) {  // 14ms Read Delay Toggle. Enabled = less controller input lag. Disable if there is connection issues. Game Dependant.
 			settings.read_delay_enabled = !settings.read_delay_enabled;
-			Serial.println(".");
+			Serial.println("");
 			Serial.print("14ms Read Delay ");
 			Serial.println(settings.read_delay_enabled ? "Enabled" : "Disabled");
-			EEPROM.put(1, settings);
 			delay(500);
 		}
 
 		Serial.print(".");
 		delay(50);
+
 		return 1; //if settings are being changed, continue to loop.
 	}
 	else {
-		loadSettings();
-		return 0; // else return 0, read controller normally now.
+		EEPROM.put(1, settings); // store any changed settings.
+		Serial.println();
+		Serial.println("Any Changes Have Been Saved.");
+		loadSettings(); // check to see if eeprom was factory reset.
+
+		return 0; // return 0, read controller normally now.
 	}
 }
 
 void loadSettings() {
   if(EEPROM.read(0)) { // if EEPROM (position 0) == 1, write default settings to EEPROM and 'lock' EEPROM by setting position 0 to 0.
-		settings = {1, 1, 0, 1, 0, 0, 0};
+		settings = {1, 0, 0, 1};
 		EEPROM.put(1, settings);
 		EEPROM.update(0,0);
 		delay(5000);
@@ -197,15 +134,47 @@ void loadSettings() {
 }
 
 void printSetting() {
-			Serial.println(EEPROM.read(0) ? "EEPROM is Unlocked" : "EEPROM is locked");
-			Serial.println("EEPROM settings:");
-				Serial.print("Input Display:     ");
-			Serial.println(settings.input_display_enabled ? "Enabled" : "Disabled");
-				Serial.print("ESS Map:           ");
-			Serial.print(settings.ess_and_button_map);
-			Serial.println(" | 0:OFF,1:OOT,2:YOSHI,3:???");
-				Serial.print("14ms Read Delay:   ");
-			Serial.println(settings.read_delay_enabled ? "Enabled" : "Disabled");
+
+	Serial.println(EEPROM.read(0) ? "EEPROM is Unlocked" : "EEPROM is locked");
+		Serial.println("EEPROM settings:");
+
+	Serial.print("Input Display:   ");
+		Serial.println(settings.input_display_enabled ? "Enabled" : "Disabled");
+
+		Serial.print("ESS Map:         ");
+		switch(settings.ess_map) {
+
+			case 0:
+			Serial.println("OFF/BYPASS");
+			break;
+
+			case 1:
+			Serial.println("ON");
+			break;
+
+			case 2:
+			Serial.println("3rd Option NO USE");
+			break;
+		}
+
+	Serial.print("Game Selection:  ");
+		switch(settings.game_selection) {
+
+			case 0:
+			Serial.println("Yoshi Story");
+			break;
+
+			case 1:
+			Serial.println("OOT");
+			break;
+
+			case 2:
+			Serial.println("Simple Button Map: No ESS");
+			break;
+		}
+
+	Serial.print("14ms Read Delay: ");
+		Serial.println(settings.read_delay_enabled ? "Enabled" : "Disabled");
 }
 
   void initializeDebug() {
@@ -216,3 +185,24 @@ void printSetting() {
     pinMode(DEBUG_GND, OUTPUT);
     digitalWrite(DEBUG_GND, LOW);
   }
+
+	bool makeMotorVibrate(uint8_t timePeriod) {
+
+		static unsigned long startOfRumble;
+		static uint8_t timePeriodSave;
+		static bool motorEnabled = false;
+
+		if (!motorEnabled && timePeriod) {
+			motorEnabled = true;
+			startOfRumble = millis();
+		  timePeriodSave = timePeriod;
+			Serial.print("ON");
+		}
+
+		if (millis() - startOfRumble > timePeriodSave && motorEnabled) {
+			motorEnabled = false;
+			Serial.print("OFF");
+		}
+
+		return motorEnabled;
+	}

@@ -23,6 +23,8 @@ void invert_vc_n64(int8_t coords[2], uint8_t ucoords[2]);
 
 void normalize_origin(uint8_t coords[2], uint8_t origin[2]);
 
-void convertToGC_OOT(const N64_Report_t& N64report, Gamecube_Report_t& GC_report);
+void N64toGC_buttonMap_Simple(const N64_Report_t& N64report, Gamecube_Report_t& GCreport);
 
-void convertToGC_Yoshi(const N64_Report_t& N64report, Gamecube_Report_t& GC_report);
+void N64toGC_buttonMap_OOT(const N64_Report_t& N64report, Gamecube_Report_t& GC_report);
+
+void N64toGC_buttonMap_Yoshi(const N64_Report_t& N64report, Gamecube_Report_t& GC_report);

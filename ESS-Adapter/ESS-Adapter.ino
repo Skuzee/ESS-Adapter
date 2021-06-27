@@ -53,6 +53,8 @@ void setup() {
 void loop() {
  	static uint8_t deviceID = 0;
 
+	//need to flush serial buffer if it gets full. else program will halt
+
 	switch(deviceID) {
 		case 0:
 			deviceID = checkConnection();
@@ -80,29 +82,30 @@ uint8_t checkConnection() { // tests connection and gets device ID. returns Devi
 	return char(connectionStatus.device);
 }
 
-void delayRead() {
+void delayRead(uint8_t readDelay) { // OOT reads the controller twice every 16ms. The ideal timing is to wait as long as possible to read the controller data, so it's fresh when the console requests it. We wait 14ms every other read cycle. Prevents the arduino from reading the controller data too early and then having to wait 15ms to send it to the wii. Delay added to controller is between 0.635ms and 1.225ms. (average of 0.930ms).
+
 		static uint8_t readDelayFlipFlop = 0;
 
 		if(readDelayFlipFlop)
-			delay(14);	// waits 14ms every other read cycle. Prevents the arduino from reading the controller data too early and then having to wait 15ms to send it to the wii. Delay added to controller is between 0.635ms and 1.225ms. (average of 0.930ms)
+			delay(readDelay);
+
 	  readDelayFlipFlop=!readDelayFlipFlop;
 }
 
 uint8_t GCloop() { // Wii vc version of OOT updates controller twice every ~16.68ms (with 1.04ms between the two rapid updates.)
-	static uint8_t firstRead = 1;
+	static uint8_t firstRead = 1; // 1 if the previous loop failed.
 
-  delayRead();
+  delayRead(14);
 
 	if (!GCcontroller.read()) { // failed read: increase failedReadCounter
 		Serial.println("Failed to read GC controller:");
-		firstRead = 1;
+		firstRead = 1; // if it fails to read, assume next successful read will be the first.
 	}
 	else {
   	data = GCcontroller.getData(); // successful read: copy controller data to access.
 
 		if(firstRead) { // special case: first read: change settings.
-			firstRead = 0;
-			firstRead = changeSettings_GC(data.report);
+			firstRead = changeSettings(data.report);
 		}
 		else {
 			#ifdef INPUT_DISPLAY
@@ -116,8 +119,11 @@ uint8_t GCloop() { // Wii vc version of OOT updates controller twice every ~16.6
 #endif
 
   normalize_origin(&data.report.xAxis, &data.origin.inititalData.xAxis);
-	if(settings.ess_and_button_map) // Does ESS conversion on all settings except off right now.
+
+	if(settings.ess_map == 1 && settings.game_selection == 1)
   	invert_vc_gc(&data.report.xAxis);
+
+
 
   console.write(data); // Loop waits here until console requests an update.
   GCcontroller.setRumble(data.status.rumble); // Set controller rumble status.
@@ -128,34 +134,38 @@ uint8_t GCloop() { // Wii vc version of OOT updates controller twice every ~16.6
 uint8_t N64loop() { // Wii vc version of OOT updates controller twice every ~16.68ms (with 1.04ms between the two rapid updates.)
 	static uint8_t firstRead = 1;
 
-  delayRead();
+  delayRead(14);
 
 	if (!N64controller.read()) {
 		Serial.println("Failed to read N64 controller:");
 		firstRead = 1; // if it fails to read, assume next successful read will be the first.
 	}
 	else {
-		switch(settings.ess_and_button_map) {
-
-      case 0:
-			case 1:
-			convertToGC_OOT(N64controller.getReport(), data.report);
-			break;
-
-			case 2:
-			convertToGC_Yoshi(N64controller.getReport(), data.report);
-			break;
-		}
-
-
 		if(firstRead || enterSettingsMenuN64Controller(N64controller.getReport())) { // special case: first read: change settings.
-			firstRead = changeSettings_N64(N64controller.getReport());
+			N64toGC_buttonMap_Simple(N64controller.getReport(), data.report);
+			firstRead = changeSettings(data.report);
 		}
 		else {
+			switch(settings.game_selection) {
+
+	      case 0:
+				N64toGC_buttonMap_Yoshi(N64controller.getReport(), data.report);
+				break;
+
+				case 1:
+				N64toGC_buttonMap_OOT(N64controller.getReport(), data.report);
+				break;
+
+				default:
+				N64toGC_buttonMap_Simple(N64controller.getReport(), data.report);
+			}
+
 			#ifdef INPUT_DISPLAY
 				writeToUSB_BYTE(data);
 			#endif
 		}
+
+
 	}
 
   console.write(data);

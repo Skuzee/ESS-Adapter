@@ -28,3 +28,13 @@ void writeToUSB_BIT(Gamecube_Report_t &GCreport) { // this is probably too slow 
 	    interrupts();
   }
 }
+
+void tryPrint(String input) {
+	if( Serial.availableForWrite() > input.length())
+		Serial.print(input);
+}
+
+void tryPrint(String input) {
+	if( Serial.availableForWrite() > input.length())
+		Serial.println(input);
+}

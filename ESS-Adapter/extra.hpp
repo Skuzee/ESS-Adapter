@@ -13,12 +13,9 @@
 
 typedef struct {
 	uint8_t input_display_enabled : 1;
-	uint8_t ess_and_button_map : 2;
-	uint8_t n64_extended_range_enabled : 1;
+	uint8_t game_selection : 3;
+	uint8_t ess_map : 3;
 	uint8_t read_delay_enabled : 1;
-	uint8_t placeholder1_enabled : 1;
-	uint8_t placeholder2_enabled : 1;
-	uint8_t placeholder3_enabled : 1;
 } EEPROM_settings;
 
 extern EEPROM_settings settings;
@@ -31,12 +28,12 @@ void analogTriggerToDigitalPress(Gamecube_Report_t& GCreport, uint8_t Threshold)
 
 uint8_t enterSettingsMenuN64Controller(const N64_Report_t& N64report);
 
-uint8_t changeSettings_N64(const N64_Report_t& N64report);
-
-uint8_t changeSettings_GC(const Gamecube_Report_t& GCreport);
+uint8_t changeSettings(Gamecube_Report_t& GCreport);
 
 void loadSettings();
 
 void printSetting();
 
 void initializeDebug();
+
+bool makeMotorVibrate(uint8_t timePeriod);

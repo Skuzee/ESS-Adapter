@@ -1,6 +1,7 @@
 //ESS.cpp
 
 #include "ESS.hpp"
+#include "extra.hpp"
 
 const PROGMEM char one_dimensional_map[] = "\x00\x00\x10\x10\x11\x11\x12\x12\x13\x13\x14\x14\x15\x15\x16\x16\x16\x17\x17\x17\x18\x18\x19\x19\x1a\x1a\x1a\x1b\x1b\x1b\x1c\x1c\x1d\x1d\x1d\x1e\x1e\x1e\x1f\x1f  !!!\"\"\"###$$$%%%&&&'''((()))***+++,,,,---...///00001111222333344445555666677778888899999::::;;;;;<<<<<=====>>>>>??????@@@";
 
@@ -64,6 +65,29 @@ void gc_to_n64(uint8_t coords[2]) {
   // n     < box[2n+1] <= n+0.5
   coords[0] = (coords[0] * scale + 16774000) >> 24;
   coords[1] = (coords[1] * scale + 16774000) >> 24;
+}
+
+void n64_to_gc_simple(const N64_Report_t& N64report, Gamecube_Report_t& GCreport) { // Converts N64 analog stick coordinates to Gamecube analog stick coordinates
+	GCreport.xAxis = N64report.xAxis+128;
+	GCreport.yAxis = N64report.yAxis+128;
+}
+
+void n64_to_gc_yoshi(const N64_Report_t& N64report, Gamecube_Report_t& GCreport) {
+	// Scale and convert N64 analog stick to work with Yoshi Story menu and gameplay. Does not contain an VC ESS map at this point. Just simple scaling.
+
+	if (N64report.xAxis*1.2 > 127)
+		GCreport.xAxis = 255;
+	else if (N64report.xAxis*1.2 < -128)
+		GCreport.xAxis = 0;
+	else
+		GCreport.xAxis = N64report.xAxis*1.2 + 128;
+
+	if (N64report.yAxis*1.2 > 127)
+		GCreport.yAxis = 255;
+	else if (N64report.yAxis*1.2 < -128)
+		GCreport.yAxis = 0;
+	else
+		GCreport.yAxis = N64report.yAxis*1.2 + 128;
 }
 
 uint16_t triangular_to_linear_index(uint8_t row, uint8_t col, uint8_t size) {
@@ -212,7 +236,29 @@ void normalize_origin(uint8_t coords[2], uint8_t origin[2]) {
   }
 }
 
-void convertToGC_OOT(const N64_Report_t& N64report, Gamecube_Report_t& GCreport) { // Converts N64 controller data to Gamecube data. Button Mapping is for VC OOT / GZ Practice ROM. N64 Cbuttons mapped to Gamecube X Y Z because Practice rom uses Gamecube cdown / N64 L to fly.
+void N64toGC_buttonMap_Simple(const N64_Report_t& N64report, Gamecube_Report_t& GCreport) { // Converts N64 controller data to Gamecube data. Button Mapping is for VC OOT / GZ Practice ROM. N64 Cbuttons mapped to Gamecube X Y Z because Practice rom uses Gamecube cdown / N64 L to fly.
+
+	GCreport.a = N64report.a;
+	GCreport.b = N64report.b;
+	GCreport.start = N64report.start;
+	GCreport.z = N64report.z;
+	GCreport.r = N64report.r;
+	GCreport.right = N64report.r * 127;
+	GCreport.l = N64report.l;
+	GCreport.left = N64report.l * 127;
+
+	GCreport.cxAxis = 127 + (N64report.cright*127) - (N64report.cleft*127);
+	GCreport.cyAxis = 127 + (N64report.cup*127) - (N64report.cdown*127);
+
+	GCreport.dleft = N64report.dleft;
+	GCreport.dright = N64report.dright;
+	GCreport.dup = N64report.dup;
+	GCreport.ddown = N64report.ddown;
+
+	n64_to_gc_simple(N64report, GCreport);
+}
+
+void N64toGC_buttonMap_OOT(const N64_Report_t& N64report, Gamecube_Report_t& GCreport) { // Converts N64 controller data to Gamecube data. Button Mapping is for VC OOT / GZ Practice ROM. N64 Cbuttons mapped to Gamecube X Y Z because Practice rom uses Gamecube cdown / N64 L to fly.
 
 	GCreport.a = N64report.a;
 	GCreport.b = N64report.b;
@@ -232,10 +278,13 @@ void convertToGC_OOT(const N64_Report_t& N64report, Gamecube_Report_t& GCreport)
 	GCreport.dup = N64report.dup;
 	GCreport.ddown = N64report.ddown;
 
-  invert_vc_n64(&N64report.xAxis, &GCreport.xAxis);
+	if(settings.ess_map)
+  	invert_vc_n64(&N64report.xAxis, &GCreport.xAxis);
+	else
+		n64_to_gc_simple(N64report, GCreport);
 }
 
-void convertToGC_Yoshi(const N64_Report_t& N64report, Gamecube_Report_t& GCreport) {
+void N64toGC_buttonMap_Yoshi(const N64_Report_t& N64report, Gamecube_Report_t& GCreport) {
 
 	GCreport.a = N64report.a;
 	GCreport.b = N64report.b;
@@ -252,19 +301,9 @@ void convertToGC_Yoshi(const N64_Report_t& N64report, Gamecube_Report_t& GCrepor
 	GCreport.dup = N64report.cup;
 	GCreport.ddown = N64report.cdown;
 
-	// Scale and convert N64 analog stick to work with Yoshi Story menu and gameplay. Does not contain an ESS map at this point. Just simple scaling.
-	GCreport.xAxis = N64report.xAxis*1.2;
-	GCreport.yAxis = N64report.yAxis*1.2;
-  GCreport.xAxis+=127;
-  GCreport.yAxis+=127;
+	if (settings.ess_map)
+		n64_to_gc_yoshi(N64report, GCreport);
+	else
+		n64_to_gc_simple(N64report, GCreport);
 
-  if (GCreport.xAxis > 255)
-  	GCreport.xAxis = 255;
-  else if (GCreport.xAxis < 0)
-  	GCreport.xAxis =0;
-
-  if (GCreport.yAxis > 255)
-  	GCreport.yAxis = 255;
-  else if (GCreport.yAxis < 0)
-  	GCreport.yAxis =0;
 }
