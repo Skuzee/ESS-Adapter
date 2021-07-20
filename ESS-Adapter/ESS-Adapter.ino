@@ -20,8 +20,8 @@
 
 //Options
 #define INPUT_DISPLAY // - works on 32u4, needs newest compiled version of NintendoSpy (not the old release from 2014).
-#define CONT_PIN 4  // Controller DATA Pin: 4 yellow, 6 master
-#define CONS_PIN 2  // Console DATA Pin: 2 yellow, 8 master
+#define CONT_PIN 6  // Controller DATA Pin: 4 yellow, 6 master
+#define CONS_PIN 8  // Console DATA Pin: 2 yellow, 8 master
 #define TRIGGER_THRESHOLD 100 // Makes the L and R triggers act like Gamecube version of OOT. range of sensitivity from 0 to 255. 0 being most sensitive. My controller has a range of ~30 to 240. Comment out to disable.
 //#define DEBUG
 
@@ -45,15 +45,7 @@ void setup() {
   Serial.begin(115200);
 	loadSettings();
 
-	pinMode(LED1_PIN_R, OUTPUT);
-	pinMode(LED1_PIN_G, OUTPUT);
-	pinMode(LED1_PIN_B, OUTPUT);
-	pinMode(LED2_PIN_R, OUTPUT);
-	pinMode(LED2_PIN_G, OUTPUT);
-	pinMode(LED2_PIN_B, OUTPUT);
-
-	IndicatorLights(1,settings.game_selection);
-	IndicatorLights(2,settings.ess_map);
+	initilizeStatusLights();
 
 #ifdef DEBUG
   initializeDebug();

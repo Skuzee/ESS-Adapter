@@ -1,39 +1,40 @@
 ﻿# Introduction
-This adapter modifies analog stick input values. For use with Legend of Zelda: Ocarina of Time. 
-Check out the other version for n64 controller support!(https://github.com/Skuzee/ESS-Adapter/tree/n64-dev)
-There is also an input display function, but it only works with Atmega 32u4 boards and the latest compiled version of NintendoSpy.
+This adapter modifies analog stick input values. For use with Legend of Zelda: Ocarina of Time.
+This version is for Gamecube controllers!  I have a dev version that supports N64 controllers here:
+[N64-Dev](https://github.com/Skuzee/ESS-Adapter/tree/n64-dev)
 
 ## About
-Ocarina of Time (OOT) on Gamecube and Wii run on Nintendo’s emulator called Virtual Console (VC). VC maps the Gamecube controller values to certain in-game values. The algorithm poorly recreates the feel of the N64 version of OOT. This ESS-Adapter interprets controller input and scales/maps it to compensate for the VC map. The end result is hopefully an analog stick with a more traditional feel. 
-This mapping is specific to OOT only, and should work with GZ The Practice Rom.
- 
+Ocarina of Time (OOT) on Gamecube (GC) and Wii run on Nintendo’s emulator called Virtual Console (VC). VC maps the GC controller values to certain in-game values. The algorithm poorly recreates the feel of the N64 version of OOT. This ESS-Adapter interprets controller input and scales/maps it to compensate for the VC map. The end result is hopefully an analog stick with a more traditional feel.
+
 ## Usage & Limitations
-Currently this code only works with 16MHz Atmel AVR boards due to some of the supporting libraries having AVR specific assembly code. 
-There are some limitations on how some boards can be powered directly from the Wii. Failure to use caution may damage your Wii or PC USB port!
-I suggest the Sparkfun Pro Micro 5v 16MHz (or a clone). 
+Currently this code only works with 16MHz Atmel AVR boards due to some of the supporting libraries having AVR specific assembly code.
 
 ## Wiring
-![Wiring](https://raw.githubusercontent.com/Skuzee/ESS-Adapter/master/GC-Schematic.png "Basic Pro Micro Schematic")
+![alt text](https://raw.githubusercontent.com/Skuzee/ESS-Adapter/master/ESS-Adapter-Schematic.png " Logo Title Text 1")
+note 1: There are too many variations for me to correctly suggest how to hook power to the arduino directly from the Wii.
+each Arduino has different mosfets/diodes/regulators/wiring. The absolute SAFEST way to power your arduino is from USB only!
+That means using a short usb cord to one of the wii usb ports, or to your PC (for use with the input display function.)
+Alternativly, you could wire the 5v wire from the controller cable to the VIN or 5v pin of your arduino...
+IF YOU DO THAT THEN YOU CANT PLUG IN USB AND WII AT THE SAME TIME!!!! You could always cut the 5v wire in your usb cable if you wanted to use the input display option while powering it from the wii.
+I'm really sorry this is how it is.
+I've been researching a simple way to fix this issue, but it's not as easy as it seems.
 
-There are too many variations for me to correctly suggest how to hook power to the Arduino directly from the Wii for each type. 
-Each Arduino/variant has different mosfets/diodes/regulators/wiring; it is not always safe to power the board from the Wii and the USB simultaniously. 
-The absolute SAFEST way to power your Arduino is from USB only!
-That means using a short USB cord to one of the Wii USB ports, or to your PC (for use with the input display function.)
-Just make sure that whichever board you choose, that you take precautions to avoid accidentally powering it from the Wii and USB power at the same time. Some boards do not have built in protection and it could damage the board, Wii, or your PC!
-This can usually be prevented with a step-up booster board, diodes, relays, or other wiring, but methods may vary. 
+The following wiring information will reference Nintendo's Gamecube coloring scheme!
+Be warned, most gamecube extension cables are different.
 
--Arduino UNO: The safest way to power would be either from a USB cable only (connected to the Wii or computer) OR from the Wii 5v wire using a step-up converter to the barrel jack. (The power protection diode does not protect the VIN pin, so if you use the VIN pin, use an external diode to prevent USB voltage from back-feeding into the Wii.)
--Arduino Nano: Power the board from the Wii 5v wire through a Schottky diode to the 5v pin (not the VIN pin)
--Sparkfun Pro Micro 5v: Power from the Wii 5v wire through a Schottky diode to the VCC pin (not the RAW pin). Make sure PCB jumper J1 is not soldered closed.
-
-![Jumper J1](https://raw.githubusercontent.com/Skuzee/ESS-Adapter/master/JumperJ1.jpg "Jumper J1")
-
+|Color | Use | Notes|
+|--- | --- | ---|
+|Red | Data 3.3v | |
+|Green | Ground | |
+|White | Ground | (Shown as Grey in schematic) |
+|Blue | 3.3v Supply | |
+|Yellow | 5v Supply | |
+|Black | Shielding | (May not be present on some cables) |
 
  ### Parts & Tools
  At a minimum you'll need:
-- A 16MHz Atmel AVR Arduino/Clone. I suggest a sparkfun Pro Micro or similar 32u4 clone with USB port.
-- A 740ohm Resistor (500ohm-1000ohm would work in a pinch.)
-- A Schottky diode. (anything 10v 500mA would work fine. THT style.)
+- A 16MHz Atmel AVR Arduino/Clone.
+- A 750ohm Resistor (500ohm-1000ohm would work in a pinch.)
 - A soldering iron.
 - Tools to cut and strip wire.
 
@@ -43,12 +44,24 @@ Depending on what components you use, you may want:
 - Small cable ties for strain relief.
 - Prototype PCB/Perf board.
 - Straight and Right Angle pin headers.
-- DuPont female plug crimp terminals & crimping tool.
+- Dupont female plug crimp terminals & crimping tool.
 - Assorted lengths of jumper wire.
-- Kapton tape.
+- Kaptop tape.
 
 ## 3D Printing
- I've designed an enclosure for the Adafruit Trinket Pro, and I'm working on one for the Sparkfun Pro Micro now. Stay tuned for links and info!
- 
+ I've designed an enclosure for the trinket pro, and I'm working on one for the sparkfun pro micro now. Stay tuned for links and info!
+
 ## Community
 Join our [Ocarina of Time Speedrunning Discord](https://discord.gg/EYU785K) to chat and ask any questions: Contact Angst in the #adapters-and-inputdisplays channel.
+
+## Changelog
+
+- added single menu navigation with n64 or gc controller
+- added hotkey to reset n64 controller connection to access settings menu
+- factory settings burn to eeprom and load on start.
+- factory setting reset.
+- added indicator lights for optional game/ess indication.
+- fixed bug: loss of serial connection would fill serial buffer and halt program. added a "tryPrint" that only prints to the serial buffer if it can fit. Having issues with missing debug data and printing settings to serial because the characters fill the buffer too fast. Possible fix is having an additional ring buffer that's larger than 64bytes to send data without halting program.
+- expanded settings to allow 8 games and 8 ess map options. not all implemented.
+- added generic n64 button map and a yoshi story map because my friend wanted it. <3
+-  
