@@ -13,15 +13,15 @@
 	Make sure the Controller is still connected: insuring the following:
 	 -5v supply from Console --> 5v to Controller (Rumble Motor)
 	 -3.3v supply from Console --> 3.3v wire to Controller
-	 -Grounds from Console --> Grounds to Controller
+	 -Grounds frFom Console --> Grounds to Controller
 
 	 If your cable has a braided metal shieding, don't connect it to anything.
 */
 
 //Options
 #define INPUT_DISPLAY // - works on 32u4, needs newest compiled version of NintendoSpy (not the old release from 2014).
-#define CONT_PIN 6  // Controller DATA Pin: 4 dev1, 6 master
-#define CONS_PIN 8  // Console DATA Pin: 2 dev1, 8 master
+#define CONT_PIN 4  // Controller DATA Pin: 4 yellow, 6 master
+#define CONS_PIN 2  // Console DATA Pin: 2 yellow, 8 master
 #define TRIGGER_THRESHOLD 100 // Makes the L and R triggers act like Gamecube version of OOT. range of sensitivity from 0 to 255. 0 being most sensitive. My controller has a range of ~30 to 240. Comment out to disable.
 //#define DEBUG
 
@@ -44,6 +44,16 @@ Gamecube_Data_t data = defaultGamecubeData; // initilize Gamecube data. Default 
 void setup() {
   Serial.begin(115200);
 	loadSettings();
+
+	pinMode(LED1_PIN_R, OUTPUT);
+	pinMode(LED1_PIN_G, OUTPUT);
+	pinMode(LED1_PIN_B, OUTPUT);
+	pinMode(LED2_PIN_R, OUTPUT);
+	pinMode(LED2_PIN_G, OUTPUT);
+	pinMode(LED2_PIN_B, OUTPUT);
+
+	IndicatorLights(1,settings.game_selection);
+	IndicatorLights(2,settings.ess_map);
 
 #ifdef DEBUG
   initializeDebug();
@@ -75,8 +85,8 @@ uint8_t checkConnection() { // tests connection and gets device ID. returns Devi
   connectionStatus.device = 0; // reset device ID
 
   n64_init(CONT_PIN, &connectionStatus); // initilize controller to update device ID
-  Serial.print("Searching... Device ID:");
-  Serial.println(connectionStatus.device);
+  tryPrint("Searching... Device ID:");
+  tryPrintln(String(connectionStatus.device));
 	delay(500);
 
 	return char(connectionStatus.device);
@@ -98,7 +108,7 @@ uint8_t GCloop() { // Wii vc version of OOT updates controller twice every ~16.6
   delayRead(14);
 
 	if (!GCcontroller.read()) { // failed read: increase failedReadCounter
-		Serial.println("Failed to read GC controller:");
+		tryPrintln("Failed to read GC controller:");
 		firstRead = 1; // if it fails to read, assume next successful read will be the first.
 	}
 	else {
@@ -120,7 +130,7 @@ uint8_t GCloop() { // Wii vc version of OOT updates controller twice every ~16.6
 
   normalize_origin(&data.report.xAxis, &data.origin.inititalData.xAxis);
 
-	if(settings.ess_map == 1 && settings.game_selection == 1)
+	if(settings.ess_map == 1 && settings.game_selection == 0) // if OOT and ESS on:
   	invert_vc_gc(&data.report.xAxis);
 
 
@@ -137,7 +147,7 @@ uint8_t N64loop() { // Wii vc version of OOT updates controller twice every ~16.
   delayRead(14);
 
 	if (!N64controller.read()) {
-		Serial.println("Failed to read N64 controller:");
+		tryPrintln("Failed to read N64 controller:");
 		firstRead = 1; // if it fails to read, assume next successful read will be the first.
 	}
 	else {
@@ -148,12 +158,12 @@ uint8_t N64loop() { // Wii vc version of OOT updates controller twice every ~16.
 		else {
 			switch(settings.game_selection) {
 
-	      case 0:
-				N64toGC_buttonMap_Yoshi(N64controller.getReport(), data.report);
+				case 0:
+				N64toGC_buttonMap_OOT(N64controller.getReport(), data.report);
 				break;
 
-				case 1:
-				N64toGC_buttonMap_OOT(N64controller.getReport(), data.report);
+	      case 1:
+				N64toGC_buttonMap_Yoshi(N64controller.getReport(), data.report);
 				break;
 
 				default:

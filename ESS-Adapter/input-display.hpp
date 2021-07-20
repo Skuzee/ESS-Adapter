@@ -15,3 +15,5 @@ void writeToUSB_BIT(Gamecube_Report_t& GC_report);
 void tryPrint(String input);
 
 void tryPrintln(String input);
+
+void checkSerialBufferFull();

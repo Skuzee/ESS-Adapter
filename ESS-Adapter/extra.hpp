@@ -11,6 +11,13 @@
 #define DEBUG_WRITE 10
 #define DEBUG_GND 9
 
+#define LED1_PIN_R 10
+#define LED1_PIN_G 16
+#define LED1_PIN_B 14
+#define LED2_PIN_R 15
+#define LED2_PIN_G 18
+#define LED2_PIN_B 19
+
 typedef struct {
 	uint8_t input_display_enabled : 1;
 	uint8_t game_selection : 3;
@@ -36,4 +43,6 @@ void printSetting();
 
 void initializeDebug();
 
-bool makeMotorVibrate(uint8_t timePeriod);
+void initilizeStatusLights();
+
+void IndicatorLights(uint8_t LEDNumber, uint8_t LEDcolor);

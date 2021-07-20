@@ -1,6 +1,7 @@
 //extra.cpp
 
 #include "extra.hpp"
+#include "input-display.hpp"
 #include <EEPROM.h>
 
 EEPROM_settings settings;
@@ -25,12 +26,15 @@ uint8_t enterSettingsMenuN64Controller(const N64_Report_t& N64report) {
 
 uint8_t changeSettings(Gamecube_Report_t& GCreport) { // read the initial buttons of the controller and set EEPROM accordingly.
 
+	IndicatorLights(1,settings.game_selection);
+	IndicatorLights(2,settings.ess_map);
+
 	if(GCreport.l && GCreport.r) {
 
 		if(GCreport.z) { // Press Z to reset settings to default.
 			EEPROM.update(0,!EEPROM.read(0));
-			Serial.println(".");
-			Serial.println(EEPROM.read(0) ? "Restoring Factory Settings... Press Z to undo." : "Factory Reset Canceled.");
+			tryPrintln(".");
+			tryPrintln(EEPROM.read(0) ? "Restore Factory Settings. Press Z to undo." : "Reset Canceled.");
 			delay(500);
 		}
 
@@ -39,20 +43,20 @@ uint8_t changeSettings(Gamecube_Report_t& GCreport) { // read the initial button
 			settings.game_selection += GCreport.dright - GCreport.dleft + 3;
 			settings.game_selection %= 3;
 
-			Serial.println("");
+			tryPrintln("");
 
 			switch(settings.game_selection) {
 
 				case 0:
-				Serial.println("Game: Yoshi Story.");
+				tryPrintln("OOT.");
 				break;
 
 				case 1:
-				Serial.println("Game: OOT.");
+				tryPrintln("Yoshi Story.");
 				break;
 
 				case 2:
-				Serial.println("Simple Button Map: No ESS");
+				tryPrintln("Simple Map");
 				break;
 			}
 
@@ -64,20 +68,20 @@ uint8_t changeSettings(Gamecube_Report_t& GCreport) { // read the initial button
 			settings.ess_map += GCreport.dup - GCreport.ddown + 3;
 			settings.ess_map %= 3;
 
-			Serial.println("");
+			tryPrintln("");
 
 			switch(settings.ess_map) {
 
 				case 0:
-				Serial.println("ESS Map: OFF/BYPASS.");
+				tryPrintln("ESS: OFF.");
 				break;
 
 				case 1:
-				Serial.println("ESS Map: ON.");
+				tryPrintln("ESS: ON.");
 				break;
 
 				case 2:
-				Serial.println("ESS Map: 3rd Option NO USE.");
+				tryPrintln("ESS: NO USE.");
 				break;
 			}
 
@@ -86,29 +90,29 @@ uint8_t changeSettings(Gamecube_Report_t& GCreport) { // read the initial button
 
 		if(GCreport.a) { // Input Display Toggle.
 			settings.input_display_enabled = !settings.input_display_enabled;
-			Serial.println("");
-			Serial.print("Input Display ");
-      Serial.println(settings.input_display_enabled ? "Enabled" : "Disabled");
+			tryPrintln("");
+			tryPrint("Input Display: ");
+      tryPrintln(settings.input_display_enabled ? "ON" : "OFF");
 			delay(500);
 		}
 
 		if(GCreport.b) {  // 14ms Read Delay Toggle. Enabled = less controller input lag. Disable if there is connection issues. Game Dependant.
 			settings.read_delay_enabled = !settings.read_delay_enabled;
-			Serial.println("");
-			Serial.print("14ms Read Delay ");
-			Serial.println(settings.read_delay_enabled ? "Enabled" : "Disabled");
+			tryPrintln("");
+			tryPrint("Read Delay: ");
+			tryPrintln(settings.read_delay_enabled ? "ON" : "OFF");
 			delay(500);
 		}
 
-		Serial.print(".");
+		tryPrint(".");
 		delay(50);
 
 		return 1; //if settings are being changed, continue to loop.
 	}
 	else {
 		EEPROM.put(1, settings); // store any changed settings.
-		Serial.println();
-		Serial.println("Any Changes Have Been Saved.");
+		tryPrintln("");
+		tryPrintln("Changes Saved.");
 		loadSettings(); // check to see if eeprom was factory reset.
 
 		return 0; // return 0, read controller normally now.
@@ -120,14 +124,12 @@ void loadSettings() {
 		settings = {1, 0, 0, 1};
 		EEPROM.put(1, settings);
 		EEPROM.update(0,0);
-		delay(5000);
-		Serial.println();
-		Serial.println("Factory Settings burned to EEPROM");
+		delay(2000);
+		tryPrintln("");
+		tryPrintln("Settings burned to EEPROM");
 	}
 	else {
 		EEPROM.get(1, settings);
-		Serial.println();
-		Serial.println("Settings loaded from EEPROM");
 	}
 
 	printSetting();
@@ -135,49 +137,46 @@ void loadSettings() {
 
 void printSetting() {
 
-	Serial.println(EEPROM.read(0) ? "EEPROM is Unlocked" : "EEPROM is locked");
-		Serial.println("EEPROM settings:");
+	tryPrint("Input Display: ");
+		tryPrintln(settings.input_display_enabled ? "ON" : "OFF");
 
-	Serial.print("Input Display:   ");
-		Serial.println(settings.input_display_enabled ? "Enabled" : "Disabled");
-
-		Serial.print("ESS Map:         ");
+		tryPrint("ESS: ");
 		switch(settings.ess_map) {
 
 			case 0:
-			Serial.println("OFF/BYPASS");
+			tryPrintln("OFF");
 			break;
 
 			case 1:
-			Serial.println("ON");
+			tryPrintln("ON");
 			break;
 
 			case 2:
-			Serial.println("3rd Option NO USE");
+			tryPrintln("NO USE");
 			break;
 		}
 
-	Serial.print("Game Selection:  ");
+	tryPrint("Game : ");
 		switch(settings.game_selection) {
 
 			case 0:
-			Serial.println("Yoshi Story");
+			tryPrintln("OOT");
 			break;
 
 			case 1:
-			Serial.println("OOT");
+			tryPrintln("Yoshi Story");
 			break;
 
 			case 2:
-			Serial.println("Simple Button Map: No ESS");
+			tryPrintln("Simple Map");
 			break;
 		}
 
-	Serial.print("14ms Read Delay: ");
-		Serial.println(settings.read_delay_enabled ? "Enabled" : "Disabled");
+	tryPrint("Read Delay: ");
+		tryPrintln(settings.read_delay_enabled ? "ON" : "OFF");
 }
 
-  void initializeDebug() {
+void initializeDebug() {
     pinMode(DEBUG_READ, OUTPUT);
     pinMode(DEBUG_ESS, OUTPUT);
     pinMode(DEBUG_INPUT, OUTPUT);
@@ -186,23 +185,62 @@ void printSetting() {
     digitalWrite(DEBUG_GND, LOW);
   }
 
-	bool makeMotorVibrate(uint8_t timePeriod) {
+void initilizeStatusLights() {
+	pinMode(LED1_PIN_R, OUTPUT);
+	pinMode(LED1_PIN_G, OUTPUT);
+	pinMode(LED1_PIN_B, OUTPUT);
+	pinMode(LED2_PIN_R, OUTPUT);
+	pinMode(LED2_PIN_G, OUTPUT);
+	pinMode(LED2_PIN_B, OUTPUT);
 
-		static unsigned long startOfRumble;
-		static uint8_t timePeriodSave;
-		static bool motorEnabled = false;
+	IndicatorLights(1,settings.game_selection);
+	IndicatorLights(2,settings.ess_map);
+}
 
-		if (!motorEnabled && timePeriod) {
-			motorEnabled = true;
-			startOfRumble = millis();
-		  timePeriodSave = timePeriod;
-			Serial.print("ON");
+void IndicatorLights(uint8_t LEDNumber, uint8_t LEDcolor) {
+
+	if (LEDNumber == 1) {
+		digitalWrite(LED1_PIN_R,HIGH);
+		digitalWrite(LED1_PIN_G,HIGH);
+		digitalWrite(LED1_PIN_B,HIGH);
+
+		switch(LEDcolor) {
+			case 0:
+			digitalWrite(LED1_PIN_R,LOW);
+			break;
+
+			case 1:
+			digitalWrite(LED1_PIN_G,LOW);
+			break;
+
+			case 2:
+			digitalWrite(LED1_PIN_B,LOW);
+			break;
 		}
+	} else if (LEDNumber == 2) {
+		digitalWrite(LED2_PIN_R,HIGH);
+		digitalWrite(LED2_PIN_G,HIGH);
+		digitalWrite(LED2_PIN_B,HIGH);
 
-		if (millis() - startOfRumble > timePeriodSave && motorEnabled) {
-			motorEnabled = false;
-			Serial.print("OFF");
+		switch(LEDcolor) {
+			case 0:
+			digitalWrite(LED2_PIN_R,LOW);
+			break;
+
+			case 1:
+			digitalWrite(LED2_PIN_G,LOW);
+			break;
+
+			case 2:
+			digitalWrite(LED2_PIN_B,LOW);
+			break;
 		}
-
-		return motorEnabled;
-	}
+	} else {
+		digitalWrite(LED1_PIN_R,HIGH);
+		digitalWrite(LED1_PIN_G,HIGH);
+		digitalWrite(LED1_PIN_B,HIGH);
+		digitalWrite(LED2_PIN_R,HIGH);
+		digitalWrite(LED2_PIN_G,HIGH);
+		digitalWrite(LED2_PIN_B,HIGH);
+		}
+}
