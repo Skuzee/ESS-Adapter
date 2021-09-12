@@ -13,7 +13,7 @@ void writeToUSB_BYTE(Gamecube_Data_t& data) {
   }
 }
 
-void writeToUSB_BIT(Gamecube_Report_t &GCreport) { // this is probably too slow to work. 8 times slower than writeToUSB_BYTE.
+void writeToUSB_BIT(Gamecube_Data_t& data) { // this is probably too slow to work. 8 times slower than writeToUSB_BYTE.
   if (Serial.availableForWrite() >= 10 && settings.input_display_enabled) { // Only write to serial data buffer if it's not full. Disconnecting Arduino Serial Monitor makes serial data buffer fill and halt program; this prevents that.
     noInterrupts();
 
@@ -21,7 +21,7 @@ void writeToUSB_BIT(Gamecube_Report_t &GCreport) { // this is probably too slow 
 
 	    for (uint8_t bitCounter = 0; bitCounter < 8; bitCounter++) {
 	      //Masks off one bit at a time and sends an ascii 1 or 0 to serial console.
-	      Serial.write(GCreport.raw8[byteCounter] & (0x80 >> bitCounter) ? ASCII_1 : ASCII_0);
+	      Serial.write(data.report.raw8[byteCounter] & (0x80 >> bitCounter) ? ASCII_1 : ASCII_0);
 	    }
 	  }
 	  Serial.write(NEWLINE);
