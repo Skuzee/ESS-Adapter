@@ -1,4 +1,4 @@
-//ESS-Adapter.ino -- dev1
+//ESS-Adapter.ino
 
 /* Visit Github for more information: https://github.com/Skuzee/ESS-Adapter */
 
@@ -22,7 +22,7 @@
 #define INPUT_DISPLAY // - works on 32u4, needs newest compiled version of NintendoSpy (not the old release from 2014).
 #define CONT_PIN 6  // Controller DATA Pin: 4 yellow, 6 master
 #define CONS_PIN 8  // Console DATA Pin: 2 yellow, 8 master
-#define TRIGGER_THRESHOLD 100 // Makes the L and R triggers act like Gamecube version of OOT. range of sensitivity from 0 to 255. 0 being most sensitive. My controller has a range of ~30 to 240. Comment out to disable.
+//#define TRIGGER_THRESHOLD 100 // Makes the L and R triggers act like Gamecube version of OOT. range of sensitivity from 0 to 255. 0 being most sensitive. My controller has a range of ~30 to 240. Comment out to disable.
 //#define DEBUG
 
 //Includes
@@ -35,11 +35,14 @@
 #error "Incorrect Nintendo.h library! Compiling with the incorrect version WILL result in 5 volts being output to your controller/console! (Not good.) Make sure the custom Nintendo library (version 1337) is included in the ESS-Adapter/src folder and try again."
 #endif
 
-CGamecubeController GCcontroller(CONT_PIN); // Sets Gamecube Controller Pin on arduino to read from controller.
-CN64Controller N64controller(CONT_PIN); // Sets N64 Controller Pin on arduino to read from controller.
-CGamecubeConsole console(CONS_PIN); // Sets D8 on arduino to write data to console.
-Gamecube_Data_t data = defaultGamecubeData; // initilize Gamecube data. Default needed for N64 data to convert correctly.
-//extern EEPROM_settings settings;
+// Sets CONT_PIN on arduino to read from controller.
+CGamecubeController GCcontroller(CONT_PIN);
+CN64Controller N64controller(CONT_PIN);
+
+// Sets CONS_PIN on arduino to write data to console.
+CGamecubeConsole console(CONS_PIN);
+Gamecube_Data_t data = defaultGamecubeData; // Initilize Gamecube data. Default needed for N64 data to convert correctly.
+
 
 void setup() {
   Serial.begin(115200);
@@ -77,7 +80,7 @@ uint8_t checkConnection() { // tests connection and gets device ID. returns Devi
   connectionStatus.device = 0; // reset device ID
 
   n64_init(CONT_PIN, &connectionStatus); // initilize controller to update device ID
-  tryPrint("Searching... Device ID:");
+  tryPrint("Searching; ID:");
   tryPrintln(String(connectionStatus.device));
 	delay(500);
 
@@ -100,7 +103,7 @@ uint8_t GCloop() { // Wii vc version of OOT updates controller twice every ~16.6
   delayRead(14);
 
 	if (!GCcontroller.read()) { // failed read: increase failedReadCounter
-		tryPrintln("Failed to read GC controller:");
+		tryPrintln("Failed GC read:");
 		firstRead = 1; // if it fails to read, assume next successful read will be the first.
 	}
 	else {
@@ -139,7 +142,7 @@ uint8_t N64loop() { // Wii vc version of OOT updates controller twice every ~16.
   delayRead(14);
 
 	if (!N64controller.read()) {
-		tryPrintln("Failed to read N64 controller:");
+		tryPrintln("Failed N64 read:");
 		firstRead = 1; // if it fails to read, assume next successful read will be the first.
 	}
 	else {

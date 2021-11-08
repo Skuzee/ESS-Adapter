@@ -8,7 +8,7 @@ EEPROM_settings settings;
 
 void softReset() {
 	asm volatile ("  jmp 0"); // Soft-reset, Assembly command that jumps to the start of the reset vector.
-  }
+}
 
 void analogTriggerToDigitalPress(Gamecube_Report_t& GCreport, uint8_t Threshold) { // Maps analog L and R presses to digital presses. Range of sensitivity from 0 to 255. 0 being most sensitive. My controller has a range of ~30 to 240.
   if (GCreport.left > Threshold)
@@ -34,7 +34,7 @@ uint8_t changeSettings(Gamecube_Report_t& GCreport) { // read the initial button
 		if(GCreport.z) { // Press Z to reset settings to default.
 			EEPROM.update(0,!EEPROM.read(0));
 			tryPrintln(".");
-			tryPrintln(EEPROM.read(0) ? "Restore Factory Settings. Press Z to undo." : "Reset Canceled.");
+			tryPrintln(EEPROM.read(0) ? "Restore Factory Settings. Z to undo." : "Reset Canceled.");
 			delay(500);
 		}
 
@@ -126,7 +126,7 @@ void loadSettings() {
 		EEPROM.update(0,0);
 		delay(2000);
 		tryPrintln("");
-		tryPrintln("Settings burned to EEPROM");
+		tryPrintln("Saved to EEPROM");
 	}
 	else {
 		EEPROM.get(1, settings);
