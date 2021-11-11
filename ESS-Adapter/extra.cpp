@@ -130,7 +130,7 @@ uint8_t changeSettings(Gamecube_Report_t& GCreport) { // read the initial button
 
 void loadSettings() {
   if(EEPROM.read(0)) { // if EEPROM (position 0) == 1, write default settings to EEPROM and 'lock' EEPROM by setting position 0 to 0.
-		settings = {1, 0, 0, 1};
+		settings = {INPUT_DISPLAY_ON, GAME_OOT, ESS_ON, 1};
 		EEPROM.put(1, settings);
 		EEPROM.update(0,0);
 		delay(2000);

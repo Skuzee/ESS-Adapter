@@ -11,14 +11,29 @@ Ocarina of Time (OOT) on Gamecube (GC) and Wii run on Nintendo’s emulator call
 Currently this code only works with 16MHz Atmel AVR boards due to some of the supporting libraries having AVR specific assembly code.
 
 ## Settings Menu Controller Shortcuts
-Connecting the adapter to a computer via usb and opening a serial monitor (like the one in the Arduino IDE) will allow you to view the current settings.
+Connecting the adapter to a computer via usb and opening a serial monitor (like the one in the Arduino IDE) will allow you to view the current settings.  
+Settings are saved in EEPROM and persist through power cycles.  
+Currently when OOT or Yoshi Story  is selected as the active button map, the ESS defaults back to ON. Generic Map does not have ESS functionality and defaults to OFF.  
+The 'factory default' settings are: Game OOT, ESS ON, Input Display ON.
 
-Gamecube Controller: 
+Gamecube Controller:  
 Press and Hold L and R triggers all the way in.  
 Press X Y and Start for ~3 seconds to reset the controller.  
+Keep L and R held while changing settings.  
+- D-pad Left/Right will change between N64 button mappings. Currently There is OOT, Yoshi Story, and a Generic Map.   
+- D-pad Up Enables ESS.  
+- D-pad Down Disables ESS.  
+- A toggles Input Display
+- Pressing Z 
+
+N64 Controller:  
+Press and Hold L and R buttons.  
+~~Mash~~ Press all 4 c buttons at once momentarily.  
 Keep L and R held.  
-D-pad Left/Right will change between N64 button mappings. Currently There is OOT, Yoshi Story, and a Generic Map.  
-D-pad Up/Down will change between ESS options. Currently There is ESS ON and ESS OFF for OOT and Yoshi Story. When OOT/Yoshi game is selected, the ESS defaults to ON. Generic Map does not have ESS functionality.  
+- D-pad Left/Right will change between N64 button mappings. Currently There is OOT, Yoshi Story, and a Generic Map.  
+- D-pad Up Enables ESS.  
+- D-pad Down Disables ESS.  
+- A toggles Input Display
 
 ## Wiring
 Any digital input pins will work. **Make sure you have them set correctly at the top of the .ino file.** Depending on the board and layout sometimes I use different pins, so double check. Pins 10,14,15,16,18,19 are used for optional RGB indicator lights.  
@@ -66,8 +81,19 @@ Depending on what components you use, you may want:
 ## Community
 Join our [Ocarina of Time Speedrunning Discord](https://discord.gg/EYU785K) to chat and ask any questions: Contact Angst#4857 in the #adapters-and-inputdisplays channel.
 
-## Changelog
+## Changelog - Top = New
+
+- Updated readme
+- Removed 3 useless ess setting
+- Changed factory defaults: OOT, ESS ON, Input display ON
+- Read delay always on when OOT is selected. OFF for other games.
+- Renamed 'simple' map to 'generic' map
+- Made settings numbers human readable with defines. 0 = GAME_OOT, etc.
+- Tidy up comments. :3
+- Changing game now defaults ess map to ON (no ess for generic map).
+
 - man so much I lost track.
+
 - added single menu navigation with n64 or gc controller
 - added hotkey to reset n64 controller connection to access settings menu
 - factory settings burn to eeprom and load on start.

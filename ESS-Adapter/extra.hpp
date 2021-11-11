@@ -37,6 +37,9 @@
 #define ESS_OFF 0
 #define ESS_ON 1
 
+#define INPUT_DISPLAY_OFF 0
+#define INPUT_DISPLAY_ON 1
+
 typedef struct {
 	uint8_t input_display_enabled : 1;
 	uint8_t game_selection : 3;
