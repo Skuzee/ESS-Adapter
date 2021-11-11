@@ -67,7 +67,7 @@ void gc_to_n64(uint8_t coords[2]) {
   coords[1] = (coords[1] * scale + 16774000) >> 24;
 }
 
-void n64_to_gc_simple(const N64_Report_t& N64report, Gamecube_Report_t& GCreport) { // Converts N64 analog stick coordinates to Gamecube analog stick coordinates
+void n64_to_gc_generic(const N64_Report_t& N64report, Gamecube_Report_t& GCreport) { // Converts N64 analog stick coordinates to Gamecube analog stick coordinates
 	GCreport.xAxis = N64report.xAxis+128;
 	GCreport.yAxis = N64report.yAxis+128;
 }
@@ -236,7 +236,7 @@ void normalize_origin(uint8_t coords[2], uint8_t origin[2]) {
   }
 }
 
-void N64toGC_buttonMap_Simple(const N64_Report_t& N64report, Gamecube_Report_t& GCreport) { // Converts N64 controller data to Gamecube data. Button Mapping is for VC OOT / GZ Practice ROM. N64 Cbuttons mapped to Gamecube X Y Z because Practice rom uses Gamecube cdown / N64 L to fly.
+void N64toGC_buttonMap_Generic(const N64_Report_t& N64report, Gamecube_Report_t& GCreport) { // Converts N64 controller data to Gamecube data. Button Mapping is for VC OOT / GZ Practice ROM. N64 Cbuttons mapped to Gamecube X Y Z because Practice rom uses Gamecube cdown / N64 L to fly.
 
 	GCreport.a = N64report.a;
 	GCreport.b = N64report.b;
@@ -255,7 +255,7 @@ void N64toGC_buttonMap_Simple(const N64_Report_t& N64report, Gamecube_Report_t& 
 	GCreport.dup = N64report.dup;
 	GCreport.ddown = N64report.ddown;
 
-	n64_to_gc_simple(N64report, GCreport);
+	n64_to_gc_generic(N64report, GCreport);
 }
 
 void N64toGC_buttonMap_OOT(const N64_Report_t& N64report, Gamecube_Report_t& GCreport) { // Converts N64 controller data to Gamecube data. Button Mapping is for VC OOT / GZ Practice ROM. N64 Cbuttons mapped to Gamecube X Y Z because Practice rom uses Gamecube cdown / N64 L to fly.
@@ -278,10 +278,10 @@ void N64toGC_buttonMap_OOT(const N64_Report_t& N64report, Gamecube_Report_t& GCr
 	GCreport.dup = N64report.dup;
 	GCreport.ddown = N64report.ddown;
 
-	if(settings.ess_map)
+	if(settings.ess_map == ESS_ON)
   	invert_vc_n64(&N64report.xAxis, &GCreport.xAxis);
 	else
-		n64_to_gc_simple(N64report, GCreport);
+		n64_to_gc_generic(N64report, GCreport);
 }
 
 void N64toGC_buttonMap_Yoshi(const N64_Report_t& N64report, Gamecube_Report_t& GCreport) {
@@ -301,9 +301,9 @@ void N64toGC_buttonMap_Yoshi(const N64_Report_t& N64report, Gamecube_Report_t& G
 	GCreport.dup = N64report.cup;
 	GCreport.ddown = N64report.cdown;
 
-	if (settings.ess_map)
+	if (settings.ess_map == ESS_ON)
 		n64_to_gc_yoshi(N64report, GCreport);
 	else
-		n64_to_gc_simple(N64report, GCreport);
+		n64_to_gc_generic(N64report, GCreport);
 
 }

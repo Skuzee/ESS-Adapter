@@ -34,7 +34,7 @@ uint8_t changeSettings(Gamecube_Report_t& GCreport) { // read the initial button
 		if(GCreport.z) { // Press Z to reset settings to default.
 			EEPROM.update(0,!EEPROM.read(0));
 			tryPrintln(".");
-			tryPrintln(EEPROM.read(0) ? "Restore Factory Settings. Z to undo." : "Reset Canceled.");
+			tryPrintln(EEPROM.read(0) ? "Restore Factory Settings. Z to undo." : "Reset Cancelled.");
 			delay(500);
 		}
 
@@ -47,41 +47,55 @@ uint8_t changeSettings(Gamecube_Report_t& GCreport) { // read the initial button
 
 			switch(settings.game_selection) {
 
-				case 0:
+				case GAME_OOT:
 				tryPrintln("OOT.");
+				settings.ess_map=ESS_OFF;
 				break;
 
-				case 1:
+				case GAME_YOSHI:
 				tryPrintln("Yoshi Story.");
+				settings.ess_map=ESS_OFF;
 				break;
 
-				case 2:
-				tryPrintln("Simple Map");
+				case GAME_GENERIC:
+				tryPrintln("Generic");
+				settings.ess_map=ESS_OFF;
 				break;
 			}
 
 			delay(500);
 		}
 
-		if(GCreport.dup || GCreport.ddown) { // Cycle n64 game button maps
+		if(GCreport.dup) { // ESS on
 
-			settings.ess_map += GCreport.dup - GCreport.ddown + 3;
-			settings.ess_map %= 3;
-
+			settings.ess_map = ESS_ON;
 			tryPrintln("");
 
 			switch(settings.ess_map) {
 
-				case 0:
+				case ESS_OFF:
 				tryPrintln("ESS: OFF.");
 				break;
 
-				case 1:
+				case ESS_ON:
 				tryPrintln("ESS: ON.");
 				break;
+			}
+		}
 
-				case 2:
-				tryPrintln("ESS: NO USE.");
+		if(GCreport.ddown) { // ESS off
+
+			settings.ess_map = ESS_OFF;
+			tryPrintln("");
+
+			switch(settings.ess_map) {
+
+				case ESS_OFF:
+				tryPrintln("ESS: OFF.");
+				break;
+
+				case ESS_ON:
+				tryPrintln("ESS: ON.");
 				break;
 			}
 
@@ -89,18 +103,13 @@ uint8_t changeSettings(Gamecube_Report_t& GCreport) { // read the initial button
 		}
 
 		if(GCreport.a) { // Input Display Toggle.
+
 			settings.input_display_enabled = !settings.input_display_enabled;
 			tryPrintln("");
+
 			tryPrint("Input Display: ");
       tryPrintln(settings.input_display_enabled ? "ON" : "OFF");
-			delay(500);
-		}
 
-		if(GCreport.b) {  // 14ms Read Delay Toggle. Enabled = less controller input lag. Disable if there is connection issues. Game Dependant.
-			settings.read_delay_enabled = !settings.read_delay_enabled;
-			tryPrintln("");
-			tryPrint("Read Delay: ");
-			tryPrintln(settings.read_delay_enabled ? "ON" : "OFF");
 			delay(500);
 		}
 
@@ -143,47 +152,39 @@ void printSetting() {
 		tryPrint("ESS: ");
 		switch(settings.ess_map) {
 
-			case 0:
+			case ESS_OFF:
 			tryPrintln("OFF");
 			break;
 
-			case 1:
+			case ESS_ON:
 			tryPrintln("ON");
-			break;
-
-			case 2:
-			tryPrintln("NO USE");
 			break;
 		}
 
 	tryPrint("Game : ");
 		switch(settings.game_selection) {
 
-			case 0:
+			case GAME_OOT:
 			tryPrintln("OOT");
 			break;
 
-			case 1:
+			case GAME_YOSHI:
 			tryPrintln("Yoshi Story");
 			break;
 
-			case 2:
-			tryPrintln("Simple Map");
+			case GAME_GENERIC:
+			tryPrintln("Generic");
 			break;
 		}
 
-	tryPrint("Read Delay: ");
-		tryPrintln(settings.read_delay_enabled ? "ON" : "OFF");
 }
 
-void initializeDebug() {
-    pinMode(DEBUG_READ, OUTPUT);
-    pinMode(DEBUG_ESS, OUTPUT);
-    pinMode(DEBUG_INPUT, OUTPUT);
-    pinMode(DEBUG_WRITE, OUTPUT);
-    pinMode(DEBUG_GND, OUTPUT);
-    digitalWrite(DEBUG_GND, LOW);
-  }
+// void initializeDebug() {
+//     pinMode(DEBUG_READ, OUTPUT);
+//     pinMode(DEBUG_ESS, OUTPUT);
+//     pinMode(DEBUG_INPUT, OUTPUT);
+//     pinMode(DEBUG_WRITE, OUTPUT);
+//   }
 
 void initilizeStatusLights() {
 	pinMode(LED1_PIN_R, OUTPUT);
@@ -195,52 +196,54 @@ void initilizeStatusLights() {
 
 	IndicatorLights(1,settings.game_selection);
 	IndicatorLights(2,settings.ess_map);
+
 }
 
+// Red = 0, Green = 1, Blue = 2
 void IndicatorLights(uint8_t LEDNumber, uint8_t LEDcolor) {
 
-	if (LEDNumber == 1) {
-		digitalWrite(LED1_PIN_R,HIGH);
-		digitalWrite(LED1_PIN_G,HIGH);
-		digitalWrite(LED1_PIN_B,HIGH);
+	if (LEDNumber == 1) { // Set LED for Game.
+		digitalWrite(LED1_PIN_R,LED_OFF);
+		digitalWrite(LED1_PIN_G,LED_OFF);
+		digitalWrite(LED1_PIN_B,LED_OFF);
 
 		switch(LEDcolor) {
-			case 0:
-			digitalWrite(LED1_PIN_R,LOW);
+			case GAME_OOT:
+			digitalWrite(LED1_PIN_R,LED_ON);
 			break;
 
-			case 1:
-			digitalWrite(LED1_PIN_G,LOW);
+			case GAME_YOSHI:
+			digitalWrite(LED1_PIN_G,LED_ON);
 			break;
 
-			case 2:
-			digitalWrite(LED1_PIN_B,LOW);
+			case GAME_GENERIC:
+			digitalWrite(LED1_PIN_B,LED_ON);
 			break;
 		}
-	} else if (LEDNumber == 2) {
-		digitalWrite(LED2_PIN_R,HIGH);
-		digitalWrite(LED2_PIN_G,HIGH);
-		digitalWrite(LED2_PIN_B,HIGH);
+	} else if (LEDNumber == 2) { // Set LED for ESS setting.
+		digitalWrite(LED2_PIN_R,LED_OFF);
+		digitalWrite(LED2_PIN_G,LED_OFF);
+		digitalWrite(LED2_PIN_B,LED_OFF);
 
 		switch(LEDcolor) {
-			case 0:
-			digitalWrite(LED2_PIN_R,LOW);
+			case GAME_OOT:
+			digitalWrite(LED2_PIN_R,LED_ON);
 			break;
 
-			case 1:
-			digitalWrite(LED2_PIN_G,LOW);
+			case GAME_YOSHI:
+			digitalWrite(LED2_PIN_G,LED_ON);
 			break;
 
-			case 2:
-			digitalWrite(LED2_PIN_B,LOW);
+			case GAME_GENERIC:
+			digitalWrite(LED2_PIN_B,LED_ON);
 			break;
 		}
 	} else {
-		digitalWrite(LED1_PIN_R,HIGH);
-		digitalWrite(LED1_PIN_G,HIGH);
-		digitalWrite(LED1_PIN_B,HIGH);
-		digitalWrite(LED2_PIN_R,HIGH);
-		digitalWrite(LED2_PIN_G,HIGH);
-		digitalWrite(LED2_PIN_B,HIGH);
+		digitalWrite(LED1_PIN_R,LED_OFF);
+		digitalWrite(LED1_PIN_G,LED_OFF);
+		digitalWrite(LED1_PIN_B,LED_OFF);
+		digitalWrite(LED2_PIN_R,LED_OFF);
+		digitalWrite(LED2_PIN_G,LED_OFF);
+		digitalWrite(LED2_PIN_B,LED_OFF);
 		}
 }

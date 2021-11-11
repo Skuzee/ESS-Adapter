@@ -13,8 +13,8 @@ void writeToUSB_BYTE(Gamecube_Data_t& data) {
   }
 }
 
-void writeToUSB_BIT(Gamecube_Report_t &GCreport) { // this is probably too slow to work. 8 times slower than writeToUSB_BYTE.
-  if (Serial.availableForWrite() >= 10 && settings.input_display_enabled) { // Only write to serial data buffer if it's not full. Disconnecting Arduino Serial Monitor makes serial data buffer fill and halt program; this prevents that.
+void writeToUSB_BIT(Gamecube_Report_t &GCreport) { // Sending the data as ASCII would allow for compatibility with old versions of nintendospy. This isn't tested and honestly this is probably too slow to work. 8 times slower than writeToUSB_BYTE. The data sent is 65 bytes long per poll, and the serial buffer is only 64 bytes. If the buffer fills up the program will block until there is room to finish sending the data. ¯\_(ツ)_/¯
+  if (Serial.availableForWrite() >= 10 && settings.input_display_enabled) {
     noInterrupts();
 
 	  for (uint8_t byteCounter = 0; byteCounter < 8; byteCounter++) {

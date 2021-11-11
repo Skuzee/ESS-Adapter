@@ -1,61 +1,72 @@
 ﻿# Introduction
 This adapter modifies analog stick input values. For use with Legend of Zelda: Ocarina of Time.
-This version is for Gamecube controllers!  I have a dev version that supports N64 controllers here:
-[N64-Dev](https://github.com/Skuzee/ESS-Adapter/tree/n64-dev)
+This version supports both N64 and Gamecube controllers. Selection is automatic. Just plug in a controller.
+This version has an input display and works with the newest version of nintendospy (not the 2014 release).
+This adapter also functions as a generic n64 to gamecube controller adapter, although I cannot guarantee that the button mapping will work for all games.
 
 ## About
-Ocarina of Time (OOT) on Gamecube (GC) and Wii run on Nintendo’s emulator called Virtual Console (VC). VC maps the GC controller values to certain in-game values. The algorithm poorly recreates the feel of the N64 version of OOT. This ESS-Adapter interprets controller input and scales/maps it to compensate for the VC map. The end result is hopefully an analog stick with a more traditional feel.
+Ocarina of Time (OOT) on Gamecube (GC) and Wii run on Nintendo’s emulator called Virtual Console (VC). VC maps the GC controller values to certain in-game values. The algorithm poorly recreates the feel of the N64 version of OOT. This ESS-Adapter interprets controller input and scales/maps it to compensate for the VC map. Applying the inverse of the function means that we cancel out the bad VC map and get a result as close as possible to the original N64 analog stick range.
 
 ## Usage & Limitations
 Currently this code only works with 16MHz Atmel AVR boards due to some of the supporting libraries having AVR specific assembly code.
 
+## Settings Menu Controller Shortcuts
+Connecting the adapter to a computer via usb and opening a serial monitor (like the one in the Arduino IDE) will allow you to view the current settings.
+
+Gamecube Controller: 
+Press and Hold L and R triggers all the way in. 
+Press X Y and Start for ~3 seconds to reset the controller. 
+Keep L and R held. 
+D-pad Left/Right will change between N64 button mappings. Currently There is OOT, Yoshi Story, and a Generic Map.
+D-pad Up/Down will change between ESS options. Currently There is ESS ON and ESS OFF for OOT and Yoshi Story. When OOT/Yoshi game is selected, the ESS defaults to ON. Generic Map does not have ESS functionality.
+
 ## Wiring
+Any digital input pins will work. **Make sure you have them set correctly at the top of the .ino file.** Depending on the board and layout sometimes I use different pins, so double check. Pins 10,14,15,16,18,19 are used for optional RGB indicator lights.
+LED 1: Red pin 10, Green pin 16, Blue pin 14
+LED 2: Red pin 15, Green pin 18(A0), Blue pin 19(A1);
+
 ![alt text](https://raw.githubusercontent.com/Skuzee/ESS-Adapter/master/ESS-Adapter-Schematic.png " Logo Title Text 1")
 note 1: There are too many variations for me to correctly suggest how to hook power to the arduino directly from the Wii.
-each Arduino has different mosfets/diodes/regulators/wiring. The absolute SAFEST way to power your arduino is from USB only!
+Each Arduino has different mosfets/diodes/regulators/wiring. The absolute SAFEST way to power your arduino is from USB only!
 That means using a short usb cord to one of the wii usb ports, or to your PC (for use with the input display function.)
-Alternativly, you could wire the 5v wire from the controller cable to the VIN or 5v pin of your arduino...
-IF YOU DO THAT THEN YOU CANT PLUG IN USB AND WII AT THE SAME TIME!!!! You could always cut the 5v wire in your usb cable if you wanted to use the input display option while powering it from the wii.
-I'm really sorry this is how it is.
-I've been researching a simple way to fix this issue, but it's not as easy as it seems.
+If you don't intend to use the input display, or you want it to work without the usb cable, it's possible to connect the 5v wire from the controller cable to the arduino directly. As stated above, every arduino is different and I highly suggest you use a diode and know what you are doing.
+I'm really sorry this is how it is. Maybe just use usb power for anything that's not a sparkfun pro micro.
 
 The following wiring information will reference Nintendo's Gamecube coloring scheme!
 Be warned, most gamecube extension cables are different.
 
 |Color | Use | Notes|
 |--- | --- | ---|
+|Yellow | 5v Supply | |
 |Red | Data 3.3v | |
 |Green | Ground | |
 |White | Ground | (Shown as Grey in schematic) |
-|Blue | 3.3v Supply | |
-|Yellow | 5v Supply | |
 |Black | Shielding | (May not be present on some cables) |
+|Blue | 3.3v Supply | |
 
  ### Parts & Tools
  At a minimum you'll need:
 - A 16MHz Atmel AVR Arduino/Clone.
-- A 750ohm Resistor (500ohm-1000ohm would work in a pinch.)
+- A 750 ohm Resistor (500ohm-1000ohm would work in a pinch.)
 - A soldering iron.
 - Tools to cut and strip wire.
 
 Depending on what components you use, you may want:
-- Heatshrink tubing
+- Heat shrink tubing
 - A project enclosure
 - Small cable ties for strain relief.
 - Prototype PCB/Perf board.
 - Straight and Right Angle pin headers.
 - Dupont female plug crimp terminals & crimping tool.
 - Assorted lengths of jumper wire.
-- Kaptop tape.
-
-## 3D Printing
- I've designed an enclosure for the trinket pro, and I'm working on one for the sparkfun pro micro now. Stay tuned for links and info!
+- Kapton tape.
 
 ## Community
-Join our [Ocarina of Time Speedrunning Discord](https://discord.gg/EYU785K) to chat and ask any questions: Contact Angst in the #adapters-and-inputdisplays channel.
+Join our [Ocarina of Time Speedrunning Discord](https://discord.gg/EYU785K) to chat and ask any questions: Contact Angst#4857 in the #adapters-and-inputdisplays channel.
 
 ## Changelog
 
+- man so much I lost track.
 - added single menu navigation with n64 or gc controller
 - added hotkey to reset n64 controller connection to access settings menu
 - factory settings burn to eeprom and load on start.
@@ -64,4 +75,3 @@ Join our [Ocarina of Time Speedrunning Discord](https://discord.gg/EYU785K) to c
 - fixed bug: loss of serial connection would fill serial buffer and halt program. added a "tryPrint" that only prints to the serial buffer if it can fit. Having issues with missing debug data and printing settings to serial because the characters fill the buffer too fast. Possible fix is having an additional ring buffer that's larger than 64bytes to send data without halting program.
 - expanded settings to allow 8 games and 8 ess map options. not all implemented.
 - added generic n64 button map and a yoshi story map because my friend wanted it. <3
--  
