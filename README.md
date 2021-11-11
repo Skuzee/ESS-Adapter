@@ -32,7 +32,7 @@ If you don't intend to use the input display, or you want it to work without the
 - Arduino UNO: The safest way to power would be either from a USB cable only (connected to the Wii or computer). It's possible to power it from the Wii 5v controller wire using a step-up DC-DC boost converter (~7v-9v) to the barrel jack.
 - Arduino Nano: Power the board from the Wii 5v wire through a Schottky diode to the 5v pin (not the VIN pin) 
 - Sparkfun Pro Micro 5v: Power from the Wii 5v wire through a Schottky diode to the VCC pin (not the RAW pin). Make sure PCB jumper J1 is not soldered closed.
-
+![Jumper J1](https://raw.githubusercontent.com/Skuzee/ESS-Adapter/master/JumperJ1.jpg "Jumper J1")
 ![Wiring](https://raw.githubusercontent.com/Skuzee/ESS-Adapter/master/GC-Schematic.png "Basic Pro Micro Schematic")
 The following wiring information will reference Nintendo's Gamecube coloring scheme!
 Be warned, most gamecube extension cables are different.
