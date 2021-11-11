@@ -22,20 +22,22 @@ D-pad Up/Down will change between ESS options. Currently There is ESS ON and ESS
 
 ## Wiring
 Any digital input pins will work. **Make sure you have them set correctly at the top of the .ino file.** Depending on the board and layout sometimes I use different pins, so double check. Pins 10,14,15,16,18,19 are used for optional RGB indicator lights.
+Both Common Cathode and Common Anode LEDs work and setting can be set in extras.hpp
 LED 1: Red pin 10, Green pin 16, Blue pin 14
 LED 2: Red pin 15, Green pin 18(A0), Blue pin 19(A1);
 
-![alt text](https://raw.githubusercontent.com/Skuzee/ESS-Adapter/master/ESS-Adapter-Schematic.png " Logo Title Text 1")
-note 1: There are too many variations for me to correctly suggest how to hook power to the arduino directly from the Wii.
-Each Arduino has different mosfets/diodes/regulators/wiring. The absolute SAFEST way to power your arduino is from USB only!
-That means using a short usb cord to one of the wii usb ports, or to your PC (for use with the input display function.)
+#### A Note About Powering different Arduinos
+There are too many variations for me to correctly suggest how to hook power to the arduino directly from the Wii.Each Arduino has different mosfets/diodes/regulators/wiring. The absolute SAFEST way to power your arduino is from USB only! That means using a short usb cord to one of the wii usb ports, or to your PC (for use with the input display function.)
 If you don't intend to use the input display, or you want it to work without the usb cable, it's possible to connect the 5v wire from the controller cable to the arduino directly. As stated above, every arduino is different and I highly suggest you use a diode and know what you are doing.
-I'm really sorry this is how it is. Maybe just use usb power for anything that's not a sparkfun pro micro.
+- Arduino UNO: The safest way to power would be either from a USB cable only (connected to the Wii or computer). It's possible to power it from the Wii 5v controller wire using a step-up DC-DC boost converter (~7v-9v) to the barrel jack.
+- Arduino Nano: Power the board from the Wii 5v wire through a Schottky diode to the 5v pin (not the VIN pin) 
+- Sparkfun Pro Micro 5v: Power from the Wii 5v wire through a Schottky diode to the VCC pin (not the RAW pin). Make sure PCB jumper J1 is not soldered closed.
 
+![Wiring](https://raw.githubusercontent.com/Skuzee/ESS-Adapter/master/GC-Schematic.png "Basic Pro Micro Schematic")
 The following wiring information will reference Nintendo's Gamecube coloring scheme!
 Be warned, most gamecube extension cables are different.
 
-|Color | Use | Notes|
+|Nintendo Color | Use | Notes
 |--- | --- | ---|
 |Yellow | 5v Supply | |
 |Red | Data 3.3v | |
@@ -44,7 +46,7 @@ Be warned, most gamecube extension cables are different.
 |Black | Shielding | (May not be present on some cables) |
 |Blue | 3.3v Supply | |
 
- ### Parts & Tools
+## Parts & Tools
  At a minimum you'll need:
 - A 16MHz Atmel AVR Arduino/Clone.
 - A 750 ohm Resistor (500ohm-1000ohm would work in a pinch.)
@@ -65,7 +67,6 @@ Depending on what components you use, you may want:
 Join our [Ocarina of Time Speedrunning Discord](https://discord.gg/EYU785K) to chat and ask any questions: Contact Angst#4857 in the #adapters-and-inputdisplays channel.
 
 ## Changelog
-
 - man so much I lost track.
 - added single menu navigation with n64 or gc controller
 - added hotkey to reset n64 controller connection to access settings menu
