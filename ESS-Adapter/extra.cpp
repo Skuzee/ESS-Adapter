@@ -49,12 +49,12 @@ uint8_t changeSettings(Gamecube_Report_t& GCreport) { // read the initial button
 
 				case GAME_OOT:
 				tryPrintln("OOT.");
-				settings.ess_map=ESS_OFF;
+				settings.ess_map=ESS_ON;
 				break;
 
 				case GAME_YOSHI:
 				tryPrintln("Yoshi Story.");
-				settings.ess_map=ESS_OFF;
+				settings.ess_map=ESS_ON;
 				break;
 
 				case GAME_GENERIC:
@@ -81,6 +81,8 @@ uint8_t changeSettings(Gamecube_Report_t& GCreport) { // read the initial button
 				tryPrintln("ESS: ON.");
 				break;
 			}
+
+			delay(500);
 		}
 
 		if(GCreport.ddown) { // ESS off
@@ -179,12 +181,12 @@ void printSetting() {
 
 }
 
-// void initializeDebug() {
-//     pinMode(DEBUG_READ, OUTPUT);
-//     pinMode(DEBUG_ESS, OUTPUT);
-//     pinMode(DEBUG_INPUT, OUTPUT);
-//     pinMode(DEBUG_WRITE, OUTPUT);
-//   }
+void initializeDebug() {
+    pinMode(DEBUG_READ, OUTPUT);
+    pinMode(DEBUG_ESS, OUTPUT);
+    pinMode(DEBUG_INPUT, OUTPUT);
+    pinMode(DEBUG_WRITE, OUTPUT);
+  }
 
 void initilizeStatusLights() {
 	pinMode(LED1_PIN_R, OUTPUT);

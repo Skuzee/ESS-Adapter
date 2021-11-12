@@ -5,10 +5,10 @@
 #include "src/Nintendo/src/Nintendo.h"
 
 // Define output pins for debug timing with Logic Analyzer.
-// #define DEBUG_READ 15
-// #define DEBUG_ESS 14
-// #define DEBUG_INPUT 16
-// #define DEBUG_WRITE 10
+#define DEBUG_READ 15
+#define DEBUG_ESS 14
+#define DEBUG_INPUT 16
+#define DEBUG_WRITE 10
 
 //LED Indicator pins
 //#define COMMON_ANODE
@@ -63,7 +63,7 @@ void loadSettings();
 
 void printSetting();
 
-// void initializeDebug();
+void initializeDebug();
 
 void initilizeStatusLights();
 

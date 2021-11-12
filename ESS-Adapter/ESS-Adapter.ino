@@ -23,6 +23,8 @@
 #define CONT_PIN 4  // Controller DATA Pin: 4 yellow, 6 master, 3 Dev board
 #define CONS_PIN 2  // Console DATA Pin: 2 yellow, 8 master branch, 2 Dev board
 //#define TRIGGER_THRESHOLD 100 // Makes the L and R triggers act like Gamecube version of OOT. range of sensitivity from 0 to 255. 0 being most sensitive. My controller has a range of ~30 to 240. Comment out to disable.
+#define DEBUG
+
 
 //Includes
 #include "src/Nintendo/src/Nintendo.h"
@@ -46,7 +48,12 @@ Gamecube_Data_t data = defaultGamecubeData; // Initilize Gamecube data. Default 
 void setup() {
   Serial.begin(115200);
 	loadSettings();
-	initilizeStatusLights();
+
+	#ifdef DEBUG
+		initializeDebug();
+	#else
+		initilizeStatusLights();
+	#endif
 }
 
 void loop() {
@@ -82,7 +89,7 @@ uint8_t checkConnection() { // Tests for a connection and gets device ID. return
 	return char(connectionStatus.device);
 }
 
-void delayRead(uint8_t readDelay) { // OOT reads the controller twice every 16ms. The ideal timing is to wait as long as possible to read the controller data, so it's fresh when the console requests it. We wait 14ms every other read cycle. Prevents the arduino from reading the controller data too early and then having to wait 15ms to send it to the wii. Input delay added to controller is between 0.635ms and 1.225ms. (average of 0.930ms).
+void delayRead(uint8_t readDelay) { // OOT reads the controller twice every 16ms. (as in, two reads in quick succession ~1ms apart.) The ideal timing is to wait as long as possible to read the controller data, so it's fresh when the console requests it. We wait 14ms every other read cycle. Prevents the arduino from reading the controller data too early and then having to wait 15ms to send it to the wii. Input delay added to controller is between 0.6ms and 0.9ms. (average of 0.6ms).
 
 	static uint8_t readDelayFlipFlop = 0;
 
@@ -95,9 +102,9 @@ void delayRead(uint8_t readDelay) { // OOT reads the controller twice every 16ms
 uint8_t GCloop() { // Wii vc version of OOT updates controller twice every ~16.68ms (with 1.04ms between the two rapid updates.)
 	static uint8_t firstRead = 1; // 1 if the previous loop failed.
 
-	if (!settings.game_selection == GAME_OOT) // If game is OOT
+	if (settings.game_selection == GAME_OOT) // If game is OOT
   	delayRead(14);
-
+digitalWrite(DEBUG_READ,HIGH); // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	if (!GCcontroller.read()) { // Attempt to read controller.
 		tryPrintln("Failed GC read:");
 		firstRead = 1; // If it fails to read, assume next successful read will be the first.
@@ -109,11 +116,16 @@ uint8_t GCloop() { // Wii vc version of OOT updates controller twice every ~16.6
 			firstRead = changeSettings(data.report); // Loops while settings are being changed.
 		}
 		else {
+digitalWrite(DEBUG_READ,LOW); // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+digitalWrite(DEBUG_INPUT,HIGH); // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
 			#ifdef INPUT_DISPLAY
 				writeToUSB_BYTE(data);
 			#endif
 		}
 	}
+digitalWrite(DEBUG_INPUT,LOW); // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+digitalWrite(DEBUG_ESS,HIGH); // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 #ifdef TRIGGER_THRESHOLD // If defined, makes Gamecube controller triggers act more like GC collectors edition. Analog press instead of having to click them all the way down.
   analogTriggerToDigitalPress(data.report, TRIGGER_THRESHOLD);
@@ -123,17 +135,18 @@ uint8_t GCloop() { // Wii vc version of OOT updates controller twice every ~16.6
 
 	if(settings.ess_map == ESS_ON && settings.game_selection == GAME_OOT) // if OOT and ESS on:
   	invert_vc_gc(&data.report.xAxis);
-
+digitalWrite(DEBUG_ESS,LOW); // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+digitalWrite(DEBUG_WRITE,HIGH); // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
   console.write(data); // Loop waits here until console requests an update.
   GCcontroller.setRumble(data.status.rumble); // Set controller rumble status.
-
+digitalWrite(DEBUG_WRITE,LOW); // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	return GCcontroller.getDevice();
 }
 
 uint8_t N64loop() { // Wii vc version of OOT updates controller twice every ~16.68ms (with 1.04ms between the two rapid updates.)
 	static uint8_t firstRead = 1; // 1 if the previous loop failed.
 
-	if (!settings.game_selection == GAME_OOT) // If game is OOT
+	if (settings.game_selection == GAME_OOT) // If game is OOT
   	delayRead(14);
 
 	if (!N64controller.read()) { // Attempt to read controller.
