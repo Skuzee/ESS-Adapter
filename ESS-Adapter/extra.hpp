@@ -21,13 +21,13 @@
 #define LED2_PIN_B 19 // A1
 
 #ifdef COMMON_ANODE
-	#define LED_ON LOW
-	#define LED_OFF HIGH
+#define LED_ON LOW
+#define LED_OFF HIGH
 #endif
 
 #ifdef COMMON_CATHODE
-	#define LED_ON HIGH
-	#define LED_OFF LOW
+#define LED_ON HIGH
+#define LED_OFF LOW
 #endif
 
 #define GAME_OOT 0
@@ -41,10 +41,10 @@
 #define INPUT_DISPLAY_ON 1
 
 typedef struct {
-	uint8_t input_display_enabled : 1;
-	uint8_t game_selection : 3;
-	uint8_t ess_map : 3;
-	uint8_t unused : 1;
+  uint8_t input_display_enabled : 1;
+  uint8_t game_selection : 3;
+  uint8_t ess_map : 3;
+  uint8_t unused : 1;
 } EEPROM_settings;
 
 extern EEPROM_settings settings;
