@@ -291,14 +291,13 @@ void N64toGC_buttonMap_Yoshi(const N64_Report_t& N64report, Gamecube_Report_t& G
   GCreport.z = N64report.l;
   GCreport.r = N64report.r;
   GCreport.right = N64report.r * 127;
-  GCreport.l = N64report.z;
-  GCreport.left = N64report.z * 127;
+  GCreport.l = N64report.z  || N64report.cpad; // 'z' and all of cpad are throw egg.
+  GCreport.left = (N64report.z || N64report.cpad) * 127;
 
-  // Map N64 cbuttons to Gamecube Dpad
-  GCreport.dleft = N64report.cleft;
-  GCreport.dright = N64report.cright;
-  GCreport.dup = N64report.cup;
-  GCreport.ddown = N64report.cdown;
+  GCreport.dleft = N64report.dleft;
+  GCreport.dright = N64report.dright;
+  GCreport.dup = N64report.dup;
+  GCreport.ddown = N64report.ddown;
 
   if (settings.ess_map == ESS_ON)
     n64_to_gc_yoshi(N64report, GCreport);

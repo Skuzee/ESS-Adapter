@@ -4,6 +4,8 @@
 #include <arduino.h>
 #include "src/Nintendo/src/Nintendo.h"
 
+#define MENU_BUTTON_TIMEOUT 300
+
 // Define output pins for debug timing with Logic Analyzer.
 #define DEBUG_READ 15
 #define DEBUG_ESS 14

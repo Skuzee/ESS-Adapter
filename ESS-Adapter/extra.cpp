@@ -33,7 +33,7 @@ uint8_t changeSettings(Gamecube_Report_t& GCreport) { // read the initial button
       EEPROM.update(0, !EEPROM.read(0));
       tryPrintln(".");
       tryPrintln(EEPROM.read(0) ? "Restore Factory Settings. Z to undo." : "Reset Cancelled.");
-      delay(500);
+      delay(MENU_BUTTON_TIMEOUT);
     }
 
     if (GCreport.dright || GCreport.dleft) { // Cycle n64 game button maps
@@ -57,23 +57,28 @@ uint8_t changeSettings(Gamecube_Report_t& GCreport) { // read the initial button
           settings.ess_map = ESS_OFF;
           break;
       }
-      delay(500);
+      delay(MENU_BUTTON_TIMEOUT);
     }
 
     if (GCreport.dup) { // ESS on
-      settings.ess_map = ESS_ON;
-      tryPrintln("");
+			tryPrintln("");
 
-      switch (settings.ess_map) {
-        case ESS_OFF:
-          tryPrintln("ESS: OFF.");
-          break;
+      if (settings.game_selection == GAME_GENERIC)
+				tryPrintln("No ESS for Generic");
+			else {
+				settings.ess_map = ESS_ON;
 
-        case ESS_ON:
-          tryPrintln("ESS: ON.");
-          break;
-      }
-      delay(500);
+	      switch (settings.ess_map) {
+	        case ESS_OFF:
+	          tryPrintln("ESS: OFF.");
+	          break;
+
+	        case ESS_ON:
+	          tryPrintln("ESS: ON.");
+	          break;
+	      }
+			}
+      delay(MENU_BUTTON_TIMEOUT);
     }
 
     if (GCreport.ddown) { // ESS off
@@ -84,12 +89,12 @@ uint8_t changeSettings(Gamecube_Report_t& GCreport) { // read the initial button
         case ESS_OFF:
           tryPrintln("ESS: OFF.");
           break;
-          
+
         case ESS_ON:
           tryPrintln("ESS: ON.");
           break;
       }
-      delay(500);
+      delay(MENU_BUTTON_TIMEOUT);
     }
 
     if (GCreport.a) { // Input Display Toggle.
@@ -97,7 +102,7 @@ uint8_t changeSettings(Gamecube_Report_t& GCreport) { // read the initial button
       tryPrintln("");
       tryPrint("Input Display: ");
       tryPrintln(settings.input_display_enabled ? "ON" : "OFF");
-      delay(500);
+      delay(MENU_BUTTON_TIMEOUT);
     }
     tryPrint(".");
     delay(50);
@@ -133,7 +138,7 @@ void printSetting() {
   tryPrint("Input Display: ");
   tryPrintln(settings.input_display_enabled ? "ON" : "OFF");
   tryPrint("ESS: ");
-  
+
   switch (settings.ess_map) {
     case ESS_OFF:
       tryPrintln("OFF");
@@ -144,7 +149,7 @@ void printSetting() {
       break;
   }
   tryPrint("Game : ");
-  
+
   switch (settings.game_selection) {
     case GAME_OOT:
       tryPrintln("OOT");
@@ -206,16 +211,12 @@ void IndicatorLights(uint8_t LEDNumber, uint8_t LEDcolor) {
     digitalWrite(LED2_PIN_B, LED_OFF);
 
     switch (LEDcolor) {
-      case GAME_OOT:
+      case ESS_OFF:
         digitalWrite(LED2_PIN_R, LED_ON);
         break;
 
-      case GAME_YOSHI:
+      case ESS_ON:
         digitalWrite(LED2_PIN_G, LED_ON);
-        break;
-
-      case GAME_GENERIC:
-        digitalWrite(LED2_PIN_B, LED_ON);
         break;
     }
   } else {

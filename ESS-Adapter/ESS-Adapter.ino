@@ -23,7 +23,7 @@
 #define CONT_PIN 4  // Controller DATA Pin: 4 yellow, 6 master, 3 Dev board
 #define CONS_PIN 2  // Console DATA Pin: 2 yellow, 8 master branch, 2 Dev board
 //#define TRIGGER_THRESHOLD 100 // Makes the L and R triggers act like Gamecube version of OOT. range of sensitivity from 0 to 255. 0 being most sensitive. My controller has a range of ~30 to 240. Comment out to disable.
-#define DEBUG
+//#define DEBUG // overwrites IndicatorLights and used for data analyzer.
 
 //Includes
 #include "src/Nintendo/src/Nintendo.h"
@@ -59,7 +59,7 @@ void loop() {
   static uint8_t deviceID = 0;
 
   // Need to flush serial buffer if it gets full. else program will halt
-  
+
   switch (deviceID) {
     case 0: // No controller connected.
       deviceID = checkConnection();
@@ -116,7 +116,7 @@ uint8_t GCloop() { // Wii vc version of OOT updates controller twice every ~16.6
       #endif
     }
   }
-  
+
   #ifdef TRIGGER_THRESHOLD // If defined, makes Gamecube controller triggers act more like GC collectors edition. Analog press instead of having to click them all the way down.
     analogTriggerToDigitalPress(data.report, TRIGGER_THRESHOLD);
   #endif
@@ -148,6 +148,7 @@ uint8_t N64loop() { // Wii vc version of OOT updates controller twice every ~16.
     }
     else {
       switch (settings.game_selection) { // Convert N64 data/buttons to GC data/buttons depending on what game/ess setting is selected
+
         case GAME_OOT:
           N64toGC_buttonMap_OOT(N64controller.getReport(), data.report);
           break;
@@ -168,6 +169,6 @@ uint8_t N64loop() { // Wii vc version of OOT updates controller twice every ~16.
 
   console.write(data); // Loop waits here until console requests an update.
   // N64 Rumble motor function???
-  
+
   return N64controller.getDevice();
 }

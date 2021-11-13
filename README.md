@@ -83,6 +83,10 @@ Join our [Ocarina of Time Speedrunning Discord](https://discord.gg/EYU785K) to c
 
 ## Changelog - Top = New
 
+- Adjusted yoshi story button map
+- made menu timing adjustable in MENU_BUTTON_TIMEOUT (prevents accidental button spamming in menu.)
+- Fixed an oopies bug with indicatorLights func.
+
 - Updated readme
 - Removed 3 useless ess setting
 - Changed factory defaults: OOT, ESS ON, Input display ON
