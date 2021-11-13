@@ -4,7 +4,7 @@ This version supports both N64 and Gamecube controllers. Selection is automatic.
 This version has an input display and works with the newest version of nintendospy (not the 2014 release).  
 This adapter also functions as a generic n64 to gamecube controller adapter, although I cannot guarantee that the button mapping will work for all games.  
 
-**Youtube Video Click Here**
+**Youtube Video Click Here**  
 [![Img alt text](https://img.youtube.com/vi/suW19im2Xqk/0.jpg)](https://www.youtube.com/watch?v=suW19im2Xqk)
 
 ## About
