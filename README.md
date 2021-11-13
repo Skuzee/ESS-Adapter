@@ -4,6 +4,14 @@ This version supports both N64 and Gamecube controllers. Selection is automatic.
 This version has an input display and works with the newest version of nintendospy (not the 2014 release).  
 This adapter also functions as a generic n64 to gamecube controller adapter, although I cannot guarantee that the button mapping will work for all games.  
 
+ifdef::env-github[]
+image:https://youtu.be/suW19im2Xqk/maxresdefault.jpg[link=https://youtu.be/suW19im2Xqk]
+endif::[]
+
+ifndef::env-github[]
+video::suW19im2Xqk[youtube]
+endif::[]
+
 ## About
 Ocarina of Time (OOT) on Gamecube (GC) and Wii run on Nintendo’s emulator called Virtual Console (VC). VC maps the GC controller values to certain in-game values. The algorithm poorly recreates the feel of the N64 version of OOT. This ESS-Adapter interprets controller input and scales/maps it to compensate for the VC map. Applying the inverse of the function means that we cancel out the bad VC map and get a result as close as possible to the original N64 analog stick range.  
 
