@@ -27,10 +27,6 @@ THE SOFTWARE.
 // Software version
 #define NINTENDO_VERSION 1337
 
-#if NINTENDO_VERSION != 1337
-#error "Incorrect Nintendo.h library! Compiling with the incorrect version WILL result in 5 volts being output to your controller/console! (Not good.) Make sure the custom Nintendo library (version 1337) is included in the ESS-Adapter/src folder and try again."
-#endif
-
 #include <Arduino.h>
 
 #if (F_CPU != 16000000)

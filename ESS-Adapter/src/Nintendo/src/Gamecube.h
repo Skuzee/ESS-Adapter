@@ -25,7 +25,6 @@ THE SOFTWARE.
 #pragma once
 
 #include <Arduino.h>
-#include "stdbool.h"
 
 //================================================================================
 // Gamecube Definitions

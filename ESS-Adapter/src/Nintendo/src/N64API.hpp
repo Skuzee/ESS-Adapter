@@ -43,7 +43,7 @@ void CN64Controller::reset(void)
 bool CN64Controller::begin(void)
 {
     // Try to init the controller
-    if (!gc_init(pin, &status))
+    if (!n64_init(pin, &status))
     {
         // Reset in any case, as some bytes may have been written.
         reset();
@@ -79,6 +79,7 @@ bool CN64Controller::read(void)
         {
             return false;
         }
+		delayMicroseconds(100);
     }
 
     // Read the controller, abort if it fails.
@@ -154,4 +155,49 @@ N64_Data_t CN64Controller::getData(void)
 // N64 Console API
 //================================================================================
 
-// TODO
+CN64Console::CN64Console(const uint8_t p) : pin(p){
+    // Empty
+}
+
+
+bool CN64Console::write(N64_Data_t &data)
+{
+    // Don't want interrupts getting in the way
+    uint8_t oldSREG = SREG;
+    cli();
+
+    // Write a respond to the N64, depending on what it requests
+    uint8_t ret = n64_write(pin, &data.status, &data.report);
+
+    // Init
+    if(ret == 1)
+    {
+        // Try to answer a following read request
+        ret = n64_write(pin, &data.status, &data.report);
+    }
+
+    // End of time sensitive code
+    SREG = oldSREG;
+
+    // Return error if no reading was possible
+    return false;
+}
+
+
+bool CN64Console::write(CN64Controller &controller)
+{
+    // Cast controller to its protected (friend) data
+    N64_Data_t& data = controller;
+    return write(data);
+}
+
+
+bool CN64Console::write(N64_Report_t &report)
+{
+    // Inititalize status and report with default values
+    N64_Data_t data = defaultN64Data;
+
+    // Copy report into the temporary struct and write to N64
+    memcpy(&data.report, &report, sizeof(data.report));
+    return write(data);
+}
