@@ -4,20 +4,12 @@ This version supports both N64 and Gamecube controllers. Selection is automatic.
 This version has an input display and works with the newest version of nintendospy (not the 2014 release).  
 This adapter also functions as a generic n64 to gamecube controller adapter, although I cannot guarantee that the button mapping will work for all games.  
 
-ifdef::env-github[]
-image:https://youtu.be/suW19im2Xqk/maxresdefault.jpg[link=https://youtu.be/suW19im2Xqk]
-endif::[]
-
-ifndef::env-github[]
-video::suW19im2Xqk[youtube]
-endif::[]
-
 ## About
 Ocarina of Time (OOT) on Gamecube (GC) and Wii run on Nintendo’s emulator called Virtual Console (VC). VC maps the GC controller values to certain in-game values. The algorithm poorly recreates the feel of the N64 version of OOT. This ESS-Adapter interprets controller input and scales/maps it to compensate for the VC map. Applying the inverse of the function means that we cancel out the bad VC map and get a result as close as possible to the original N64 analog stick range.  
 
 By taking the typical Gamecube analog stick values (top left) and applying the inverse of the VC map function (top right), they effectively cancel each other out. We can then do our own scaling and are left with an analog stick map (bottom left) That closely resembles an original n64 controller (bottom right).  
-![ESS-map-graphs.png](https://raw.githubusercontent.com/Skuzee/ESS-Adapter/master/ESS-map-graphs.png "ESS-map-graphs.png")  
-*Because of the nature of the VC map function, some in-game analog stick values are not possible, Hence the slightly jagged appearance of the bottom right graph. We pick the closest value.  *
+![ESS-map-graphs.png](https://raw.githubusercontent.com/Skuzee/ESS-Adapter/dev1/ESS-map-graphs.png "ESS-map-graphs.png")  
+*Because of the nature of the VC map function, some in-game analog stick values are not possible, Hence the slightly jagged appearance of the bottom right graph. We pick the closest value.*
 Unreachable VC analog values:  
 8,13,17,22,25,28,31,34,37,39,42,45,46,49,51,53,55,57,59,61,62,64,66,68,69,71,73,74,76,78,79,80  
 
@@ -50,9 +42,8 @@ Keep L and R held.
 - A toggles Input Display
 - Pressing Z and then exiting the settings menu will reset the settings to "factory default". Press Z again to cancel.
 
-![n64-controller-button-map](https://raw.githubusercontent.com/Skuzee/ESS-Adapter/master/n64-controller-button-map.png "n64-controller-button-map.png")  
-*The n64 generic button map might not be very useful unless maybe you're tying to play a Gamecube game with an N64 controller? (That doesn't need X and Y).  *
-
+![n64-controller-button-map](https://raw.githubusercontent.com/Skuzee/ESS-Adapter/dev1/n64-controller-button-map.png "n64-controller-button-map.png")  
+*The n64 generic button map might not be very useful unless maybe you're tying to play a Gamecube game with an N64 controller? (That doesn't need X and Y).*
 
 ## Wiring
 Any digital input pins will work. **Make sure you have them set correctly at the top of the .ino file.** Depending on the board and layout sometimes I use different pins, so double check. Pins 10,14,15,16,18,19 are used for optional RGB indicator lights.  
