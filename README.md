@@ -9,7 +9,7 @@ Ocarina of Time (OOT) on Gamecube (GC) and Wii run on Nintendo’s emulator call
 
 By taking the typical Gamecube analog stick values (top left) and applying the inverse of the VC map function (top right), they effectively cancel each other out. We can then do our own scaling and are left with an analog stick map (bottom left) That closely resembles an original n64 controller (bottom right).  
 ![ESS-map-graphs.png](https://raw.githubusercontent.com/Skuzee/ESS-Adapter/dev1/ESS-map-graphs.png "ESS-map-graphs.png")  
-Because of the nature of the VC map function, some in-game analog stick values are not possible, Hence the slightly jagged appearance of the bottom right graph. We pick the closest value.
+*Because of the nature of the VC map function, some in-game analog stick values are not possible, Hence the slightly jagged appearance of the bottom right graph. We pick the closest value.  *
 Unreachable VC analog values:  
 8,13,17,22,25,28,31,34,37,39,42,45,46,49,51,53,55,57,59,61,62,64,66,68,69,71,73,74,76,78,79,80  
 
@@ -22,7 +22,7 @@ Settings are saved in EEPROM and persist through power cycles.
 Currently when OOT or Yoshi Story  is selected as the active button map, the ESS defaults back to ON. Generic Map does not have ESS functionality and defaults to OFF.  
 The 'factory default' settings are: Game OOT, ESS ON, Input Display ON.
 
-Gamecube Controller:  
+**Gamecube Controller:**  
 Press and Hold L and R triggers all the way in.  
 Press X Y and Start for ~3 seconds to reset the controller.  
 Keep L and R held while changing settings.  
@@ -32,7 +32,7 @@ Keep L and R held while changing settings.
 - A toggles Input Display
 - Pressing Z and then exiting the settings menu will reset the settings to "factory default". Press Z again to cancel.
 
-N64 Controller:  
+**N64 Controller:**  
 Press and Hold L and R buttons.  
 ~~Mash~~ Press all 4 c buttons at once momentarily.  
 Keep L and R held.  
@@ -42,8 +42,8 @@ Keep L and R held.
 - A toggles Input Display
 - Pressing Z and then exiting the settings menu will reset the settings to "factory default". Press Z again to cancel.
 
-![n64-controller-button-map](https://raw.githubusercontent.com/Skuzee/ESS-Adapter/dev1/n64-controller-button-map.png "n64-controller-button-map.png")
-The n64 generic button map might not be very useful unless maybe you're tying to play a Gamecube game with an N64 controller? (That doesn't need X and Y).  
+![n64-controller-button-map](https://raw.githubusercontent.com/Skuzee/ESS-Adapter/dev1/n64-controller-button-map.png "n64-controller-button-map.png")  
+*The n64 generic button map might not be very useful unless maybe you're tying to play a Gamecube game with an N64 controller? (That doesn't need X and Y).  *
 
 
 ## Wiring
@@ -93,11 +93,11 @@ Depending on what components you use, you may want:
 Join our [Ocarina of Time Speedrunning Discord](https://discord.gg/EYU785K) to chat and ask any questions: Contact Angst#4857 in the #adapters-and-inputdisplays channel.
 
 ## Changelog - Top = New
-
+  
 - Adjusted yoshi story button map
 - made menu timing adjustable in MENU_BUTTON_TIMEOUT (prevents accidental button spamming in menu.)
 - Fixed an oopies bug with indicatorLights func.
-
+  
 - Updated readme
 - Removed 3 useless ess setting
 - Changed factory defaults: OOT, ESS ON, Input display ON
@@ -106,9 +106,9 @@ Join our [Ocarina of Time Speedrunning Discord](https://discord.gg/EYU785K) to c
 - Made settings numbers human readable with defines. 0 = GAME_OOT, etc.
 - Tidy up comments. :3
 - Changing game now defaults ess map to ON (no ess for generic map).
-
+  
 - man so much I lost track.
-
+  
 - added single menu navigation with n64 or gc controller
 - added hotkey to reset n64 controller connection to access settings menu
 - factory settings burn to eeprom and load on start.
