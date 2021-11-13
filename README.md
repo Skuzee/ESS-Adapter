@@ -9,7 +9,7 @@ Ocarina of Time (OOT) on Gamecube (GC) and Wii run on Nintendo’s emulator call
 
 By taking the typical Gamecube analog stick values (top left) and applying the inverse of the VC map function (top right), they effectively cancel each other out. We can then do our own scaling and are left with an analog stick map (bottom left) That closely resembles an original n64 controller (bottom right).  
 ![ESS-map-graphs.png](https://raw.githubusercontent.com/Skuzee/ESS-Adapter/dev1/ESS-map-graphs.png "ESS-map-graphs.png")  
-*Because of the nature of the VC map function, some in-game analog stick values are not possible, Hence the slightly jagged appearance of the bottom right graph. We pick the closest value.  *
+*Because of the nature of the VC map function, some in-game analog stick values are not possible, Hence the slightly jagged appearance of the bottom right graph. We pick the closest value.*
 Unreachable VC analog values:  
 8,13,17,22,25,28,31,34,37,39,42,45,46,49,51,53,55,57,59,61,62,64,66,68,69,71,73,74,76,78,79,80  
 
@@ -43,8 +43,7 @@ Keep L and R held.
 - Pressing Z and then exiting the settings menu will reset the settings to "factory default". Press Z again to cancel.
 
 ![n64-controller-button-map](https://raw.githubusercontent.com/Skuzee/ESS-Adapter/dev1/n64-controller-button-map.png "n64-controller-button-map.png")  
-*The n64 generic button map might not be very useful unless maybe you're tying to play a Gamecube game with an N64 controller? (That doesn't need X and Y).  *
-
+*The n64 generic button map might not be very useful unless maybe you're tying to play a Gamecube game with an N64 controller? (That doesn't need X and Y).*
 
 ## Wiring
 Any digital input pins will work. **Make sure you have them set correctly at the top of the .ino file.** Depending on the board and layout sometimes I use different pins, so double check. Pins 10,14,15,16,18,19 are used for optional RGB indicator lights.  
