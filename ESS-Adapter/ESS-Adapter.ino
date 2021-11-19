@@ -35,6 +35,20 @@
 #error "Incorrect Nintendo.h library! Compiling with the incorrect version WILL result in 5 volts being output to your controller/console! (Not good.) Make sure the custom Nintendo library (version 1337) is included in the ESS-Adapter/src folder and try again."
 #endif
 
+#define Q1_NOTCH_X 77
+#define Q1_NOTCH_Y 82
+
+#define Q2_NOTCH_X -70
+#define Q2_NOTCH_Y 79
+
+#define Q3_NOTCH_X -72
+#define Q3_NOTCH_Y -76
+
+#define Q4_NOTCH_X 78
+#define Q4_NOTCH_Y -78
+													//Q1	  //Q2			//Q3			//Q4
+int8_t cornerNotches[] = {77, 82, -70, 79, -72, -76, 78, -78};
+
 // Sets CONT_PIN on arduino to read from controller.
 CGamecubeController GCcontroller(CONT_PIN);
 CN64Controller N64controller(CONT_PIN);
@@ -123,10 +137,31 @@ uint8_t GCloop() { // Wii vc version of OOT updates controller twice every ~16.6
 
   normalize_origin(&data.report.xAxis, &data.origin.inititalData.xAxis);
 
+  Serial.print("S ");
+	Serial.print(data.report.xAxis);
+  Serial.print(' ');
+	Serial.print(data.report.yAxis);
+
+	notchCorrection(&data.report.xAxis);
+
+  Serial.print(' ');
+	Serial.print(data.report.xAxis);
+  Serial.print(' ');
+	Serial.print(data.report.yAxis);
+
   if (settings.ess_map == ESS_ON && settings.game_selection == GAME_OOT) // if OOT and ESS on:
     invert_vc_gc(&data.report.xAxis);
 
-  console.write(data); // Loop waits here until console requests an update.
+
+  Serial.print(' ');
+	Serial.print(data.report.xAxis);
+  Serial.print(' ');
+	Serial.print(data.report.yAxis);
+	Serial.println(" E");
+
+	delay(10);
+
+  //console.write(data); // Loop waits here until console requests an update.
   GCcontroller.setRumble(data.status.rumble); // Set controller rumble status.
 
   return GCcontroller.getDevice();
@@ -171,4 +206,42 @@ uint8_t N64loop() { // Wii vc version of OOT updates controller twice every ~16.
   // N64 Rumble motor function???
 
   return N64controller.getDevice();
+}
+
+void notchCorrection(uint8_t ucoords[2]) {
+//	uint8_t dist = pythagDist(coords[0],coords[1],NW_NOTCH_X-128,NW_NOTCH_Y-128);
+
+	// if(dist <= abs(notchCorrectionNW)) {
+	// 	coords[0] += (dist + notchCorrectionNW);
+	// 	coords[1] += (dist + notchCorrectionNW);
+	// }
+
+
+	// int8_t diff = (abs(ucoords[0]-128) - abs(ucoords[1]-128));
+	// if (ucoords[0] == 128 || ucoords[1] == 128)
+	// 	diff = 0;
+	// ucoords[0] -= diff*constrain(ucoords[0]-128,-1,1)/2;
+	// ucoords[1] += diff*constrain(ucoords[1]-128,-1,1)/2;
+
+	//remember un/signed
+	//calc dist
+	//constrain dist to 0 to diff/2
+	//reverse map: diff to 0/2
+	//add that as correction offset to X and Y
+	for (uint8_t i = 0; i<8; i+=2) {
+
+		int8_t diff = abs(cornerNotches[i]) - abs(cornerNotches[i+1]);
+		uint8_t sign = constrain(diff,-1,1);
+		diff = abs(diff);
+		uint8_t dist = pythagDist(ucoords[0],ucoords[1],cornerNotches[i]+128,cornerNotches[i+1]+128);
+		dist = constrain(dist,0,diff/2);
+		dist = map(dist, 0, diff/2, diff/2, 0);
+
+		ucoords[0] -= dist*constrain(ucoords[0]-128,-1,1)*sign;
+		ucoords[1] += dist*constrain(ucoords[1]-128,-1,1)*sign;
+	}
+}
+
+uint8_t pythagDist(uint8_t x1, uint8_t y1,uint8_t x2, uint8_t y2) {
+	return round(sqrt(pow(x1-x2,2) + pow(y1-y2,2)));
 }

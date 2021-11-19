@@ -16,4 +16,8 @@ void tryPrint(String input);
 
 void tryPrintln(String input);
 
+void tryPrint(uint8_t input);
+
+void tryPrintln(uint8_t input);
+
 void checkSerialBufferFull();

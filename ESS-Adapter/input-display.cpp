@@ -36,6 +36,16 @@ void tryPrintln(String input) {
     Serial.println(input);
 }
 
+void tryPrint(uint8_t input) {
+  if ( Serial.availableForWrite() > 1)
+    Serial.print(input);
+}
+
+void tryPrintln(uint8_t input) {
+  if ( Serial.availableForWrite() > 1)
+    Serial.println(input);
+}
+
 void checkSerialBufferFull() {
   static uint8_t lastBuffer;
 
