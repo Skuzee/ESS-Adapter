@@ -242,12 +242,12 @@ void N64toGC_buttonMap_Generic(const N64_Report_t& N64report, Gamecube_Report_t&
   GCreport.start = N64report.start;
   GCreport.z = N64report.z;
   GCreport.r = N64report.r;
-  GCreport.right = N64report.r * 127;
+  GCreport.right = N64report.r * 255;
   GCreport.l = N64report.l;
-  GCreport.left = N64report.l * 127;
+  GCreport.left = N64report.l * 255;
 
-  GCreport.cxAxis = 127 + (N64report.cright * 127) - (N64report.cleft * 127);
-  GCreport.cyAxis = 127 + (N64report.cup * 127) - (N64report.cdown * 127);
+  GCreport.cxAxis = 128 + (N64report.cright * 127) - (N64report.cleft * 127);
+  GCreport.cyAxis = 128 + (N64report.cup * 127) - (N64report.cdown * 127);
 
   GCreport.dleft = N64report.dleft;
   GCreport.dright = N64report.dright;
@@ -264,13 +264,13 @@ void N64toGC_buttonMap_OOT(const N64_Report_t& N64report, Gamecube_Report_t& GCr
   GCreport.start = N64report.start;
   GCreport.z = N64report.cdown; // Gamecube Z same as cdown.
   GCreport.r = N64report.r;
-  GCreport.right = N64report.r * 127;
+  GCreport.right = N64report.r * 255;
   GCreport.l = N64report.z;
-  GCreport.left = N64report.z * 127;
+  GCreport.left = N64report.z * 255;
 
   GCreport.x = N64report.cright; // Gamecube X same as cleft
   GCreport.y = N64report.cleft; // Camecube Y same as cright
-  GCreport.cyAxis = 127 + (N64report.cup * 127) - (N64report.l * 127); // set cyAxis(up) to N64 cup, set cyAxis(down) to N64 l for flying in GZ.
+  GCreport.cyAxis = 128 + (N64report.cup * 127) - (N64report.l * 127); // set cyAxis(up) to N64 cup, set cyAxis(down) to N64 l for flying in GZ.
 
   GCreport.dleft = N64report.dleft;
   GCreport.dright = N64report.dright;
@@ -290,9 +290,9 @@ void N64toGC_buttonMap_Yoshi(const N64_Report_t& N64report, Gamecube_Report_t& G
   GCreport.start = N64report.start;
   GCreport.z = N64report.l;
   GCreport.r = N64report.r;
-  GCreport.right = N64report.r * 127;
+  GCreport.right = N64report.r * 255;
   GCreport.l = N64report.z  || N64report.cpad; // 'z' and all of cpad are throw egg.
-  GCreport.left = (N64report.z || N64report.cpad) * 127;
+  GCreport.left = (N64report.z || N64report.cpad) * 255;
 
   GCreport.dleft = N64report.dleft;
   GCreport.dright = N64report.dright;
