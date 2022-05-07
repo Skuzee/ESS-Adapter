@@ -50,6 +50,7 @@ typedef struct {
 } EEPROM_settings;
 
 extern EEPROM_settings settings;
+extern CGamecubeController GCcontroller;
 
 void softReset();
 
@@ -70,3 +71,5 @@ void initializeDebug();
 void initilizeStatusLights();
 
 void IndicatorLights(uint8_t LEDNumber, uint8_t LEDcolor);
+
+void rumbleMotor(uint16_t duration, uint16_t pause, uint8_t pulses);

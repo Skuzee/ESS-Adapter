@@ -57,6 +57,7 @@ uint8_t changeSettings(Gamecube_Report_t& GCreport) { // read the initial button
           settings.ess_map = ESS_OFF;
           break;
       }
+			rumbleMotor(200,300,settings.game_selection+1);
       delay(MENU_BUTTON_TIMEOUT);
     }
 
@@ -78,6 +79,7 @@ uint8_t changeSettings(Gamecube_Report_t& GCreport) { // read the initial button
 	          break;
 	      }
 			}
+			rumbleMotor(200+settings.ess_map*600,300,1);
       delay(MENU_BUTTON_TIMEOUT);
     }
 
@@ -94,6 +96,7 @@ uint8_t changeSettings(Gamecube_Report_t& GCreport) { // read the initial button
           tryPrintln("ESS: ON.");
           break;
       }
+			rumbleMotor(200+settings.ess_map*600,300,1);
       delay(MENU_BUTTON_TIMEOUT);
     }
 
@@ -102,7 +105,8 @@ uint8_t changeSettings(Gamecube_Report_t& GCreport) { // read the initial button
       tryPrintln("");
       tryPrint("Input Display: ");
       tryPrintln(settings.input_display_enabled ? "ON" : "OFF");
-      delay(MENU_BUTTON_TIMEOUT);
+			rumbleMotor(200+settings.input_display_enabled*600,400,1);
+	    delay(MENU_BUTTON_TIMEOUT);
     }
     tryPrint(".");
     delay(50);
@@ -114,7 +118,7 @@ uint8_t changeSettings(Gamecube_Report_t& GCreport) { // read the initial button
     tryPrintln("");
     tryPrintln("Changes Saved.");
     loadSettings(); // check to see if eeprom was factory reset.
-
+		
     return 0; // return 0, read controller normally now.
   }
 }
@@ -227,4 +231,15 @@ void IndicatorLights(uint8_t LEDNumber, uint8_t LEDcolor) {
     digitalWrite(LED2_PIN_G, LED_OFF);
     digitalWrite(LED2_PIN_B, LED_OFF);
   }
+}
+
+void rumbleMotor(uint16_t duration, uint16_t pause, uint8_t pulses) {
+	for (uint8_t i = 0; i<pulses; i++) {
+		GCcontroller.setRumble(1);
+		GCcontroller.read();
+		delay(duration);
+		GCcontroller.setRumble(0);
+		GCcontroller.read();
+		delay(pause);
+	}
 }

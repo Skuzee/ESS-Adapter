@@ -1,4 +1,4 @@
-//ESS-Adapter.ino -- dev 1
+//ESS-Adapter.ino -- master
 
 /* Visit Github for more information: https://github.com/Skuzee/ESS-Adapter */
 
