@@ -1,4 +1,4 @@
-//ESS-Adapter.ino -- master
+//ESS-Adapter.ino -- dev1
 
 /* Visit Github for more information: https://github.com/Skuzee/ESS-Adapter */
 
@@ -20,7 +20,7 @@
 
 //Options
 #define INPUT_DISPLAY // - works on 32u4, needs newest compiled version of NintendoSpy (not the old release from 2014).
-#define CONT_PIN 4  // Controller DATA Pin: 4 yellow, 6 master, 3 Dev board
+#define CONT_PIN 3  // Controller DATA Pin: 4 yellow, 6 master, 3 Dev board
 #define CONS_PIN 2  // Console DATA Pin: 2 yellow, 8 master branch, 2 Dev board
 //#define TRIGGER_THRESHOLD 100 // Makes the L and R triggers act like Gamecube version of OOT. range of sensitivity from 0 to 255. 0 being most sensitive. My controller has a range of ~30 to 240. Comment out to disable.
 //#define DEBUG // overwrites IndicatorLights and used for data analyzer.
@@ -30,12 +30,20 @@
 #include "ESS.hpp"
 #include "extra.hpp"
 #include "input-display.hpp"
+#include "notchCalibration.hpp"
 
 #if NINTENDO_VERSION != 1337
 #error "Incorrect Nintendo.h library! Compiling with the incorrect version WILL result in 5 volts being output to your controller/console! (Not good.) Make sure the custom Nintendo library (version 1337) is included in the ESS-Adapter/src folder and try again."
 #endif
-													//Q1	  //Q2			//Q3		 //Q4
-int8_t cornerNotches[] = {77, 80, -70, 79, -72, -76, 78, -78};
+
+// GZ practice rom corner notch values.		Q2|Q1
+//	Quadrents start in upper right.				Q3|Q4
+
+CornerNotch notches[4] = {CornerNotch(77, 80), 	// Q1
+											   CornerNotch(-70, 79), 	// Q2
+												 CornerNotch(-72, -76),	// Q3
+												 CornerNotch(78, -78)}; // Q4
+
 
 // Sets CONT_PIN on arduino to read from controller.
 CGamecubeController GCcontroller(CONT_PIN);
@@ -55,6 +63,7 @@ void setup() {
   #else
     initilizeStatusLights();
   #endif
+
 }
 
 void loop() {
@@ -125,22 +134,26 @@ uint8_t GCloop() { // Wii vc version of OOT updates controller twice every ~16.6
 
   normalize_origin(&data.report.xAxis, &data.origin.inititalData.xAxis);
 
+#ifdef DEBUG
   Serial.print("S ");
 	Serial.print(data.report.xAxis);
   Serial.print(' ');
 	Serial.print(data.report.yAxis);
+#endif
 
 	notchCorrection(&data.report.xAxis);
-
+	
+#ifdef DEBUG
   Serial.print(' ');
 	Serial.print(data.report.xAxis);
   Serial.print(' ');
 	Serial.print(data.report.yAxis);
+#endif
 
   if (settings.ess_map == ESS_ON && settings.game_selection == GAME_OOT) // if OOT and ESS on:
     invert_vc_gc(&data.report.xAxis);
 
-
+#ifdef DEBUG
   Serial.print(' ');
 	Serial.print(data.report.xAxis);
   Serial.print(' ');
@@ -148,8 +161,11 @@ uint8_t GCloop() { // Wii vc version of OOT updates controller twice every ~16.6
 	Serial.println(" E");
 
 	delay(10);
+#endif
 
-  //console.write(data); // Loop waits here until console requests an update.
+#ifndef DEBUG
+  console.write(data); // Loop waits here until console requests an update.
+#endif	
   GCcontroller.setRumble(data.status.rumble); // Set controller rumble status.
 
   return GCcontroller.getDevice();
@@ -194,50 +210,4 @@ uint8_t N64loop() { // Wii vc version of OOT updates controller twice every ~16.
   // N64 Rumble motor function???
 
   return N64controller.getDevice();
-}
-
-// Applies a slight correction to the diagonal corner values to nudge the analog value towards the ideal 45 degree angle. The end result is a correction proportional to the closeness of the current coordinate to the physical notch.
-void notchCorrection(uint8_t ucoords[2]) {
-
-
-	//calc dist
-	//constrain dist to 0 to diff/2
-	//reverse map: diff to 0/2
-	//add that as correction offset to X and Y
-
-	for (uint8_t i = 0; i<8; i+=2) { // Calculate for each of 4 corner notches.
-
-		// Calculate the correction factor to apply to make X == Y
-		// if corner is 70,78 (unsigned values) the ideal diagonal is 74,74
-		// which is the average.
-		// Calculate X and Y seperately. In case the difference is odd, round 1 up and 1 down.
-		int8_t diffX = ceil(float(abs(cornerNotches[i]) - abs(cornerNotches[i+1]))/2);
-		int8_t diffY = floor(float(abs(cornerNotches[i]) - abs(cornerNotches[i+1]))/2);
-		// Save whether diff is pos/neg. We need it later.
-		uint8_t sign = constrain(diffX,-1,1);
-		// Remove sign to apply scaling map.
-		diffX = abs(diffX);
-		diffY = abs(diffY);
-		// Calculate the distance between current coordinates and corner notch.
-		uint8_t distX = pythagDist(ucoords[0],ucoords[1],cornerNotches[i]+128,cornerNotches[i+1]+128);
-		uint8_t distY = distX;
-		// Constrain the max value of dist to the difference.
-		distX = constrain(distX,0,diffX);
-		distY = constrain(distY,0,diffY);
-		// Invert the map. This means that distance starts at "0" and the closer we get
-		// to the corner notch the higher the value gets. The correction factor is strongest
-		// when we are at the corner notch, and fades as we get farther.
-		distX = map(distX, 0, diffX, diffX, 0);
-		distY = map(distY, 0, diffY, diffY, 0);
-		// The correction factor is to nudge the coordinate towards the true 45 line.
-		// We need to add/subtract depending whether the correction factor is negative
-		// or positive. (A negative dist means X < Y. We also need to flip the correction
-		// if the axis is negative.
-		ucoords[0] -= distX*constrain(ucoords[0]-128,-1,1)*sign;
-		ucoords[1] += distY*constrain(ucoords[1]-128,-1,1)*sign;
-	}
-}
-
-uint8_t pythagDist(uint8_t x1, uint8_t y1,uint8_t x2, uint8_t y2) {
-	return round(sqrt(pow(x1-x2,2) + pow(y1-y2,2)));
 }
