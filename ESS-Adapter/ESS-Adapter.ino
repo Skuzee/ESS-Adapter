@@ -23,7 +23,7 @@
 #define CONT_PIN 3  // Controller DATA Pin: 4 yellow, 6 master, 3 Dev board
 #define CONS_PIN 2  // Console DATA Pin: 2 yellow, 8 master branch, 2 Dev board
 //#define TRIGGER_THRESHOLD 100 // Makes the L and R triggers act like Gamecube version of OOT. range of sensitivity from 0 to 255. 0 being most sensitive. My controller has a range of ~30 to 240. Comment out to disable.
-//#define DEBUG // overwrites IndicatorLights and used for data analyzer.
+#define DEBUG // overwrites IndicatorLights and used for data analyzer.
 
 //Includes
 #include "src/Nintendo/src/Nintendo.h"
@@ -36,9 +36,38 @@
 #error "Incorrect Nintendo.h library! Compiling with the incorrect version WILL result in 5 volts being output to your controller/console! (Not good.) Make sure the custom Nintendo library (version 1337) is included in the ESS-Adapter/src folder and try again."
 #endif
 
+// Consider the following scenerio:
+// You're physical controller gate corner notch is x80, y70
+// The closest "perfect" diagonal notch would be x75, y75
+
+// Gate_Snap_Strength means if the analog stick is within a certain distance to
+// your phsyical gate, it will snap to the perfect diagonal. This is helpful if
+// you want to use your physical gate as a reference to hold a perfect 45 degree angle.
+// Example: holding x82, y68 with a Gate_Snap_Strength of 2 will still output x75, y75.
+
+// Notch_Snap_Strength means if the analog stick within a certain distance to
+// the perfect diagonal, it will snap to the perfect diagonal. This is helpful if
+// you are accustomed to holding a true 45 degree angle on the analog stick.
+// Example: holding x74, y73 with a Notch_Snap_Strength of 2 will still output x75, y75.
+
+// NOTCH_GRAVITY: This warps the space between the physical gate diagonal and the
+// closes perfect diagonal to bias the output towards the perfect diagonal.
+// Example: If the physical gate notch is x80, y70. The correction factor is
+// half the difference of x and y; in this case 5. Any coordiante within a 
+// distance of 5 will be corrected towards the perfect diagonal proportional to
+// distance. In effect making any angle between the physical notch and the perfect
+// diagonal 45 degrees (when within the correction factor distance.)
+// For physical gates that are very bad and far from the perfect diagonal this 
+// streching of the map might be intolerable. For the example x80, y70 the angle
+// is 41 degrees. This would make angles from 41 to 45 equal to 45, and angles
+// 45 to 49 twice as sensitive (when coordiante is within distance of 5 from notch)
+
+uint8_t Gate_Snap_Strength = 0;
+uint8_t Notch_Snap_Strength = 0;
+#define NOTCH_GRAVITY;
+
 // GZ practice rom corner notch values.		Q2|Q1
 //	Quadrents start in upper right.				Q3|Q4
-
 CornerNotch notches[4] = {CornerNotch(77, 80), 	// Q1
 											   CornerNotch(-70, 79), 	// Q2
 												 CornerNotch(-72, -76),	// Q3
@@ -142,7 +171,7 @@ uint8_t GCloop() { // Wii vc version of OOT updates controller twice every ~16.6
 #endif
 
 	notchCorrection(&data.report.xAxis);
-	
+
 #ifdef DEBUG
   Serial.print(' ');
 	Serial.print(data.report.xAxis);

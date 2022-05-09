@@ -6,7 +6,7 @@
 
 
 uint8_t pythagDist(uint8_t x1, uint8_t y1,uint8_t x2, uint8_t y2) {
-	return round(sqrt(pow(x1-x2,2) + pow(y1-y2,2)));
+	return round(sqrtf((x1-x2)*(x1-x2) + (y1-y2)*(y1-y2)));
 }
 
 // Finds the Quadrant the current coord is in and applies correction.
