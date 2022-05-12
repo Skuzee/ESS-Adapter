@@ -20,10 +20,11 @@
 
 import processing.serial.*;
 
+// GZ values of physical gate corner notches. Q1, Q2, Q3, Q4
 int myNotches[] = {77,80, -70,79, -72,-76, 78,-78};
 
+// Class that stores a coordinate point and useful information about that point including scaled coordinates for graphing, and text color
 public class Coord {
-  
   // signed -127 to 128
   private int X=0;
   private int Y=0;
@@ -60,7 +61,7 @@ public class Coord {
     popStyle();
   }
   
-  private void updateGraphCoords() {
+  private void updateGraphCoords() { // maps the analog stick coord to the screen range * zoom level
     graphX = int(map(X,-127,128,0,width*zoom));
     graphY = int(map(Y,-127,128,height*zoom,0));
     graphTagX = X;
@@ -80,10 +81,12 @@ public class Coord {
   }
 } //<>//
 
-Coord cornerNotches[] = new Coord[4];
-Coord actualCornerNotches[] = new Coord[4];
-Coord cardinalNotches[] = new Coord[4];
+// arrays of notch values, true and perfect, used for graphing.
+Coord cornerNotches[] = new Coord[4]; // Guesstimation of where corner notches are
+Coord actualCornerNotches[] = new Coord[4]; //GZ values, set from myNotches[]
+Coord cardinalNotches[] = new Coord[4]; // Guesstimation of where cardinal notches are
 Coord graphs[] = new Coord[4];
+int displayValues[] = new int[8];
 
 Serial myPort;  // Create object from Serial class
 String serialString;     // Data received from the serial port
@@ -137,6 +140,9 @@ void draw()
   }
   
   popMatrix();
+   drawDebugValues();
+   setLocalDebugValue(cornerNotches[0].getMag(),4);
+  
 }
 
 void drawLines(){  
@@ -181,6 +187,8 @@ void notchOutline(){
   popStyle();
 }
 
+// Reads in serial data. Expects 'S' Staring bit and 'E' Ending bit. ' ' Is delimiter.
+// currently it is receiving 12 bytes of data, 2x3 (6bytes) x,y graph coordinates, and 4 bytes of general debug values.
 void serialEvent (Serial myPort) {
   serialString = myPort.readStringUntil('\n');
   if (serialString != null) {
@@ -195,9 +203,14 @@ void serialEvent (Serial myPort) {
       for (int i=0; i<6; i+=2) {
         graphs[i/2].setCoords(serialArray[i+1]-128,serialArray[i+2]-128);
       }
+      for (int i=6; i<10; i++) {
+        displayValues[i]=serialArray[i];
+      }
+
       compareCornerNotches(graphs[0]);
       compareCardinalNotches(graphs[0]);
     }
+    
   }
 }
 
@@ -276,6 +289,20 @@ void initCoords() {
     graphs[i]= new Coord(-15+(i*15),color(i*10,120,120), 13-(i*3));
     graphs[i].setCoords(0,0);
   }
+}
+
+void setLocalDebugValue(int inputVal, int position) {
+ displayValues[position] = inputVal;
+}
+
+void drawDebugValues() {
+  pushStyle();
+  noStroke();
+  fill(#ff0000);
+  for(int i=0; i<displayValues.length;i++) {
+    text(displayValues[i],20,(1+i)*20);
+  }
+  popStyle();
 }
 
 void mouseWheel(MouseEvent event) {

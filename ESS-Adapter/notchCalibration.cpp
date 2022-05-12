@@ -5,8 +5,8 @@
 #include "notchCalibration.hpp"
 
 
-uint8_t pythagDist(uint8_t x1, uint8_t y1,uint8_t x2, uint8_t y2) {
-	return round(sqrtf((x1-x2)*(x1-x2) + (y1-y2)*(y1-y2)));
+float pythagDist(uint8_t x1, uint8_t y1,uint8_t x2, uint8_t y2) {
+	return round(2*sqrtf((x1-x2)*(x1-x2) + (y1-y2)*(y1-y2)))/2;
 }
 
 // Finds the Quadrant the current coord is in and applies correction.

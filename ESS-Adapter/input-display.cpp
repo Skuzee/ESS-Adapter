@@ -54,3 +54,25 @@ void checkSerialBufferFull() {
   else
     lastBuffer = Serial.availableForWrite();
 }
+
+// 0 = 'S' start bit
+// 11 = 'E' end bit
+// fills bytes 1 to 10, then sends it all.
+void serialDebug(char input) { 
+	
+	static uint8_t position = 0;
+	serialDebugData[position] = input;
+	position++;
+	
+	if (position == 9) {
+		position = 0;
+		Serial.print('S');
+		
+		for (uint8_t i = 0; i < 10; i++) {
+			Serial.print(' ');
+			Serial.print(serialDebugData[i]);
+		}
+		
+		Serial.println('E')
+	}
+}

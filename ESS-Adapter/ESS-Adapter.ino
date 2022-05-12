@@ -82,6 +82,7 @@ CN64Controller N64controller(CONT_PIN);
 CGamecubeConsole console(CONS_PIN);
 Gamecube_Data_t data = defaultGamecubeData; // Initilize Gamecube data. Default needed for N64 data to convert correctly.
 
+char serialDebugData[12] = {0,0,0,0,0,0,0,0,0,0};
 
 void setup() {
   Serial.begin(115200);
@@ -164,30 +165,29 @@ uint8_t GCloop() { // Wii vc version of OOT updates controller twice every ~16.6
   normalize_origin(&data.report.xAxis, &data.origin.inititalData.xAxis);
 
 #ifdef DEBUG
-  Serial.print("S ");
-	Serial.print(data.report.xAxis);
-  Serial.print(' ');
-	Serial.print(data.report.yAxis);
+  serialDebug(data.report.xAxis);
+	serialDebug(data.report.yAxis);
 #endif
 
 	notchCorrection(&data.report.xAxis);
 
 #ifdef DEBUG
-  Serial.print(' ');
-	Serial.print(data.report.xAxis);
-  Serial.print(' ');
-	Serial.print(data.report.yAxis);
+  serialDebug(data.report.xAxis);
+	serialDebug(data.report.yAxis);
 #endif
 
   if (settings.ess_map == ESS_ON && settings.game_selection == GAME_OOT) // if OOT and ESS on:
     invert_vc_gc(&data.report.xAxis);
 
 #ifdef DEBUG
-  Serial.print(' ');
-	Serial.print(data.report.xAxis);
-  Serial.print(' ');
-	Serial.print(data.report.yAxis);
-	Serial.println(" E");
+  serialDebug(data.report.xAxis);
+	serialDebug(data.report.yAxis);
+	
+	//Send 4 debug bytes;
+	serialDebug(1);
+	serialDebug(2);
+	serialDebug(3);
+	serialDebug(4);
 
 	delay(10);
 #endif
