@@ -62,8 +62,8 @@
 // is 41 degrees. This would make angles from 41 to 45 equal to 45, and angles
 // 45 to 49 twice as sensitive (when coordiante is within distance of 5 from notch)
 
-uint8_t Gate_Snap_Strength = 0;
-uint8_t Notch_Snap_Strength = 0;
+uint8_t Gate_Snap_Strength = 3;
+uint8_t Notch_Snap_Strength = 3;
 #define NOTCH_GRAVITY;
 
 // GZ practice rom corner notch values.		Q2|Q1
@@ -82,7 +82,7 @@ CN64Controller N64controller(CONT_PIN);
 CGamecubeConsole console(CONS_PIN);
 Gamecube_Data_t data = defaultGamecubeData; // Initilize Gamecube data. Default needed for N64 data to convert correctly.
 
-char serialDebugData[12] = {0,0,0,0,0,0,0,0,0,0};
+uint8_t serialDebugData[10] = {0,0,0,0,0,0,0,0,0,0};
 
 void setup() {
   Serial.begin(115200);

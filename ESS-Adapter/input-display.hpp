@@ -8,7 +8,7 @@
 #define ASCII_1 '1'
 #define NEWLINE '\n'
 
-extern char serialDebugData[10];
+extern uint8_t serialDebugData[10];
 
 void writeToUSB_BYTE(Gamecube_Data_t& data);
 
@@ -24,4 +24,4 @@ void tryPrintln(uint8_t input);
 
 void checkSerialBufferFull();
 
-void serialDebug(char input);
+void serialDebug(uint8_t input);

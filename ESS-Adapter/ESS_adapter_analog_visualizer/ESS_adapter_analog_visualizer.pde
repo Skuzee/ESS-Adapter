@@ -16,7 +16,8 @@
 
 //Mouse to move graph around and zoom wheel to zoom in/out for closer analysis.
 
-//Run program once. Look at serial list number. enter that value into line 98.
+//Run program once. Look at serial list number. Set SERIAL_PORT_INDEX to that value
+final int SERIAL_PORT_INDEX = 2;
 
 import processing.serial.*;
 
@@ -28,12 +29,13 @@ public class Coord {
   // signed -127 to 128
   private int X=0;
   private int Y=0;
-  private int mag=0; // squared distance to origin
+  private float mag=0; // distance to origin
   
-  private int graphX=0;
+  private int graphX=0; // scaled coord values for graphing porportional to window size and zoom level
   private int graphY=0;
-  public int graphTagX=0;
+  public int graphTagX=0; // The value to be displayed near the graph point. public coordinate value.
   public int graphTagY=0;
+  public float distFromDiag=0; // 1/2 the difference of abs x and abs y
   
   public int tagOffset;
   public color tagColor;
@@ -48,7 +50,8 @@ public class Coord {
   public void setCoords(int inputX, int inputY){
     X = inputX;
     Y = inputY;
-    mag = int(pow(X,2) + pow(Y,2)); 
+    mag = sqrt(pow(X,2) + pow(Y,2));
+    distFromDiag = abs(abs(X) - abs(Y))/2.0;
   }
   
   public void drawCoord(){
@@ -68,7 +71,7 @@ public class Coord {
     graphTagY = Y;
   }
   
-  int getMag() {
+  float getMag() {
     return mag;
   }
   
@@ -86,7 +89,7 @@ Coord cornerNotches[] = new Coord[4]; // Guesstimation of where corner notches a
 Coord actualCornerNotches[] = new Coord[4]; //GZ values, set from myNotches[]
 Coord cardinalNotches[] = new Coord[4]; // Guesstimation of where cardinal notches are
 Coord graphs[] = new Coord[4];
-int displayValues[] = new int[8];
+float displayValues[] = new float[8];
 
 Serial myPort;  // Create object from Serial class
 String serialString;     // Data received from the serial port
@@ -98,7 +101,7 @@ void setup()
 {
   initCoords();
   printArray(Serial.list());
-  String portName = Serial.list()[2]; //change the 0 to a 1 or 2 etc. to match your port <<<<<<<<<<<<<<
+  String portName = Serial.list()[SERIAL_PORT_INDEX]; //change the 0 to a 1 or 2 etc. to match your port <<<<<<<<<<<<<<
   myPort = new Serial(this, portName, 115200);
   
   size(1024, 1024);        
@@ -140,8 +143,10 @@ void draw()
   }
   
   popMatrix();
-   drawDebugValues();
-   setLocalDebugValue(cornerNotches[0].getMag(),4);
+  
+  setLocalDebugValue(graphs[0].getMag(),4);
+  setLocalDebugValue(graphs[0].distFromDiag,5);
+  drawDebugValues();
   
 }
 
@@ -197,14 +202,23 @@ void serialEvent (Serial myPort) {
     char startChar = serialString.charAt(0);
     char endChar = serialString.charAt(serialString.length()-1);
     
-    if ((startChar == 'S') && (endChar == 'E')) {
+    //int[] tempserialArray = int(split(serialString, ' '));
+    //for (int input : tempserialArray){
+    //  print(input);
+    //  print(' ');
+    //}
+    //println();
+    
+    if ((startChar == 'S') && (endChar == 'E')) {  // typical: S x1 y1 x2 y2 x3 y3 D1 D2 D3 D4 E
+    // 
       int[] serialArray = int(split(serialString, ' '));
       
       for (int i=0; i<6; i+=2) {
         graphs[i/2].setCoords(serialArray[i+1]-128,serialArray[i+2]-128);
       }
-      for (int i=6; i<10; i++) {
-        displayValues[i]=serialArray[i];
+      
+      for (int i=0; i<4; i++) {
+        displayValues[i]=serialArray[i+7];
       }
 
       compareCornerNotches(graphs[0]);
@@ -215,25 +229,56 @@ void serialEvent (Serial myPort) {
 }
 
 void compareCornerNotches(Coord current){
+  
+  // x and y need to be greater than 65
+  // finds the coordinate with the largest magnitude
+  // if there is a tie, tiebreaker goes to coordinate closest to perfect diagonal.
+  
+  
   // Q1
-  if ((current.graphTagX > 65) && (current.graphTagY > 65) && (current.getMag() > cornerNotches[0].getMag())) {
-    cornerNotches[0].setCoords(current.graphTagX,current.graphTagY);
-  }
+  if ((current.graphTagX > 65) &&
+      (current.graphTagY > 65) && 
+        ((int(current.getMag()) > int(cornerNotches[0].getMag())) || 
+          ((int(current.getMag()) == int(cornerNotches[0].getMag())) &&
+          (current.distFromDiag < cornerNotches[0].distFromDiag)))
+     )
+  { cornerNotches[0].setCoords(current.graphTagX,current.graphTagY); }
+     
   // Q2
-  else if ((current.graphTagX < -65) && (current.graphTagY > 65) && (current.getMag() > cornerNotches[1].getMag())) {
-    cornerNotches[1].setCoords(current.graphTagX,current.graphTagY);
-  }
+  else if ((current.graphTagX < -65) &&
+           (current.graphTagY > 65) && 
+             ((int(current.getMag()) > int(cornerNotches[1].getMag())) || 
+               ((int(current.getMag()) == int(cornerNotches[1].getMag())) &&
+               (current.distFromDiag < cornerNotches[1].distFromDiag)))
+          )
+  { cornerNotches[1].setCoords(current.graphTagX,current.graphTagY); }
+  
   // Q3
-  else if ((current.graphTagX < -65) && (current.graphTagY < -65) && (current.getMag() > cornerNotches[2].getMag())) {
-    cornerNotches[2].setCoords(current.graphTagX,current.graphTagY);
-  }
+   else if ((current.graphTagX < -65) &&
+           (current.graphTagY < -65) && 
+             ((int(current.getMag()) > int(cornerNotches[2].getMag())) || 
+               ((int(current.getMag()) == int(cornerNotches[2].getMag())) &&
+               (current.distFromDiag < cornerNotches[2].distFromDiag)))
+          )
+  { cornerNotches[2].setCoords(current.graphTagX,current.graphTagY); }
+  
   // Q4
-  else if ((current.graphTagX > 65) && (current.graphTagY < -65) && (current.getMag() > cornerNotches[3].getMag())) {
-    cornerNotches[3].setCoords(current.graphTagX,current.graphTagY);
-  }
+  else if ((current.graphTagX > 65) &&
+           (current.graphTagY < -65) && 
+             ((int(current.getMag()) > int(cornerNotches[3].getMag())) || 
+               ((int(current.getMag()) == int(cornerNotches[3].getMag())) &&
+               (current.distFromDiag < cornerNotches[3].distFromDiag)))
+          )
+  { cornerNotches[3].setCoords(current.graphTagX,current.graphTagY); }
 }
 
+
+
 void compareCardinalNotches(Coord current){
+  
+  // find the coordinate with the largest X value for West/East, largest Y value for North/South
+  // if there is a tie, tiebreaker goes to coordinate with the smallest perpendicular axis value. 
+  
   // East 0
   if (current.graphTagX > cardinalNotches[0].graphTagX) {
     cardinalNotches[0].setCoords(current.graphTagX,current.graphTagY);
@@ -291,7 +336,7 @@ void initCoords() {
   }
 }
 
-void setLocalDebugValue(int inputVal, int position) {
+void setLocalDebugValue(float inputVal, int position) {
  displayValues[position] = inputVal;
 }
 
