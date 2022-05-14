@@ -1,4 +1,6 @@
-﻿# Introduction
+﻿**I am considering selling assembled adapters. I want them to be affordable, accessable, and quality. If you're interested in purchasing one, you should contact me on discord; Angst#4857, or email me at angst4857@gmail.com**
+
+# Introduction
 This adapter modifies analog stick input values. For use with Legend of Zelda: Ocarina of Time.  
 This version supports both N64 and Gamecube controllers. Selection is automatic. Just plug in a controller.  
 This version has an input display and works with the newest version of nintendospy (not the 2014 release).  
