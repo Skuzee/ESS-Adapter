@@ -4,11 +4,16 @@
 // Cardinal Direction gate/notch gravity?
 // fix the weird odd/even notch gravity error.
 
-
+#pragma once
 #include <vector_type.h>
+#include "input-display.hpp"
+
 extern uint8_t Notch_Snap_Strength;
+extern uint8_t Gate_Snap_Strength;
 
 float pythagDist(uint8_t x1, uint8_t y1,uint8_t x2, uint8_t y2);
+
+void notchCorrection(uint8_t ucoords[2]);
 
 class CornerNotch{ 
 
@@ -32,9 +37,9 @@ class CornerNotch{
 	}
 	
 	void applyCorrection(uint8_t ucoords[2]) {
-		notchSnapping(ucoords);
+		//notchSnapping(ucoords);
 		gateSnapping(ucoords);
-		notchGravity(ucoords);
+		//notchGravity(ucoords);
 	}
 	
 	// Applies a slight correction to the diagonal corner values to nudge the analog value towards the ideal 45 degree angle. The end result is a correction proportional to the closeness of the current coordinate to the physical notch.
@@ -94,6 +99,8 @@ class CornerNotch{
 	void notchSnapping(uint8_t ucoords[2]) {
 		vec3_t v1 = {ucoords[0]-(Xvalue+128)-(correction*Xsign),ucoords[1]-(Yvalue+128)+(correction*Ysign)};
 
+		serialDebug(int(v1.mag()),6);
+
 		if (v1.mag() <= Notch_Snap_Strength) {
 			//v1 /= 2;
 			ucoords[0]-=v1.x;
@@ -104,7 +111,9 @@ class CornerNotch{
 	void gateSnapping(uint8_t ucoords[2]) {
 			vec3_t v1 = {ucoords[0]-(Xvalue+128),ucoords[1]-(Yvalue+128)};
 	
-			if (v1.mag() <= Notch_Snap_Strength) {
+			serialDebug(int(v1.mag()),7);
+	
+			if (v1.mag() <= Gate_Snap_Strength) {
 				//v1 /= 2;
 				ucoords[0]-=v1.x-(correction*Xsign);
 				ucoords[1]-=v1.y+(correction*Ysign);
