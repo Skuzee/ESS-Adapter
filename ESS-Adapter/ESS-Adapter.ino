@@ -62,7 +62,7 @@
 // is 41 degrees. This would make angles from 41 to 45 equal to 45, and angles
 // 45 to 49 twice as sensitive (when coordiante is within distance of 5 from notch)
 
-uint8_t Gate_Snap_Strength = 3;
+uint8_t Gate_Snap_Strength = 10;
 uint8_t Notch_Snap_Strength = 3;
 #define NOTCH_GRAVITY;
 
@@ -165,30 +165,24 @@ uint8_t GCloop() { // Wii vc version of OOT updates controller twice every ~16.6
   normalize_origin(&data.report.xAxis, &data.origin.inititalData.xAxis);
 
 #ifdef DEBUG
-  serialDebug(data.report.xAxis);
-	serialDebug(data.report.yAxis);
+  serialDebug(data.report.xAxis,0);
+	serialDebug(data.report.yAxis,1);
 #endif
 
 	notchCorrection(&data.report.xAxis);
 
 #ifdef DEBUG
-  serialDebug(data.report.xAxis);
-	serialDebug(data.report.yAxis);
+  serialDebug(data.report.xAxis,2);
+	serialDebug(data.report.yAxis,3);
 #endif
 
   if (settings.ess_map == ESS_ON && settings.game_selection == GAME_OOT) // if OOT and ESS on:
     invert_vc_gc(&data.report.xAxis);
 
 #ifdef DEBUG
-  serialDebug(data.report.xAxis);
-	serialDebug(data.report.yAxis);
-	
-	//Send 4 debug bytes;
-	serialDebug(1);
-	serialDebug(2);
-	serialDebug(3);
-	serialDebug(4);
-
+  serialDebug(data.report.xAxis,4);
+	serialDebug(data.report.yAxis,5);
+  serialDebug(0,10);
 	delay(10);
 #endif
 

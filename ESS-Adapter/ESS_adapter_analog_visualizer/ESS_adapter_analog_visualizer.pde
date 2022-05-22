@@ -96,6 +96,8 @@ String serialString;     // Data received from the serial port
 int zoom = 1;
 int notchFocus =0;
 
+int lastx[] = {0,0};
+int lasty[] = {0,0};
 
 void setup()
 {
@@ -110,11 +112,11 @@ void setup()
   noStroke();
   frameRate(120);
   textSize(15);
+
 }
 
 void draw()
 {
-  
   pushMatrix();
   //translate(-1*actualCornerNotches[notchFocus].graphX+width/2,-1*actualCornerNotches[notchFocus].graphY+height/2);
   translate(-mouseX*zoom+width/2,-mouseY*zoom+height/2);
@@ -147,6 +149,24 @@ void draw()
   setLocalDebugValue(graphs[0].getMag(),4);
   setLocalDebugValue(graphs[0].distFromDiag,5);
   drawDebugValues();
+  
+
+  if(lastx[0] < graphs[0].graphTagX && lastx[1] > graphs[1].graphTagX) {
+    print(lastx[0]);
+    print(" ");
+    println(graphs[0].graphTagX);
+    
+  }
+
+  if(lasty[0] < graphs[0].graphTagY && lasty[1] > graphs[1].graphTagY) {
+    println("oops 2 Electric Bugaloo");
+  }
+
+  
+  lastx[0] = graphs[0].graphTagX;
+  lasty[0] = graphs[0].graphTagY;
+  lastx[1] = graphs[1].graphTagX;
+  lasty[1] = graphs[1].graphTagY;
   
 }
 

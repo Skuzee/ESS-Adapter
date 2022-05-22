@@ -24,4 +24,4 @@ void tryPrintln(uint8_t input);
 
 void checkSerialBufferFull();
 
-void serialDebug(uint8_t input);
+void serialDebug(uint8_t input, uint8_t position);
