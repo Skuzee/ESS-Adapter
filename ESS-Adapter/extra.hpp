@@ -5,6 +5,7 @@
 #include "src/Nintendo/src/Nintendo.h"
 
 #define MENU_BUTTON_TIMEOUT 300
+#define EEPROM_VERSION 2
 
 // Define output pins for debug timing with Logic Analyzer.
 #define DEBUG_READ 15
@@ -42,11 +43,16 @@
 #define INPUT_DISPLAY_OFF 0
 #define INPUT_DISPLAY_ON 1
 
+#define TRIGGER_THRESHOLD_OFF 0
+#define TRIGGER_THRESHOLD_ON 1
+#define DEF_TRIGGER_THRESHOLD 100
+
 typedef struct {
   uint8_t input_display_enabled : 1;
   uint8_t game_selection : 3;
   uint8_t ess_map : 3;
-  uint8_t unused : 1;
+  uint8_t trigger_threshold_enabled : 1;
+	uint8_t trigger_threshold;
 } EEPROM_settings;
 
 extern EEPROM_settings settings;
@@ -54,7 +60,7 @@ extern CGamecubeController GCcontroller;
 
 void softReset();
 
-void analogTriggerToDigitalPress(Gamecube_Report_t& GCreport, uint8_t Threshold);
+void analogTriggerToDigitalPress(Gamecube_Report_t& GCreport);
 
 //void blinkLED(uint8_t blinks, uint8_t blinkTime);
 

@@ -22,7 +22,7 @@
 #define INPUT_DISPLAY // - works on 32u4, needs newest compiled version of NintendoSpy (not the old release from 2014).
 #define CONT_PIN 4  // Controller DATA Pin: 4 yellow, 6 master, 3 Dev board
 #define CONS_PIN 2  // Console DATA Pin: 2 yellow, 8 master branch, 2 Dev board
-//#define TRIGGER_THRESHOLD 100 // Makes the L and R triggers act like Gamecube version of OOT. range of sensitivity from 0 to 255. 0 being most sensitive. My controller has a range of ~30 to 240. Comment out to disable.
+#define TRIGGER_THRESHOLD // Makes the L and R triggers act like Gamecube version of OOT. range of sensitivity from 0 to 255. 0 being most sensitive. My controller has a range of ~30 to 240. Comment out to disable. Configurable with controller settings menu.
 //#define DEBUG // overwrites IndicatorLights and used for data analyzer.
 
 //Includes
@@ -111,15 +111,16 @@ uint8_t GCloop() { // Wii vc version of OOT updates controller twice every ~16.6
       firstRead = changeSettings(data.report); // Loops while settings are being changed.
     }
     else {
+			
+		  #ifdef TRIGGER_THRESHOLD // If defined, makes Gamecube controller triggers act more like GC collectors edition. Analog press instead of having to click them all the way down.
+		    analogTriggerToDigitalPress(data.report);
+		  #endif
+			
       #ifdef INPUT_DISPLAY
             writeToUSB_BYTE(data);
       #endif
     }
   }
-
-  #ifdef TRIGGER_THRESHOLD // If defined, makes Gamecube controller triggers act more like GC collectors edition. Analog press instead of having to click them all the way down.
-    analogTriggerToDigitalPress(data.report, TRIGGER_THRESHOLD);
-  #endif
 
   normalize_origin(&data.report.xAxis, &data.origin.inititalData.xAxis);
 

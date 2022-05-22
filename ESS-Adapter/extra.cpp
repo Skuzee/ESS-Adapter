@@ -10,11 +10,14 @@ void softReset() {
   asm volatile ("  jmp 0"); // Soft-reset, Assembly command that jumps to the start of the reset vector.
 }
 
-void analogTriggerToDigitalPress(Gamecube_Report_t& GCreport, uint8_t Threshold) { // Maps analog L and R presses to digital presses. Range of sensitivity from 0 to 255. 0 being most sensitive. My controller has a range of ~30 to 240.
-  if (GCreport.left > Threshold)
+void analogTriggerToDigitalPress(Gamecube_Report_t& GCreport) { // Maps analog L and R presses to digital presses. Range of sensitivity from 0 to 255. 0 being most sensitive. My controller has a range of ~30 to 240
+	if (settings.trigger_threshold_enabled)
+	{
+  	if (GCreport.left >= settings.trigger_threshold)
     GCreport.l = 1;
-  if (GCreport.right > Threshold)
+  	if (GCreport.right >= settings.trigger_threshold)
     GCreport.r = 1;
+	}
 }
 
 uint8_t enterSettingsMenuN64Controller(const N64_Report_t& N64report) {
@@ -29,10 +32,16 @@ uint8_t changeSettings(Gamecube_Report_t& GCreport) { // read the initial button
   IndicatorLights(2, settings.ess_map);
 
   if (GCreport.l && GCreport.r) {
+		
     if (GCreport.z) { // Press Z to reset settings to default.
-      EEPROM.update(0, !EEPROM.read(0));
+			
+			if(EEPROM.read(0)==EEPROM_VERSION)
+      	EEPROM.update(0, 255);
+			else
+				EEPROM.update(0, EEPROM_VERSION);
+				
       tryPrintln(".");
-      tryPrintln(EEPROM.read(0) ? "Restore Factory Settings. Z to undo." : "Reset Cancelled.");
+      tryPrintln(EEPROM.read(0)==255 ? "Restoring Factory Settings. Z to undo." : "Reset Cancelled.");
       delay(MENU_BUTTON_TIMEOUT);
     }
 
@@ -108,6 +117,48 @@ uint8_t changeSettings(Gamecube_Report_t& GCreport) { // read the initial button
 			rumbleMotor(200+settings.input_display_enabled*600,400,1);
 	    delay(MENU_BUTTON_TIMEOUT);
     }
+		
+    if (GCreport.b) { // Trigger Threshold Toggle.
+      settings.trigger_threshold_enabled = !settings.trigger_threshold_enabled;
+      tryPrintln("");
+      tryPrint("trigger Threshold: ");
+      tryPrintln(settings.trigger_threshold_enabled ? String(settings.trigger_threshold) : "OFF");
+			rumbleMotor(200+settings.trigger_threshold_enabled*600,400,1);
+	    delay(MENU_BUTTON_TIMEOUT);
+    }
+		
+	  if (GCreport.y) { // Trigger Threshold Inc
+			tryPrintln("");
+			
+			if (settings.trigger_threshold_enabled && settings.trigger_threshold+10<=250) {
+				settings.trigger_threshold+=10;
+  			tryPrint("trigger Threshold: ");
+				tryPrintln(settings.trigger_threshold);
+				rumbleMotor((100+settings.trigger_threshold)*settings.trigger_threshold_enabled,300,1);
+			} else {
+	      tryPrint("trigger Threshold: ");
+	      tryPrintln(settings.trigger_threshold_enabled ? String(settings.trigger_threshold) : "OFF");
+			}
+			
+      delay(MENU_BUTTON_TIMEOUT);
+    }
+		
+	  if (GCreport.x) { // Trigger Threshold Dec
+			tryPrintln("");
+			
+			if (settings.trigger_threshold_enabled && settings.trigger_threshold-10>=10) {
+				settings.trigger_threshold-=10;
+  			tryPrint("trigger Threshold: ");
+				tryPrintln(settings.trigger_threshold);
+				rumbleMotor((100+settings.trigger_threshold)*settings.trigger_threshold_enabled,300,1);
+			} else {
+	      tryPrint("trigger Threshold: ");
+	      tryPrintln(settings.trigger_threshold_enabled ? String(settings.trigger_threshold) : "OFF");
+			}
+	
+      delay(MENU_BUTTON_TIMEOUT);
+    }
+		
     tryPrint(".");
     delay(50);
 
@@ -124,10 +175,10 @@ uint8_t changeSettings(Gamecube_Report_t& GCreport) { // read the initial button
 }
 
 void loadSettings() {
-  if (EEPROM.read(0)) { // if EEPROM (position 0) == 1, write default settings to EEPROM and 'lock' EEPROM by setting position 0 to 0.
-    settings = {INPUT_DISPLAY_ON, GAME_OOT, ESS_ON, 1};
+  if (EEPROM.read(0)!=EEPROM_VERSION) { // if EEPROM (position 0) does not match EEPROM_VERSION, write default settings to EEPROM and update eeprom verion. This allows me to reprogram eeprom on new devices, or if the settings eeprom format changes and it's changes are incompatable with the old format.
+    settings = {INPUT_DISPLAY_ON, GAME_OOT, ESS_ON, TRIGGER_THRESHOLD_OFF, DEF_TRIGGER_THRESHOLD};
     EEPROM.put(1, settings);
-    EEPROM.update(0, 0);
+    EEPROM.update(0, EEPROM_VERSION);
     delay(2000);
     tryPrintln("");
     tryPrintln("Saved to EEPROM");
@@ -141,8 +192,11 @@ void loadSettings() {
 void printSetting() {
   tryPrint("Input Display: ");
   tryPrintln(settings.input_display_enabled ? "ON" : "OFF");
-  tryPrint("ESS: ");
 
+  tryPrint("trigger Threshold: ");
+  tryPrintln(settings.trigger_threshold_enabled ? String(settings.trigger_threshold) : "OFF");
+	
+  tryPrint("ESS: ");
   switch (settings.ess_map) {
     case ESS_OFF:
       tryPrintln("OFF");
@@ -152,8 +206,8 @@ void printSetting() {
       tryPrintln("ON");
       break;
   }
+	
   tryPrint("Game : ");
-
   switch (settings.game_selection) {
     case GAME_OOT:
       tryPrintln("OOT");

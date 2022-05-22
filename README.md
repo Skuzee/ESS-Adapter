@@ -21,6 +21,12 @@ Unreachable VC analog values:
 ## Usage & Limitations
 Currently this code only works with 16MHz Atmel AVR boards due to some of the supporting libraries having AVR specific assembly code.
 
+## Input Display
+Support for this adapter, and adapters using Nicohood's Nintendo Controller Library has been added to the newest verions of Nintendospy, but must be downloaded and compiled.  
+I've added support for the adapter to retrospy may-2022. Hopefully it will be merged soon. Until then, I have compiled my fork of retrospy so you don't have to:  
+https://github.com/Skuzee/RetroSpy/releases/tag/v5.0.4  
+You may need to uncheck Options-> Don't Filter COM Ports. To see the arduino.  
+
 ## Settings Menu Controller Shortcuts
 Connecting the adapter to a computer via usb and opening a serial monitor (like the one in the Arduino IDE) will allow you to view the current settings.  
 Settings are saved in EEPROM and persist through power cycles.  
@@ -31,21 +37,25 @@ The 'factory default' settings are: Game OOT, ESS ON, Input Display ON.
 Press and Hold L and R triggers all the way in.  
 Press X Y and Start for ~3 seconds to reset the controller.  
 Keep L and R held while changing settings.  
-- D-pad Left/Right will change between N64 button mappings. Currently There is OOT, Yoshi Story, and a Generic Map.   
-- D-pad Up Enables ESS.  
-- D-pad Down Disables ESS.  
+- D-pad Left/Right will change between Games. Currently There is OOT, Yoshi Story, and a Generic Map. *Affects which N64 button map is used, and what ESS map is used. (Currently only OOT ESS Map Exists)  
+- D-pad Up Enables ESS. *ESS defaults to ON when game is changed to OOT.  
+- D-pad Down Disables ESS. *ESS defaults to OFF when game is changed to generic.  
 - A toggles Input Display
-- Pressing Z and then exiting the settings menu will reset the settings to "factory default". Press Z again to cancel.
+- B Toggles L/R Trigger Fix (partial trigger press activates L and R buttons)  
+- Y Increase Trigger Threshold (Max of 250) *Lower is more sensitive. Typical Controller has a physical range of ~30 to 230.  
+- Z Decrease Trigger Threshold (Min of 10)  
+- Z Reset Settings to Default. *Pressing Z, and then exiting the settings menu will reset the settings to "factory default". Press Z again to cancel.  
 
 **N64 Controller:**  
 Press and Hold L and R buttons.  
 ~~Mash~~ Press all 4 c buttons at once momentarily.  
 Keep L and R held.  
 - D-pad Left/Right will change between N64 button mappings. Currently There is OOT, Yoshi Story, and a Generic Map.  
-- D-pad Up Enables ESS.  
-- D-pad Down Disables ESS.  
+- D-pad Up Enables ESS. *ESS defaults to ON when game is changed to OOT.  
+- D-pad Down Disables ESS. *ESS defaults to OFF when game is changed to generic.  
 - A toggles Input Display
-- Pressing Z and then exiting the settings menu will reset the settings to "factory default". Press Z again to cancel.
+- Z Reset Settings to Default. *Pressing Z, and then exiting the settings menu will reset the settings to "factory default". Press Z again to cancel.  
+
 
 ![n64-controller-button-map](https://raw.githubusercontent.com/Skuzee/ESS-Adapter/dev1/n64-controller-button-map.png "n64-controller-button-map.png")  
 *The n64 generic button map might not be very useful unless maybe you're tying to play a Gamecube game with an N64 controller? (That doesn't need X and Y).*
