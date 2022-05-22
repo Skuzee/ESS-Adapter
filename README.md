@@ -7,13 +7,13 @@ This version has an input display and works with the newest version of nintendos
 This adapter also functions as a generic n64 to gamecube controller adapter, although I cannot guarantee that the button mapping will work for all games.  
 
 **Youtube Video Click Here**  
-[![Img alt text](https://img.youtube.com/vi/suW19im2Xqk/0.jpg)](https://www.youtube.com/watch?v=suW19im2Xqk)
+[![youtube video](https://img.youtube.com/vi/suW19im2Xqk/0.jpg)](https://www.youtube.com/watch?v=suW19im2Xqk)
 
 ## About
 Ocarina of Time (OOT) on Gamecube (GC) and Wii run on Nintendo’s emulator called Virtual Console (VC). VC maps the GC controller values to certain in-game values. The algorithm poorly recreates the feel of the N64 version of OOT. This ESS-Adapter interprets controller input and scales/maps it to compensate for the VC map. Applying the inverse of the function means that we cancel out the bad VC map and get a result as close as possible to the original N64 analog stick range.  
 
 By taking the typical Gamecube analog stick values (top left) and applying the inverse of the VC map function (top right), they effectively cancel each other out. We can then do our own scaling and are left with an analog stick map (bottom left) That closely resembles an original n64 controller (bottom right).  
-![ESS-map-graphs.png](https://raw.githubusercontent.com/Skuzee/ESS-Adapter/dev1/ESS-map-graphs.png "ESS-map-graphs.png")  
+![ESS-map-graphs.png](https://raw.githubusercontent.com/Skuzee/ESS-Adapter/master/ESS-map-graphs.png "ESS-map-graphs.png")  
 *Because of the nature of the VC map function, some in-game analog stick values are not possible, Hence the slightly jagged appearance of the bottom right graph. We pick the closest value.*
 Unreachable VC analog values:  
 8,13,17,22,25,28,31,34,37,39,42,45,46,49,51,53,55,57,59,61,62,64,66,68,69,71,73,74,76,78,79,80  
@@ -27,11 +27,35 @@ I've added support for the adapter to retrospy may-2022. Hopefully it will be me
 https://github.com/Skuzee/RetroSpy/releases/tag/v5.0.4  
 You may need to uncheck Options-> Don't Filter COM Ports. To see the arduino.  
 
+## Downloading Arduino IDE and Uploading firmware to arduino.  
+Download Arduino IDE  
+https://www.arduino.cc/en/software  
+  
+Download and unzip the github files.  
+https://github.com/Skuzee/ESS-Adapter/archive/refs/heads/master.zip  
+  
+Open the ESS-Adapter.ino file with Arduino IDE  
+
+Tools->Board->Board Manager  
+Search "Sparkfun"  
+Install "SparkFun AVR Boards"  
+Close board manager.  
+  
+Plug ess adapter into pc via a good usb cable.  
+Select Tools->Boards->SparkFun AVR Boards->SparkFun Pro Micro  
+Select Tools->Processor->ATmega32U4 (5V 16MHz)  
+Select Tools->Port->COM_X (Usually the highest number, not usually 1 or 2)  
+Click the UPLOAD button. ctrl+U  
+
+**If this process does not work, try a different cable, different port, or restart your PC. COM ports can be finicky.**  
+You can use the arduino IDE Serial Monitor ctrl+shft+M to view the settings menu as text and adjust settings easily.  
+
 ## Settings Menu Controller Shortcuts
-Connecting the adapter to a computer via usb and opening a serial monitor (like the one in the Arduino IDE) will allow you to view the current settings.  
+![Serial Monitor Example](https://raw.githubusercontent.com/Skuzee/ESS-Adapter/master/serial-monitor-example.PNG "Arduino IDE Serial Monitor")  
+Connecting the adapter to a computer via usb and opening a serial monitor (like the one in the Arduino IDE) will allow you to view the current settings.  BAUD 115200
 Settings are saved in EEPROM and persist through power cycles.  
 Currently when OOT or Yoshi Story  is selected as the active button map, the ESS defaults back to ON. Generic Map does not have ESS functionality and defaults to OFF.  
-The 'factory default' settings are: Game OOT, ESS ON, Input Display ON.
+The 'factory default' settings are: Game: OOT, ESS: ON, Input Display: ON, Trigger Fix: OFF, Trigger Threshold: 100.
 
 **Gamecube Controller:**  
 Press and Hold L and R triggers all the way in.  
@@ -57,7 +81,7 @@ Keep L and R held.
 - Z Reset Settings to Default. *Pressing Z, and then exiting the settings menu will reset the settings to "factory default". Press Z again to cancel.  
 
 
-![n64-controller-button-map](https://raw.githubusercontent.com/Skuzee/ESS-Adapter/dev1/n64-controller-button-map.png "n64-controller-button-map.png")  
+![n64-controller-button-map](https://raw.githubusercontent.com/Skuzee/ESS-Adapter/master/n64-controller-button-map.png "n64-controller-button-map.png")  
 *The n64 generic button map might not be very useful unless maybe you're tying to play a Gamecube game with an N64 controller? (That doesn't need X and Y).*
 
 ## Wiring
