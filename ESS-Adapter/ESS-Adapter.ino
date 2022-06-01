@@ -24,12 +24,14 @@
 #define CONS_PIN 2  // Console DATA Pin: 2 yellow, 8 master branch, 2 Dev board
 #define TRIGGER_THRESHOLD // Makes the L and R triggers act like Gamecube version of OOT. range of sensitivity from 0 to 255. 0 being most sensitive. My controller has a range of ~30 to 240. Comment out to disable. Configurable with controller settings menu.
 //#define DEBUG // overwrites IndicatorLights and used for data analyzer.
+#define USB_JOYSTICK_MODE // 
 
 //Includes
 #include "src/Nintendo/src/Nintendo.h"
 #include "ESS.hpp"
 #include "extra.hpp"
 #include "input-display.hpp"
+#include "usb_joystick.hpp"
 
 #if NINTENDO_VERSION != 1337
 #error "Incorrect Nintendo.h library! Compiling with the incorrect version WILL result in 5 volts being output to your controller/console! (Not good.) Make sure the custom Nintendo library (version 1337) is included in the ESS-Adapter/src folder and try again."
@@ -53,6 +55,11 @@ void setup() {
   #else
     initilizeStatusLights();
   #endif
+	
+	//**********************
+	inititalizeJoystick();
+	//**********************
+
 }
 
 void loop() {
@@ -127,9 +134,16 @@ uint8_t GCloop() { // Wii vc version of OOT updates controller twice every ~16.6
   if (settings.ess_map == ESS_ON && settings.game_selection == GAME_OOT) // if OOT and ESS on:
     invert_vc_gc(&data.report.xAxis);
 
-  console.write(data); // Loop waits here until console requests an update.
-  GCcontroller.setRumble(data.status.rumble); // Set controller rumble status.
 
+	#ifdef USB_JOYSTICK_MODE
+		//**********************
+		sendJoystickData(data.report);
+		//**********************
+	#else
+  	console.write(data); // Loop waits here until console requests an update.
+  	GCcontroller.setRumble(data.status.rumble); // Set controller rumble status.
+	#endif
+	
   return GCcontroller.getDevice();
 }
 
