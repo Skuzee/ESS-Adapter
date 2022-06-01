@@ -22,12 +22,16 @@ Unreachable VC analog values:
 Currently this code only works with 16MHz Atmel AVR boards due to some of the supporting libraries having AVR specific assembly code.
 
 ## Input Display
-Support for this adapter, and adapters using Nicohood's Nintendo Controller Library has been added to the newest verions of Nintendospy, but must be downloaded and compiled.  
-I've added support for the adapter to retrospy may-2022. Hopefully it will be merged soon. Until then, I have compiled my fork of retrospy so you don't have to:  
+Support for this adapter, and adapters using Nicohood's Nintendo Controller Library has been added to the newest verions of Nintendospy, and Retrospy but must be downloaded and compiled.  
+I have compiled my fork of retrospy so you don't have to:  
 https://github.com/Skuzee/RetroSpy/releases/tag/v5.0.4  
 You may need to uncheck Options-> Don't Filter COM Ports. To see the arduino.  
 
 ## Downloading Arduino IDE and Uploading firmware to arduino.  
+
+**Youtube Video Click Here**  
+[![youtube video](https://img.youtube.com/vi/iTfaGLxnyhg/0.jpg)](https://www.youtube.com/watch?v=iTfaGLxnyhg)
+
 Download Arduino IDE  
 https://www.arduino.cc/en/software  
   
@@ -41,10 +45,11 @@ Search "Sparkfun"
 Install "SparkFun AVR Boards"  
 Close board manager.  
   
-Plug ess adapter into pc via a good usb cable.  
+Plug ESS adapter into PC via a good USB cable.  
 Select Tools->Boards->SparkFun AVR Boards->SparkFun Pro Micro  
 Select Tools->Processor->ATmega32U4 (5V 16MHz)  
 Select Tools->Port->COM_X (Usually the highest number, not usually 1 or 2)  
+
 Click the UPLOAD button. ctrl+U  
 
 **If this process does not work, try a different cable, different port, or restart your PC. COM ports can be finicky.**  
@@ -129,30 +134,4 @@ Depending on what components you use, you may want:
 
 ## Community
 Join our [Ocarina of Time Speedrunning Discord](https://discord.gg/EYU785K) to chat and ask any questions: Contact Angst#4857 in the #adapters-and-inputdisplays channel.
-
-## Changelog - Top = New
-  
-- Adjusted yoshi story button map
-- made menu timing adjustable in MENU_BUTTON_TIMEOUT (prevents accidental button spamming in menu.)
-- Fixed an oopies bug with indicatorLights func.
-  
-- Updated readme
-- Removed 3 useless ess setting
-- Changed factory defaults: OOT, ESS ON, Input display ON
-- Read delay always on when OOT is selected. OFF for other games.
-- Renamed 'simple' map to 'generic' map
-- Made settings numbers human readable with defines. 0 = GAME_OOT, etc.
-- Tidy up comments. :3
-- Changing game now defaults ess map to ON (no ess for generic map).
-  
-- man so much I lost track.
-  
-- added single menu navigation with n64 or gc controller
-- added hotkey to reset n64 controller connection to access settings menu
-- factory settings burn to eeprom and load on start.
-- factory setting reset.
-- added indicator lights for optional game/ess indication.
-- fixed bug: loss of serial connection would fill serial buffer and halt program. added a "tryPrint" that only prints to the serial buffer if it can fit. Having issues with missing debug data and printing settings to serial because the characters fill the buffer too fast. Possible fix is having an additional ring buffer that's larger than 64bytes to send data without halting program.
-- expanded settings to allow 8 games and 8 ess map options. not all implemented.
-- added generic n64 button map and a yoshi story map because my friend wanted it. <3
 
