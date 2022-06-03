@@ -3,12 +3,15 @@
 /* Visit Github for more information: https://github.com/Skuzee/ESS-Adapter */
 
 /*Basic Wiring Information for ATMEGA:
-   (Any GPIO pin will work. Please check CONT_PIN and CONS_PIN.)
-   -CONT_PIN --> DATA to Controller
-   -CONT_PIN --> 750ohm Pull-up Resistor --> 3.3v supply from Console
-   -CONS_PIN --> DATA to Console
-   -5v supply from console --> schottky diode --> Vcc Unregulated Voltage pin.
-   -GND Pin --> Ground wires
+  (Any GPIO pin will work. Please check CONSOLE_PIN and CONT_PIN.)
+  -CONSOLE_PIN --> DATA to Console
+	
+  ***One pull-up resistor per controller DATA pin.***
+  -CONT_PIN --> DATA to Controller
+  -CONT_PIN --> 750ohm Pull-up Resistor --> 3.3v supply from Console
+	 	 
+  -5v supply from console --> schottky diode --> Vcc Unregulated Voltage pin.
+  -GND Pin --> Ground wires
 
 	Make sure the Controller is still connected: insuring the following:
 	 -5v supply from Console --> 5v to Controller (Rumble Motor)
@@ -18,10 +21,16 @@
 	 If your cable has a braided metal shieding, don't connect it to anything.
 */
 
-//Options
-#define INPUT_DISPLAY // - works on 32u4, needs newest compiled version of NintendoSpy (not the old release from 2014).
-#define CONT_PIN 4  // Controller DATA Pin: 4 yellow, 6 master, 3 Dev board
-#define CONS_PIN 2  // Console DATA Pin: 2 yellow, 8 master branch, 2 Dev board
+
+// Both Controller types can use the same pin, HOWEVER!
+// You CANNOT plug two controllers into the same pin at the same time without error.
+// If you want two plugs on the same adapter use one pin per controller type.
+// (i.e. PIN 4 for GC controller, PIN 3 for N64) Each with their own pull-up resistor.
+#define CONT_PIN_GC 4  // GC Controller DATA Pin
+#define CONT_PIN_N64 4  // N64 Controller DATA Pin
+#define CONSOLE_PIN 2  // Console DATA Pin: 2 yellow, 8 master branch, 2 Dev board
+
+#define INPUT_DISPLAY // - works on 32u4, needs newest compiled version of NintendoSpy/Retrospy.
 #define TRIGGER_THRESHOLD // Makes the L and R triggers act like Gamecube version of OOT. range of sensitivity from 0 to 255. 0 being most sensitive. My controller has a range of ~30 to 240. Comment out to disable. Configurable with controller settings menu.
 //#define DEBUG // overwrites IndicatorLights and used for data analyzer.
 
@@ -32,15 +41,15 @@
 #include "input-display.hpp"
 
 #if NINTENDO_VERSION != 1337
-#error "Incorrect Nintendo.h library! Compiling with the incorrect version WILL result in 5 volts being output to your controller/console! (Not good.) Make sure the custom Nintendo library (version 1337) is included in the ESS-Adapter/src folder and try again."
+	#error "Incorrect Nintendo.h library! Compiling with the incorrect version WILL result in 5 volts being output to your controller/console! (Not good.) Make sure the custom Nintendo library (version 1337) is included in the ESS-Adapter/src folder and try again."
 #endif
 
 // Sets CONT_PIN on arduino to read from controller.
-CGamecubeController GCcontroller(CONT_PIN);
-CN64Controller N64controller(CONT_PIN);
+CGamecubeController GCcontroller(CONT_PIN_GC);
+CN64Controller N64controller(CONT_PIN_N64);
 
-// Sets CONS_PIN on arduino to write data to console.
-CGamecubeConsole console(CONS_PIN);
+// Sets CONSOLE_PIN on arduino to write data to console.
+CGamecubeConsole console(CONSOLE_PIN);
 Gamecube_Data_t data = defaultGamecubeData; // Initilize Gamecube data. Default needed for N64 data to convert correctly.
 
 
@@ -78,7 +87,15 @@ uint8_t checkConnection() { // Tests for a connection and gets device ID. return
   N64_Status_t connectionStatus; // Create a generic Status (N64 and GC status are the same)
   connectionStatus.device = 0; // Reset device ID
 
-  n64_init(CONT_PIN, &connectionStatus); // Initilize controller to update device ID
+	// Initilize controller to update device ID
+  n64_init(CONT_PIN_GC, &connectionStatus); // Check first pin for a controller.
+	// If CONT_PIN_GC == CONT_PIN_N64 then this will return either controller type.
+	
+	if(!connectionStatus.device) { // If no controller connected to first pin:
+		n64_init(CONT_PIN_N64, &connectionStatus); // Check the other pin.
+		// If CONT_PIN_GC != CONT_PIN_N64 then this will return n64 if connected.
+	}
+	
   tryPrint("Searching; ID:");
   tryPrintln(String(connectionStatus.device));
   delay(500);
