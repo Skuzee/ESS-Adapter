@@ -92,11 +92,11 @@ Keep L and R held.
 ## Wiring
 Any digital input pins will work. **Make sure you have them set correctly at the top of the .ino file.** Depending on the board and layout sometimes I use different pins, so double check. Pins 10,14,15,16,18,19 are used for optional RGB indicator lights.  
 
-Pin 2 is the default data pin for the Wii.
-Pin 4 is the default data pin for both controller types.
-**You CANNOT plug two controllers into the same pin at the same time without error.**
-If you want two plugs on the same adapter use one pin per controller type.
-(i.e. PIN 4 for GC controller, PIN 3 for N64) Each with their own pull-up resistor.
+Pin 2 is the default data pin for the Wii.  
+Pin 4 is the default data pin for both controller types.  
+**You CANNOT plug two controllers into the same pin at the same time without error.**  
+If you want two plugs on the same adapter use one pin per controller type.  
+(i.e. PIN 4 for GC controller, PIN 3 for N64) Each with their own pull-up resistor.  
 
 Both Common Cathode and Common Anode LEDs work and setting can be set in extras.hpp  
 LED 1: Red pin 10, Green pin 16, Blue pin 14  
