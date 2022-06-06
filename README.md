@@ -72,7 +72,7 @@ Keep L and R held while changing settings.
 - A toggles Input Display
 - B Toggles L/R Trigger Fix (partial trigger press activates L and R buttons)  
 - Y Increase Trigger Threshold (Max of 250) *Lower is more sensitive. Typical Controller has a physical range of ~30 to 230.  
-- Z Decrease Trigger Threshold (Min of 10)  
+- X Decrease Trigger Threshold (Min of 10)  
 - Z Reset Settings to Default. *Pressing Z, and then exiting the settings menu will reset the settings to "factory default". Press Z again to cancel.  
 
 **N64 Controller:**  
