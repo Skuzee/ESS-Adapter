@@ -165,10 +165,6 @@ uint8_t N64loop() { // Wii vc version of OOT updates controller twice every ~16.
       firstRead = changeSettings(data.report); // Loops while settings are being changed.
     }
     else {
-      #ifdef INPUT_DISPLAY
-        writeToUSB_BYTE(data);
-      #endif
-			
       switch (settings.game_selection) { // Convert N64 data/buttons to GC data/buttons depending on what game/ess setting is selected
 
         case GAME_OOT:
@@ -182,6 +178,10 @@ uint8_t N64loop() { // Wii vc version of OOT updates controller twice every ~16.
         default:
           N64toGC_buttonMap_Generic(N64controller.getReport(), data.report);
       }
+
+      #ifdef INPUT_DISPLAY
+        writeToUSB_BYTE(data);
+      #endif
     }
   }
 
