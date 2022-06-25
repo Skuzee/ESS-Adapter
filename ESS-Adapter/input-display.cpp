@@ -12,6 +12,15 @@ void writeToUSB_BYTE(Gamecube_Data_t& data) {
   }
 }
 
+void writeToUSB_BYTE(N64_Report_t& report) {
+  if (Serial.availableForWrite() >= 6 && settings.input_display_enabled) { // Only write to serial data buffer if it's not full. Disconnecting Arduino Serial Monitor makes serial data buffer fill and halt program; this prevents that.
+    noInterrupts(); // Important! Due to how time sensitive our code is, and how the arduino parallel processes serial data (with interrupts), we must allow the data to be written to the serial buffer or it will back up and hault the program. This was causing a hiccup in the timing roughly once every second, resulting in missing controller reads/updates.
+    Serial.write(report.raw8, sizeof(report.raw8));
+    Serial.write(NEWLINE);
+    interrupts();
+  }
+}
+
 void writeToUSB_BIT(Gamecube_Report_t &GCreport) { // Sending the data as ASCII would allow for compatibility with old versions of nintendospy. This isn't tested and honestly this is probably too slow to work. 8 times slower than writeToUSB_BYTE. The data sent is 65 bytes long per poll, and the serial buffer is only 64 bytes. If the buffer fills up the program will block until there is room to finish sending the data. ¯\_(ツ)_/¯
   if (Serial.availableForWrite() >= 10 && settings.input_display_enabled) {
     noInterrupts();

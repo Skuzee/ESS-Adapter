@@ -10,6 +10,8 @@
 
 void writeToUSB_BYTE(Gamecube_Data_t& data);
 
+void writeToUSB_BYTE(N64_Report_t& report);
+
 void writeToUSB_BIT(Gamecube_Report_t& GC_report);
 
 void tryPrint(String input);

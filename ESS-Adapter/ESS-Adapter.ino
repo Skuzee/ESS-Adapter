@@ -51,7 +51,7 @@ CN64Controller N64controller(CONT_PIN_N64);
 // Sets CONSOLE_PIN on arduino to write data to console.
 CGamecubeConsole console(CONSOLE_PIN);
 Gamecube_Data_t data = defaultGamecubeData; // Initilize Gamecube data. Default needed for N64 data to convert correctly.
-
+N64_Report_t N64report = defaultN64Data.report;
 
 void setup() {
   Serial.begin(115200);
@@ -152,36 +152,40 @@ uint8_t GCloop() { // Wii vc version of OOT updates controller twice every ~16.6
 
 uint8_t N64loop() { // Wii vc version of OOT updates controller twice every ~16.68ms (with 1.04ms between the two rapid updates.)
   static uint8_t firstRead = 1; // 1 if the previous loop failed.
+	
 
   delayRead(14); // This helps reduce input lag. remove if a game/controller combo is glitching.
-
+	
   if (!N64controller.read()) { // Attempt to read controller.
     tryPrintln("Failed N64 read:");
     firstRead = 1; // If it fails to read, assume next successful read will be the first.
   }
   else {
-    if (firstRead || enterSettingsMenuN64Controller(N64controller.getReport())) { // Special case: first read: change settings.
-      N64toGC_buttonMap_Generic(N64controller.getReport(), data.report); // Use the generic button map for the settings menu to keep things consistent.
+		N64report = N64controller.getReport();
+			
+    if (firstRead || enterSettingsMenuN64Controller(N64report)) { // Special case: first read: change settings.
+      N64toGC_buttonMap_Generic(N64report, data.report); // Use the generic button map for the settings menu to keep things consistent.
       firstRead = changeSettings(data.report); // Loops while settings are being changed.
     }
     else {
+			
+      #ifdef INPUT_DISPLAY
+        writeToUSB_BYTE(N64report);
+      #endif
+
       switch (settings.game_selection) { // Convert N64 data/buttons to GC data/buttons depending on what game/ess setting is selected
 
         case GAME_OOT:
-          N64toGC_buttonMap_OOT(N64controller.getReport(), data.report);
+          N64toGC_buttonMap_OOT(N64report, data.report);
           break;
 
         case GAME_YOSHI:
-          N64toGC_buttonMap_Yoshi(N64controller.getReport(), data.report);
+          N64toGC_buttonMap_Yoshi(N64report, data.report);
           break;
 
         default:
-          N64toGC_buttonMap_Generic(N64controller.getReport(), data.report);
+          N64toGC_buttonMap_Generic(N64report, data.report);
       }
-
-      #ifdef INPUT_DISPLAY
-        writeToUSB_BYTE(data);
-      #endif
     }
   }
 
