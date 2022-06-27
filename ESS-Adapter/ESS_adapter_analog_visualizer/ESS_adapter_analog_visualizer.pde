@@ -1,3 +1,7 @@
+// Serial data analog stick plotter/visualizer
+// Expects 12 bytes: Start, 3 coordinate pairs, 4 debug values, End
+// typical: S x1 y1 x2 y2 x3 y3 D1 D2 D3 D4 E
+
 //plots various controller coordinates in different colors to compare the effects of ess and notch calibration
 // My notches 
 // NE 77,80
