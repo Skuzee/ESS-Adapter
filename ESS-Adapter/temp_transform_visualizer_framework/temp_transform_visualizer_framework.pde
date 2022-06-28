@@ -1,3 +1,23 @@
+/* This is a framework for a more complicated plotter / visualizer program.
+   The program will take a SET of data points (analog stick coordinates) and apply
+   a TRANSFORM to the coordinate (one at a time) and plot / display the output with
+   a VISUALIZER. The design is modular such that any transform and any visualizer can 
+   be used on any set of coordinate points. Example:
+     visualizer.display(coord, transform); 
+   Displays the current coord, then applies the transform and displays the result.
+   
+   TODO: Figure out how to turn a list of func names into a call to that function.
+     Currently need to list func name in enem, in switch, and define it in a class.
+     Would prefer to only define and add to enum.
+   TODO: handle SETs either dynamically, or simply.
+   TODO: make VISUALIZER take arrays of transforms[] and apply them one after another.
+   TODO: make some array list of PREGEN transforms for known uses.
+   
+
+
+*/
+
+
 // Coord Class ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 public class Coord {
   public int X;
