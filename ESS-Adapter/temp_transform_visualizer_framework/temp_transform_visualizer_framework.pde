@@ -11,6 +11,8 @@
      Would prefer to only define and add to enum.
    TODO: handle SETs either dynamically, or simply.
    TODO: make VISUALIZER take arrays of transforms[] and apply them one after another.
+     maybe an array of enum and then just interate and select the tranform each loop!
+     maybe split transform from visualizer so I can call visualizer after each of many transforms.
    TODO: make some array list of PREGEN transforms for known uses.
    
 
@@ -93,6 +95,15 @@ public class subtraction implements Transform { // Subtraction
   }
 }
 
+// Array of Transform test ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+void interateTransforms (ListOfTransforms[] transformArray) {
+  for (ListOfTransforms currentTransform : transformArray) {
+    activeTransform = currentTransform;
+    selectTransform();
+    visualizer.display(coord, transform);
+  }
+}
+
 // List of Visualizers ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 public static enum ListOfVisualizers { 
   dots, lines;
@@ -165,7 +176,7 @@ Transform transform;
 ListOfVisualizers activeVisualizer;
 Visualizer visualizer;
 
-Coord activeCoord;
+Coord coord;
 
 // Setup ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 void setup() {
@@ -177,13 +188,13 @@ void setup() {
   println("TRANSFORM: " + activeTransform + " | VISUALIZER: " + activeVisualizer);
   transform = new addition();
   visualizer = new LotsOfDots();
-  activeCoord = new Coord(100, 100);
+  coord = new Coord(100, 100);
 }
 
 // Draw ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 void draw() {
   background(255);
-  visualizer.display(activeCoord, transform);
+  visualizer.display(coord, transform);
 }
 
 // Mouse Events ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
