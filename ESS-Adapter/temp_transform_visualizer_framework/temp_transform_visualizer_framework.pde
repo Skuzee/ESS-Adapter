@@ -25,22 +25,51 @@ TODO: pregen that is just one of each transform/visualizer for demo mode.
 
 
 // Imports ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-import java.util.Iterator;  // Import the class of Iterator
+import java.util.Iterator;
 
 // Coord Class ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 public class Coord {
-  public int X;
-  public int Y;
-
-  Coord(int X, int Y) {
-    this.X = X;
-    this.Y =Y;
+  // signed -127 to 128
+  private int X=0;
+  private int Y=0;
+  private float mag=0; // distance to origin
+  
+  public int scaledX=0; // scaled coord values for graphing porportional to window size and zoom level
+  public int scaledY=0;
+  
+  // Constructors
+  Coord(int inputX, int inputY) { this.setXY(inputX, inputY); } 
+  
+  Coord(Coord inputCoord) { this.setXY(inputCoord.getX(), inputCoord.getY()); }
+  
+  // Updater
+  private void update() {
+    scaledX = int(map(X,-127,128,0,width*zoom));
+    scaledY = int(map(Y,-127,128,height*zoom,0));
+    mag = sqrt(pow(X,2) + pow(Y,2));
   }
+  
+  public float distanceFrom(int inputX,int inputY) { return sqrt(pow(inputX-scaledX,2) + pow(inputY-scaledY,2)); }
 
-  Coord(Coord inputCoord) {
-    this.X = inputCoord.X;
-    this.Y =inputCoord.Y;
-  }
+  public float getMag() { return mag; }
+  
+  public int getX() { return X; }
+  
+  public int getY() { return Y; }
+
+  public void setXY(int inputX, int inputY){ X = inputX; Y = inputY; this.update();}
+  
+  public void setX(int inputX) { X = inputX; this.update(); }
+  
+  public void setY(int inputY) { Y = inputY; this.update(); }
+  
+  public void incX() { X++; this.update(); }
+  
+  public void incY() { Y++; this.update(); }
+  
+  public void incX(int a) { X+=a; this.update(); }
+  
+  public void incY(int a) { Y+=a; this.update(); }
 }
 
 // Sequence Class ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -62,7 +91,7 @@ public class Sequence {
       
       Visualizer visualizer = visualizerList.get(index);
       if ((visualizer != null)) {
-        visualizer.display(outputCoord, 1);
+        visualizer.display(outputCoord, zoom);
       }
       //println("X1 " + inputCoord.X + " | Y1 " + inputCoord.Y + " | X2 " + outputCoord.X + " | Y2 " +outputCoord.Y);
   }
@@ -81,7 +110,7 @@ public class Sequence {
       
       Visualizer visualizer = visualizerIterator.next();
       if ((visualizer != null)) {
-        visualizer.display(outputCoord, 1);
+        visualizer.display(outputCoord, zoom);
       }
       //println("X1 " + inputCoord.X + " | Y1 " + inputCoord.Y + " | X2 " + outputCoord.X + " | Y2 " +outputCoord.Y);
     }
@@ -90,13 +119,10 @@ public class Sequence {
 
 // "Pregen" assembled lists of pregenerated transforms and visualizations ~~~~~~~~~~~~~~~~~~~~~
 public class WiiVCmap extends Sequence {
-  private Coord myCoord = new Coord(100,100);
 
   WiiVCmap() {
-    this.addElement(null,new LotsOfDots());  
-    this.addElement(new addition(),new LotsOfDots());
-    this.addElement(new addition(),new LotsOfDots());
-    this.addElement(new addition(),new LotsOfDots());
+    this.addElement(null, new LotsOfDots());  
+    this.addElement(new subtraction(), new LotsOfDots());
     //this.singleElement(myCoord, 1);
   }
 }
@@ -148,13 +174,13 @@ public interface Transform {
 
 public class addition implements Transform { // Addition 
   public Coord apply(Coord inputCoord) {
-    return new Coord(inputCoord.X+10, inputCoord.Y+10);
+    return new Coord(inputCoord.getX()+10, inputCoord.getY()+10);
   }
 }
 
 public class subtraction implements Transform { // Subtraction
   public Coord apply(Coord inputCoord) {
-    return new Coord(inputCoord.X-10, inputCoord.Y-10);
+    return new Coord(inputCoord.getX()-10, inputCoord.getY()-10);
   }
 }
 
@@ -208,7 +234,7 @@ public class LotsOfDots implements Visualizer { // DOTS
   public void display(Coord inputCoord, int setting1) {
     stroke(0);
     fill(0);
-    ellipse(inputCoord.X, inputCoord.Y, setting1, setting1);
+    ellipse(inputCoord.scaledX, inputCoord.scaledY, setting1, setting1);
   }
 }
 
@@ -219,7 +245,7 @@ public class ManyLines implements Visualizer { // LINES
 
     // Need to call next transform in list?
 
-    // line(inputCoord.X, inputCoord.Y, outputCoord.X, outputCoord.Y);
+    // line(inputCoord.getX, inputCoord.getY, outputCoord.getX, outputCoord.getY);
   }
 }
 
@@ -231,9 +257,11 @@ TypesOfVisualizers activeVisualizer;
 Visualizer visualizer;
 Coord coord;
 
+int zoom = 1;
+
 // Setup ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 void setup() {
-  size(200, 200);
+  size(1024, 1024);   
   background(255);
 
   activeTransform = TypesOfTransforms.first();
@@ -247,14 +275,19 @@ void setup() {
 // Draw ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 void draw() {
   background(255);
-  coord = new Coord(-127,127);
+  coord = new Coord(-100,-100);
+  pushMatrix();
+  translate(-mouseX*zoom+width/2,-mouseY*zoom+height/2);
+  //translate(width/2,height/2);
   
   WiiVCmap test = new WiiVCmap();
-  for (coord.Y=-127; coord.Y<128;coord.Y+=2) {
-    for (coord.X=-127; coord.X<128;coord.X+=2) {
+  for(coord.setY(-100);coord.getY()<100;coord.incY(7)) {
+    for(coord.setX(-100);coord.getX()<100;coord.incX(7)) {
       test.iterateDeep(coord);
     }
   }
+  
+  popMatrix();
 }
 
 // Mouse Events ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -270,4 +303,9 @@ void mousePressed() {
   }
 
   println("TRANSFORM: " + activeTransform + " | VISUALIZER: " + activeVisualizer);
+}
+
+void mouseWheel(MouseEvent event) {
+  zoom -= event.getCount();
+  zoom = constrain(zoom,1,40);
 }
