@@ -1,24 +1,23 @@
 /* This is a framework for a more complicated plotter / visualizer program.
-   The program will take a SET of data points (analog stick coordinates) and apply
-   a TRANSFORM to the coordinate (one at a time) and plot / display the output with
-   a VISUALIZER. The design is modular such that any transform and any visualizer can 
-   be used on any set of coordinate points. Example:
-     visualizer.display(coord, transform); 
-   Displays the current coord, then applies the transform and displays the result.
-   
-   TODO: Figure out how to turn a list of func names into a call to that function.
-     Currently need to list func name in enem, in switch, and define it in a class.
-     Would prefer to only define and add to enum.
-   TODO: handle SETs either dynamically, or simply.
-   TODO: make VISUALIZER take arrays of transforms[] and apply them one after another.
-     maybe an array of enum and then just interate and select the tranform each loop!
-     maybe split transform from visualizer so I can call visualizer after each of many transforms.
-   TODO: make some array list of PREGEN transforms for known uses.
-   
-
-
-*/
-
+ The program will take a SET of data points (analog stick coordinates) and apply
+ a TRANSFORM to the coordinate (one at a time) and plot / display the output with
+ a VISUALIZER. The design is modular such that any transform and any visualizer can 
+ be used on any set of coordinate points. Example:
+ visualizer.display(coord, transform); 
+ Displays the current coord, then applies the transform and displays the result.
+ 
+ TODO: Figure out how to turn a list of func names into a call to that function.
+ Currently need to list func name in enem, in switch, and define it in a class.
+ Would prefer to only define and add to enum.
+ TODO: handle SETs either dynamically, or simply.
+ TODO: make VISUALIZER take arrays of transforms[] and apply them one after another.
+ maybe an array of enum and then just interate and select the tranform each loop!
+ maybe split transform from visualizer so I can call visualizer after each of many transforms.
+ TODO: make some array list of PREGEN transforms for known uses.
+ TODO: DEEP vs BROAD transform visualization. 
+ All transforms one point at a time, or
+ all points one transform at a time?
+ */
 
 // Coord Class ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 public class Coord {
@@ -29,12 +28,11 @@ public class Coord {
     this.X = X;
     this.Y =Y;
   }
-  
+
   Coord(Coord inputCoord) {
     this.X = inputCoord.X;
     this.Y =inputCoord.Y;
   }
-  
 }
 
 // List of Transforms ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -85,18 +83,18 @@ public interface Transform {
 
 public class addition implements Transform { // Addition 
   public Coord apply(Coord inputCoord) {
-    return new Coord(inputCoord.X+10,inputCoord.Y+10);
+    return new Coord(inputCoord.X+10, inputCoord.Y+10);
   }
 }
 
 public class subtraction implements Transform { // Subtraction
   public Coord apply(Coord inputCoord) {
-    return new Coord(inputCoord.X-10,inputCoord.Y-10);
+    return new Coord(inputCoord.X-10, inputCoord.Y-10);
   }
 }
 
 // Array of Transform test ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-void interateTransforms (ListOfTransforms[] transformArray) {
+void interatePREGEN (ListOfTransforms[] transformArray, ListOfVisualizers[] VisualizerArray) {
   for (ListOfTransforms currentTransform : transformArray) {
     activeTransform = currentTransform;
     selectTransform();
@@ -184,10 +182,11 @@ void setup() {
   background(255);
 
   activeTransform = ListOfTransforms.first();
+  selectTransform();
   activeVisualizer = ListOfVisualizers.first();
+  selectVisualizer();
   println("TRANSFORM: " + activeTransform + " | VISUALIZER: " + activeVisualizer);
-  transform = new addition();
-  visualizer = new LotsOfDots();
+
   coord = new Coord(100, 100);
 }
 
@@ -208,7 +207,6 @@ void mousePressed() {
     activeVisualizer = activeVisualizer.next();
     selectVisualizer();
   }
-  
-  println("TRANSFORM: " + activeTransform + " | VISUALIZER: " + activeVisualizer);  
 
+  println("TRANSFORM: " + activeTransform + " | VISUALIZER: " + activeVisualizer);
 }

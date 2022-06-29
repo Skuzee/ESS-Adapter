@@ -72,6 +72,8 @@ Coord workingCoord = new Coord(0,0);
 float displayValues[] = new float[8];
 
 int zoom = 1;
+int proximity = 5;
+int lineBrightness = 50;
 
 int lastx[] = {0,0};
 int lasty[] = {0,0};
@@ -96,6 +98,7 @@ void draw()
   translate(-mouseX*zoom+width/2,-mouseY*zoom+height/2);
   background(0);
   drawAxisLines();
+  //drawDeadzone15();
   
 // draw here~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
   drawVCVectorField();
@@ -115,18 +118,29 @@ void drawAxisLines(){
   line(0,(height+4)*zoom/2,width*zoom,(height+4)*zoom/2);
   line(0,4*zoom,width*zoom,(height+4)*zoom);
   line(width*zoom,0,0,height*zoom);
+  popStyle();
+}
 
+void drawDeadzone15(){
+  pushStyle();
+  stroke(0,0,120);
+  strokeWeight(1);
+  int deadZoneBound = int(map(15,-127,128,0,width*zoom));
+  line(deadZoneBound,deadZoneBound,deadZoneBound,-deadZoneBound);
+  popStyle();
 }
 
 void lineFromTo(Coord inputFrom, Coord inputTo) {
   pushStyle();
-  stroke(64-abs(inputFrom.mag-inputTo.mag)*2,100,50);
+  stroke(64-abs(inputFrom.mag-inputTo.mag)*2,100,50,lineBrightness);
+  strokeWeight(1+zoom);
   noFill();
   line(inputFrom.scaledX, inputFrom.scaledY, inputTo.scaledX, inputTo.scaledY);
   popStyle();
 }
 
 void drawVCVectorField(){
+  displayValues[0] = float(proximity);
   Coord VCcoord = new Coord(0,0);
   
   for (int yValue=-127; yValue<128;yValue+=1) {
@@ -135,14 +149,18 @@ void drawVCVectorField(){
 
       VCcoord.setXY(VCmapTransform(xValue),VCmapTransform(yValue));
 
-      if ((VCmapTransform(xValue)!=0) && (VCmapTransform(yValue)!=0) && (workingCoord.distanceFrom(mouseX+mouseX*zoom-width/2, mouseY+mouseY*zoom-height/2) <= 2000*zoom)) {
+      float dist = workingCoord.distanceFrom(mouseX+mouseX*zoom-width/2, mouseY+mouseY*zoom-height/2);
+      lineBrightness = int(constrain(zoom*proximity+100-dist,0,100));
+      
+      if ((VCmapTransform(xValue)!=0) && (VCmapTransform(yValue)!=0) && (dist <= proximity*zoom)) { // && (lineBrightness>=25)
         //workingCoord.drawCoord(color(50,100,50));
         lineFromTo(workingCoord,VCcoord);
-        VCcoord.drawCoord(color(25,100,50));
+        VCcoord.drawCoord(color(25,100,50,lineBrightness));
       }
       
-      if ((workingCoord.distanceFrom(mouseX+mouseX*zoom-width/2, mouseY+mouseY*zoom-height/2) <= 200*zoom)) {
+      if (dist <= 2*zoom) {
         workingCoord.drawCoord(color(50,100,50));
+        println(lineBrightness);
         text("x" + workingCoord.getX() + " y" + workingCoord.getY(),workingCoord.scaledX,workingCoord.scaledY-3*zoom);
       }
       
@@ -150,31 +168,6 @@ void drawVCVectorField(){
   } 
 }
 
-public enum Operation {
-    PLUS {
-        public double calc(double a, double b) {
-            return a + b;
-        }
-    },
-    TIMES {
-        public double calc(double a, double b) {
-            return a * b;
-        }
-    };
-     // 
-
-     public abstract double calc(double a, double b);
-}
-
-public class VCtransform {
-  VCtransform() {
-    
-  }
-  
-  void apply(){
-   
-  }
-}
 
 //void drawVectorField(function<int(int)> transform) {
 //  Coord primary = new Coord(0,0);
@@ -229,6 +222,16 @@ int VCmapTransform(int input) {
   //output = constrain(output,0,127);
   output *= sign;
   
-
   return int(output);
+}
+
+void mouseClicked() {
+  if (mouseButton==LEFT) {
+    proximity+=5;
+  }
+
+  if (mouseButton==RIGHT) {
+    proximity-=5;
+  }
+  proximity = constrain(proximity, 5,200);
 }
