@@ -1,23 +1,31 @@
 /* This is a framework for a more complicated plotter / visualizer program.
- The program will take a SET of data points (analog stick coordinates) and apply
- a TRANSFORM to the coordinate (one at a time) and plot / display the output with
- a VISUALIZER. The design is modular such that any transform and any visualizer can 
- be used on any set of coordinate points. Example:
- visualizer.display(coord, transform); 
- Displays the current coord, then applies the transform and displays the result.
+The program will take a SET of data points (analog stick coordinates) and apply
+a TRANSFORM to the coordinate (one at a time) and plot / display the output with
+a VISUALIZER. The design is modular such that any transform and any visualizer can 
+be used on any set of coordinate points. 
+Currently there is a Sequence class that holds a lists of Transforms and Visualizer objects.
+use NULL to skip transform or visualizations. 
+extending the Sequence class is a "pregen" a custom list of transforms/visualizer steps.
+calling singleElement(Coord, index) or iterateAll(Coord) will apply and display the steps.
  
- TODO: Figure out how to turn a list of func names into a call to that function.
- Currently need to list func name in enem, in switch, and define it in a class.
- Would prefer to only define and add to enum.
- TODO: handle SETs either dynamically, or simply.
- TODO: make VISUALIZER take arrays of transforms[] and apply them one after another.
- maybe an array of enum and then just interate and select the tranform each loop!
- maybe split transform from visualizer so I can call visualizer after each of many transforms.
- TODO: make some array list of PREGEN transforms for known uses.
- TODO: DEEP vs BROAD transform visualization. 
- All transforms one point at a time, or
- all points one transform at a time?
+TODO: replace "types of transforms/visualizers" with enum list of pregens. 
+  Currently need to list func name in enem, in switch, and define it in a class.
+  Would prefer to only define and add to enum.
+TODO: a way to open pregens from files.
+TODO: handle SETs either dynamically, or predefined data.
+ still need to decide who is going to be in change of deep vs broad data generation and call sequence elements
+TODO: make some array list of PREGEN transforms for known uses.
+TODO: copy over transforms and displays
+TODO: handle drawing lines? might need to pass 2 coords to all visualizers just in case it need the next one?
+  or allow visualizer to call the next transform (temporarily or permanently)
+TODO: scale output of visualizers to screen pixel values.
+TODO: pregen that is just one of each transform/visualizer for demo mode.
+
  */
+
+
+// Imports ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+import java.util.Iterator;  // Import the class of Iterator
 
 // Coord Class ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 public class Coord {
@@ -35,13 +43,71 @@ public class Coord {
   }
 }
 
-// List of Transforms ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-public static enum ListOfTransforms { 
+// Sequence Class ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+public class Sequence {
+  private ArrayList<Transform> transformList = new ArrayList<Transform>();
+  private ArrayList<Visualizer> visualizerList = new ArrayList<Visualizer>();
+  
+  public void addElement(Transform transform, Visualizer visualizer) {
+    transformList.add(transform);
+    visualizerList.add(visualizer);
+  }
+  
+  public void singleElement(Coord inputCoord, int index) {
+    Coord outputCoord = inputCoord; // Transform returns new coord as to not accidentally edit original inputCoord by reference.
+      Transform transform = transformList.get(index);
+      if (transform != null) {
+        outputCoord = transform.apply(outputCoord); // applies transforms sequentially while preserving original inputCoord object.
+      }
+      
+      Visualizer visualizer = visualizerList.get(index);
+      if ((visualizer != null)) {
+        visualizer.display(outputCoord, 1);
+      }
+      //println("X1 " + inputCoord.X + " | Y1 " + inputCoord.Y + " | X2 " + outputCoord.X + " | Y2 " +outputCoord.Y);
+  }
+  
+  public void iterateDeep(Coord inputCoord) { // Applies all Transforms and Visualizations to a single Coord before continuing.
+    Iterator<Transform> transformIterator = transformList.iterator();
+    Iterator<Visualizer> visualizerIterator = visualizerList.iterator();
+    Coord outputCoord = inputCoord; // Transform returns new coord as to not accidentally edit original inputCoord by reference.
+    
+    
+    while (transformIterator.hasNext() && visualizerIterator.hasNext()) {
+      Transform transform = transformIterator.next();
+      if (transform != null) {
+        outputCoord = transform.apply(outputCoord); // applies transforms sequentially while preserving original inputCoord object.
+      }
+      
+      Visualizer visualizer = visualizerIterator.next();
+      if ((visualizer != null)) {
+        visualizer.display(outputCoord, 1);
+      }
+      //println("X1 " + inputCoord.X + " | Y1 " + inputCoord.Y + " | X2 " + outputCoord.X + " | Y2 " +outputCoord.Y);
+    }
+  }
+}
+
+// "Pregen" assembled lists of pregenerated transforms and visualizations ~~~~~~~~~~~~~~~~~~~~~
+public class WiiVCmap extends Sequence {
+  private Coord myCoord = new Coord(100,100);
+
+  WiiVCmap() {
+    this.addElement(null,new LotsOfDots());  
+    this.addElement(new addition(),new LotsOfDots());
+    this.addElement(new addition(),new LotsOfDots());
+    this.addElement(new addition(),new LotsOfDots());
+    //this.singleElement(myCoord, 1);
+  }
+}
+
+// Types of Transforms ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+public static enum TypesOfTransforms { 
   addition, subtraction;
 
-  private static ListOfTransforms[] vals = values();
+  private static TypesOfTransforms[] vals = values();
 
-  public static ListOfTransforms first()
+  public static TypesOfTransforms first()
   {
     return vals[0];
   }
@@ -51,18 +117,17 @@ public static enum ListOfTransforms {
     return vals.length;
   }
 
-  public ListOfTransforms next()
+  public TypesOfTransforms next()
   {
     return vals[(this.ordinal()+1) % vals.length];
   }
-  public ListOfTransforms prev()
+  public TypesOfTransforms prev()
   {
     return vals[(this.ordinal()+vals.length-1) % vals.length];
   }
 }
 
 // Select Transform ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
 void selectTransform() {
   switch (activeTransform) {
 
@@ -93,22 +158,13 @@ public class subtraction implements Transform { // Subtraction
   }
 }
 
-// Array of Transform test ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-void interatePREGEN (ListOfTransforms[] transformArray, ListOfVisualizers[] VisualizerArray) {
-  for (ListOfTransforms currentTransform : transformArray) {
-    activeTransform = currentTransform;
-    selectTransform();
-    visualizer.display(coord, transform);
-  }
-}
-
-// List of Visualizers ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-public static enum ListOfVisualizers { 
+// Types of Visualizers ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+public static enum TypesOfVisualizers { 
   dots, lines;
 
-  private static ListOfVisualizers[] vals = values();
+  private static TypesOfVisualizers[] vals = values();
 
-  public static ListOfVisualizers first()
+  public static TypesOfVisualizers first()
   {
     return vals[0];
   }
@@ -118,11 +174,11 @@ public static enum ListOfVisualizers {
     return vals.length;
   }
 
-  public ListOfVisualizers next()
+  public TypesOfVisualizers next()
   {
     return vals[(this.ordinal()+1) % vals.length];
   }
-  public ListOfVisualizers prev()
+  public TypesOfVisualizers prev()
   {
     return vals[(this.ordinal()+vals.length-1) % vals.length];
   }
@@ -145,35 +201,34 @@ void selectVisualizer() {
 
 // Visualizer Interface & Definitions ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 public interface Visualizer {
-  public void display(Coord inputCoord, Transform transform);
+  public void display(Coord inputCoord, int setting1);
 }
 
 public class LotsOfDots implements Visualizer { // DOTS
-  public void display(Coord inputCoord, Transform transform) {
+  public void display(Coord inputCoord, int setting1) {
     stroke(0);
     fill(0);
-    Coord outputCoord = transform.apply(inputCoord);
-    ellipse(inputCoord.X, inputCoord.Y, 5, 5);
-    ellipse(outputCoord.X, outputCoord.Y, 5, 5);
+    ellipse(inputCoord.X, inputCoord.Y, setting1, setting1);
   }
 }
 
 public class ManyLines implements Visualizer { // LINES
-  public void display(Coord inputCoord, Transform transform) {
+  public void display(Coord inputCoord, int setting1) {
     stroke(0);
     noFill();
-    Coord outputCoord = transform.apply(inputCoord);
-    line(inputCoord.X, inputCoord.Y, outputCoord.X, outputCoord.Y);
+
+    // Need to call next transform in list?
+
+    // line(inputCoord.X, inputCoord.Y, outputCoord.X, outputCoord.Y);
   }
 }
 
 //Globals ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-ListOfTransforms activeTransform;
+TypesOfTransforms activeTransform;
 Transform transform;
 
-ListOfVisualizers activeVisualizer;
+TypesOfVisualizers activeVisualizer;
 Visualizer visualizer;
-
 Coord coord;
 
 // Setup ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -181,19 +236,25 @@ void setup() {
   size(200, 200);
   background(255);
 
-  activeTransform = ListOfTransforms.first();
+  activeTransform = TypesOfTransforms.first();
   selectTransform();
-  activeVisualizer = ListOfVisualizers.first();
+  activeVisualizer = TypesOfVisualizers.first();
   selectVisualizer();
   println("TRANSFORM: " + activeTransform + " | VISUALIZER: " + activeVisualizer);
 
-  coord = new Coord(100, 100);
 }
 
 // Draw ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 void draw() {
   background(255);
-  visualizer.display(coord, transform);
+  coord = new Coord(-127,127);
+  
+  WiiVCmap test = new WiiVCmap();
+  for (coord.Y=-127; coord.Y<128;coord.Y+=2) {
+    for (coord.X=-127; coord.X<128;coord.X+=2) {
+      test.iterateDeep(coord);
+    }
+  }
 }
 
 // Mouse Events ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
