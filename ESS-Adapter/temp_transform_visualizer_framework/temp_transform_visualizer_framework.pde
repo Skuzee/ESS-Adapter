@@ -15,11 +15,12 @@ TODO: a way to open pregens from files.
 TODO: handle SETs either dynamically, or predefined data.
  still need to decide who is going to be in change of deep vs broad data generation and call sequence elements
 TODO: make some array list of PREGEN transforms for known uses.
-TODO: copy over transforms and displays
-TODO: handle drawing lines? might need to pass 2 coords to all visualizers just in case it need the next one?
-  or allow visualizer to call the next transform (temporarily or permanently)
-TODO: scale output of visualizers to screen pixel values.
-TODO: pregen that is just one of each transform/visualizer for demo mode.
+  pregen that is just one of each transform/visualizer for demo mode.
+TODO:hand how color alpha and line size are store handled passed
+TODO: standardize lineFromTo or merge with vector field
+TODO: proximity? maybe local to vector field
+TODO: axis lines!
+
 
  */
 
@@ -122,9 +123,9 @@ public class Sequence {
 public class WiiVCmap extends Sequence {
 
   WiiVCmap() {
-    this.addElement(null, new LotsOfDots());  
+    //this.addElement(null, new LotsOfDots());  
     this.addElement(new VCmap(), new VectorField());
-    this.addElement(null, new LotsOfDots());
+    //this.addElement(null, new LotsOfDots());
   }
 }
 
@@ -289,13 +290,28 @@ public class VectorField implements Visualizer {
   }
 }
 
-void lineFromTo(Coord inputFrom, Coord inputTo) {
+void lineFromTo(Coord inputFrom, Coord inputTo) { // Merge this with vectorfield, or make it handle color and size and generalize it.
   pushStyle();
   stroke(64-abs(inputFrom.mag-inputTo.mag)*2,100,100,lineBrightness);
   strokeWeight(1+zoom);
   noFill();
   line(inputFrom.scaledX, inputFrom.scaledY, inputTo.scaledX, inputTo.scaledY);
   popStyle(); 
+}
+
+// Draw Axis Lines ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+void drawAxisLines(){  
+  // white x and Y axis lines
+  pushStyle();
+  stroke(0,0,120);
+  strokeWeight(1);
+  line((width-4)*zoom/2,0,(width-4)*zoom/2,height*zoom);
+  line(0,(height+4)*zoom/2,width*zoom,(height+4)*zoom/2);
+  
+  // white diagonal lines
+  //line(0,4*zoom,width*zoom,(height+4)*zoom);
+  //line(width*zoom,0,0,height*zoom);
+  popStyle();
 }
 
 //Globals ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -321,20 +337,21 @@ void setup() {
   activeVisualizer = TypesOfVisualizers.first();
   selectVisualizer();
   println("TRANSFORM: " + activeTransform + " | VISUALIZER: " + activeVisualizer);
-
+  coord = new Coord(0,0);
 }
 
 // Draw ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 void draw() {
   background(0);
-  coord = new Coord(-100,-100);
+
   pushMatrix();
   translate(-mouseX*zoom+width/2,-mouseY*zoom+height/2);
   //translate(width/2,height/2);
+  drawAxisLines();
   
   WiiVCmap test = new WiiVCmap();
-  for(coord.setY(-100);coord.getY()<100;coord.incY(3)) {
-    for(coord.setX(-100);coord.getX()<100;coord.incX(3)) {
+  for(coord.setY(-100);coord.getY()<100;coord.incY(1)) {
+    for(coord.setX(-100);coord.getX()<100;coord.incX(1)) {
       test.iterateDeep(coord);
     }
   }
