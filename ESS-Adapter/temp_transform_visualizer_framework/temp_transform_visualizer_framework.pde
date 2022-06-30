@@ -209,7 +209,7 @@ public class PREGEN_WiiVCmap extends Sequence {
 
 public class PREGEN_MonotonicTest extends Sequence {
   PREGEN_MonotonicTest() {
-    this.addElement(new VCmap(), new Gradient_Fade(), new MonotonicTest());
+    this.addElement(new VCmap(), new SolidColor(), new MonotonicTest());
   }
 }
 
@@ -361,9 +361,14 @@ public class MonotonicTest implements Visualizer { // Draws a line from inputCoo
   public void display(Coord inputCoord1, Coord inputCoord2) {
 
     pushStyle();
-    noStroke();
-    fill(inputCoord2.HSBcolor, 100);
-    ellipse(inputCoord1.scaledX, inputCoord2.scaledY, inputCoord2.drawSize*zoom*2, inputCoord2.drawSize*zoom*2);
+    stroke(inputCoord2.HSBcolor, 100);
+    strokeWeight(1+zoom);
+    noFill();
+    ///////////////////// Need to juggle X f(X), and save previous coord for line drawing.
+    ///////////////////// sequential outputCoords (in DEEP or SINGLE)??
+    line(inputCoord1.scaledX, inputCoord2.scaledX, inputCoord1.scaledX, inputCoord2.scaledX); //inputCoord1.scaledY, inputCoord2.scaledY);
+    inputCoord1.setY(inputCoord1.getX());
+    inputCoord2.setY(inputCoord2.getX());
     popStyle();
   }
 }
@@ -406,7 +411,6 @@ void draw() {
   translate(-mouseX*zoom+width/2, -mouseY*zoom+height/2);
   //translate(width/2,height/2);
   drawAxisLines();
-
   PREGEN_WiiVCmap test = new PREGEN_WiiVCmap();
   for (coord.setY(-100); coord.getY()<=100; coord.incY(1)) {
     for (coord.setX(-100); coord.getX()<=100; coord.incX(1)) {
@@ -415,8 +419,7 @@ void draw() {
   }
   
   //PREGEN_MonotonicTest test = new PREGEN_MonotonicTest();
-  //for (coord.setX(0); coord.getX()<=128; coord.incX(1)) {
-  //  coord.setY(coord.getX());
+  //for (coord.setXY(0,0); coord.getX()<=128; coord.incX(1)) {
   //  test.iterateDeep(coord);
   //}
 
