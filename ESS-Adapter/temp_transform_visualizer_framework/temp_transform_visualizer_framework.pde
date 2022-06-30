@@ -14,8 +14,9 @@
  TODO: make some array list of PREGEN transforms for known uses.
  pregen that is just one of each transform/visualizer for demo mode.
  ENUM of pregens: swap between pregens with keys.
- TODO:hand how color alpha and line size are store handled passed
- TODO: proximity? maybe local to vector field
+ TODO: Colormode argument vs Colormode interface and sequence array?
+   dot/line size?
+ TODO: renderDistance? maybe local to vector field
  TODO: generalize render distance to mouse.
  
  
@@ -35,6 +36,7 @@ public class Coord {
   public int scaledX=0; // scaled coord values for graphing porportional to window size and zoom level
   public int scaledY=0;
   public color HSBcolor = color(0, 100, 100);
+  public int Acolor = 100;
 
   // Constructors
   Coord(){
@@ -126,22 +128,23 @@ public class Sequence {
     transformList.add(transform);
     visualizerList.add(visualizer);
   }
-
+  
+  // applies single transform. Used to render all coordinates of a given transform before applying the next.
   public void singleElement(Coord inputCoord, int index) {
     Coord outputCoord = inputCoord; // Transform returns new coord as to not accidentally edit original inputCoord by reference.
     Transform transform = transformList.get(index);
     if (transform != null) {
-      outputCoord = transform.apply(outputCoord); // applies transforms sequentially while preserving original inputCoord object.
+      outputCoord = transform.apply(outputCoord); 
     }
 
     Visualizer visualizer = visualizerList.get(index);
-    if ((visualizer != null)) {
-      visualizer.display(outputCoord, zoom);
+    if ((visualizer != null) && inRenderDistance(inputCoord)) {
+      visualizer.display(inputCoord, outputCoord, zoom);
     }
-    //println("X1 " + inputCoord.X + " | Y1 " + inputCoord.Y + " | X2 " + outputCoord.X + " | Y2 " +outputCoord.Y);
   }
-
-  public void iterateDeep(Coord inputCoord) { // Applies all Transforms and Visualizations to a single Coord before continuing.
+  
+  // Applies all Transforms and Visualizations to a single Coord before continuing.
+  public void iterateDeep(Coord inputCoord) { 
     Iterator<Transform> transformIterator = transformList.iterator();
     Iterator<Visualizer> visualizerIterator = visualizerList.iterator();
     Coord outputCoord = inputCoord; // Transform returns new coord as to not accidentally edit original inputCoord by reference.
@@ -154,11 +157,17 @@ public class Sequence {
       }
 
       Visualizer visualizer = visualizerIterator.next();
-      if ((visualizer != null)) {
+      if ((visualizer != null) && inRenderDistance(inputCoord)) {
         visualizer.display(inputCoord, outputCoord, zoom);
       }
-      //println("X1 " + inputCoord.X + " | Y1 " + inputCoord.Y + " | X2 " + outputCoord.X + " | Y2 " +outputCoord.Y);
     }
+  }
+  
+  boolean inRenderDistance(Coord inputCoord) { // Calculates the distance from the scaled XY coordinate and the mouse position.
+    float dist = inputCoord.distanceFrom(mouseX+mouseX*zoom-width/2, mouseY+mouseY*zoom-height/2); // Need to offset mouse transform, so wierd maths.
+    inputCoord.Acolor = int(constrain(100-100*dist/(zoom*renderDistance), 0, 100));
+    
+    return (dist<=renderDistance*zoom && inputCoord.Acolor!=0) ? true : false; 
   }
 }
 
@@ -167,9 +176,9 @@ public class WiiVCmap extends Sequence {
 
   WiiVCmap() {
     //this.addElement(null, new LotsOfDots());  
-    //this.addElement(new VCmap(), new VectorField());
-    this.addElement(new VCmap(), new LotsOfDots());
-    //this.addElement(null, new LotsOfDots());
+    this.addElement(new VCmap(), new VectorField());
+    //this.addElement(new VCmap(), new LotsOfDots());
+    this.addElement(null, new LotsOfDots());
   }
 }
 
@@ -252,8 +261,6 @@ public class VCmap implements Transform { // Subtraction
     outputY *= signY;
     
     outputCoord.setXY(int(outputX), int(outputY));
-
-    //int colorAlpha = int(constrain(100-100*inputCoord.distanceFrom(mouseX+mouseX*zoom-width/2, mouseY+mouseY*zoom-height/2)/(zoom*proximity)+10, 0, 100));
     outputCoord.HSBcolor = color(40-inputCoord.distToCoord(outputCoord)*2, 100, 100);
     return outputCoord;
   }
@@ -298,46 +305,33 @@ void selectVisualizer() {
 
 // Visualizer Interface & Definitions ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 public interface Visualizer {
-  public void display(Coord inputCoord, int setting1);
   public void display(Coord inputCoord1, Coord inputCoord2, int setting1);
 }
 
 public class LotsOfDots implements Visualizer { // DOTS
-  public void display(Coord inputCoord, int setting1) {
-    noStroke();
-    fill(inputCoord.HSBcolor);
-    ellipse(inputCoord.scaledX, inputCoord.scaledY, setting1, setting1);
-  }
-
   public void display(Coord inputCoord1, Coord inputCoord2, int setting1) {
-    display(inputCoord2, setting1);
+    setting1*=2;
+    pushStyle();
+    noStroke();
+    fill(inputCoord2.HSBcolor, inputCoord1.Acolor);
+    ellipse(inputCoord2.scaledX, inputCoord2.scaledY, setting1, setting1);
+    popStyle();
   }
 }
 
 public class VectorField implements Visualizer { // Draws a line from inputCoord1 to inputCoord2
-
-  public void display(Coord inputCoord, int setting1) {
-    println("Hey this needs two coords!");
-    exit();
-  }
-
   public void display(Coord inputCoord1, Coord inputCoord2, int setting1) {
 
-    float dist = inputCoord1.distanceFrom(mouseX+mouseX*zoom-width/2, mouseY+mouseY*zoom-height/2);
-    int lineAlpha = int(constrain(100-100*dist/(zoom*proximity)+10, 0, 100));
+    //float dist = inputCoord1.distanceFrom(mouseX+mouseX*zoom-width/2, mouseY+mouseY*zoom-height/2);
+    //int colorAlpha = int(constrain(100-100*dist/(zoom*renderDistance), 0, 100));
 
-    if ((inputCoord2.getX()!=0) && (inputCoord2.getY()!=0) && (dist <= proximity*zoom) && (lineAlpha!=0)) {
+    if ((inputCoord2.getX()!=0) && (inputCoord2.getY()!=0)) {
       pushStyle();
-      stroke(inputCoord2.HSBcolor, lineAlpha);
+      stroke(inputCoord2.HSBcolor, inputCoord1.Acolor);
       strokeWeight(1+zoom);
       noFill();
       line(inputCoord1.scaledX, inputCoord1.scaledY, inputCoord2.scaledX, inputCoord2.scaledY);
       popStyle();
-    }
-
-    if (dist <= 2*zoom) {
-      //inputCoord1.drawCoord(color(50,100,100));
-      text("x" + inputCoord1.getX() + " y" + inputCoord1.getY(), inputCoord1.scaledX, inputCoord1.scaledY-3*zoom);
     }
   }
 }
@@ -366,7 +360,7 @@ Visualizer visualizer;
 Coord coord;
 
 int zoom = 1;
-int proximity = 200;
+int renderDistance = 200;
 
 // Setup ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 void setup() {
@@ -418,13 +412,13 @@ void draw() {
 
 void mouseClicked() {
   if (mouseButton==LEFT) {
-    proximity+=5;
+    renderDistance+=10;
   }
 
   if (mouseButton==RIGHT) {
-    proximity-=5;
+    renderDistance-=10;
   }
-  proximity = constrain(proximity, 5, 200);
+  renderDistance = constrain(renderDistance, 5, 1025);
 }
 
 void mouseWheel(MouseEvent event) {
