@@ -132,11 +132,11 @@ void drawDeadzone15(){
 
 void lineFromTo(Coord inputFrom, Coord inputTo) {
   pushStyle();
-  stroke(64-abs(inputFrom.mag-inputTo.mag)*2,100,50,lineBrightness);
+  stroke(64-abs(inputFrom.mag-inputTo.mag)*2,100,100,lineBrightness);
   strokeWeight(1+zoom);
   noFill();
   line(inputFrom.scaledX, inputFrom.scaledY, inputTo.scaledX, inputTo.scaledY);
-  popStyle();
+  popStyle(); 
 }
 
 void drawVCVectorField(){
@@ -150,17 +150,17 @@ void drawVCVectorField(){
       VCcoord.setXY(VCmapTransform(xValue),VCmapTransform(yValue));
 
       float dist = workingCoord.distanceFrom(mouseX+mouseX*zoom-width/2, mouseY+mouseY*zoom-height/2);
-      lineBrightness = int(constrain(zoom*proximity+100-dist,0,100));
+      lineBrightness = int(constrain(100-100*dist/(zoom*proximity),0,100));
       
-      if ((VCmapTransform(xValue)!=0) && (VCmapTransform(yValue)!=0) && (dist <= proximity*zoom)) { // && (lineBrightness>=25)
-        //workingCoord.drawCoord(color(50,100,50));
+      if ((VCmapTransform(xValue)!=0) && (VCmapTransform(yValue)!=0) && (dist <= proximity*zoom) && (lineBrightness>0)) { // && (lineBrightness>=25)
+        println(lineBrightness);
+        //workingCoord.drawCoord(color(50,100,100));
         lineFromTo(workingCoord,VCcoord);
-        VCcoord.drawCoord(color(25,100,50,lineBrightness));
+        VCcoord.drawCoord(color(25,100,100,lineBrightness));
       }
       
       if (dist <= 2*zoom) {
-        workingCoord.drawCoord(color(50,100,50));
-        println(lineBrightness);
+        workingCoord.drawCoord(color(50,100,100));
         text("x" + workingCoord.getX() + " y" + workingCoord.getY(),workingCoord.scaledX,workingCoord.scaledY-3*zoom);
       }
       
@@ -180,9 +180,9 @@ void drawVCVectorField(){
 //      secondary.setXY(VCmapTransform(xValue),VCmapTransform(yValue));
 
 //      if ((VCmapTransform(xValue)!=0) && (VCmapTransform(yValue)!=0) && (primary.distanceFrom(mouseX+mouseX*zoom-width/2, mouseY+mouseY*zoom-height/2) <= 20*zoom)) {
-//        //primary.drawCoord(color(50,100,50));
+//        //primary.drawCoord(color(50,100,100));
 //        lineFromTo(primary,VCcoord);
-//        secondary.drawCoord(color(25,100,50));
+//        secondary.drawCoord(color(25,100,100));
 //      }
       
 //      if ((primary.distanceFrom(mouseX+mouseX*zoom-width/2, mouseY+mouseY*zoom-height/2) <= 2*zoom)) {

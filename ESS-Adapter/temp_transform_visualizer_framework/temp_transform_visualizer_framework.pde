@@ -36,6 +36,7 @@ public class Coord {
   
   public int scaledX=0; // scaled coord values for graphing porportional to window size and zoom level
   public int scaledY=0;
+  public color HSBAcolor = color(0, 100, 50, 100);
   
   // Constructors
   Coord(int inputX, int inputY) { this.setXY(inputX, inputY); } 
@@ -258,9 +259,12 @@ Visualizer visualizer;
 Coord coord;
 
 int zoom = 1;
+int proximity = 5;
+int lineBrightness = 50;
 
 // Setup ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 void setup() {
+  colorMode(HSB, 100, 100, 100, 100);
   size(1024, 1024);   
   background(255);
 
@@ -291,18 +295,29 @@ void draw() {
 }
 
 // Mouse Events ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-void mousePressed() {
+//void mousePressed() {
+//  if (mouseButton==LEFT) {
+//    activeTransform = activeTransform.next();
+//    selectTransform();
+//  }
+
+//  if (mouseButton==RIGHT) {
+//    activeVisualizer = activeVisualizer.next();
+//    selectVisualizer();
+//  }
+
+//  println("TRANSFORM: " + activeTransform + " | VISUALIZER: " + activeVisualizer);
+//}
+
+void mouseClicked() {
   if (mouseButton==LEFT) {
-    activeTransform = activeTransform.next();
-    selectTransform();
+    proximity+=5;
   }
 
   if (mouseButton==RIGHT) {
-    activeVisualizer = activeVisualizer.next();
-    selectVisualizer();
+    proximity-=5;
   }
-
-  println("TRANSFORM: " + activeTransform + " | VISUALIZER: " + activeVisualizer);
+  proximity = constrain(proximity, 5,200);
 }
 
 void mouseWheel(MouseEvent event) {
