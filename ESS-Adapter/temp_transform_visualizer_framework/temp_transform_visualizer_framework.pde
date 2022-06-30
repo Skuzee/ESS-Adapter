@@ -36,7 +36,7 @@ public class Coord {
   
   public int scaledX=0; // scaled coord values for graphing porportional to window size and zoom level
   public int scaledY=0;
-  public color HSBAcolor = color(0, 100, 50, 100);
+  public color HSBAcolor = color(0, 100, 100, 100);
   
   // Constructors
   Coord(int inputX, int inputY) { this.setXY(inputX, inputY); } 
@@ -111,7 +111,7 @@ public class Sequence {
       
       Visualizer visualizer = visualizerIterator.next();
       if ((visualizer != null)) {
-        visualizer.display(outputCoord, zoom);
+        visualizer.display(inputCoord, outputCoord, zoom);
       }
       //println("X1 " + inputCoord.X + " | Y1 " + inputCoord.Y + " | X2 " + outputCoord.X + " | Y2 " +outputCoord.Y);
     }
@@ -123,8 +123,8 @@ public class WiiVCmap extends Sequence {
 
   WiiVCmap() {
     this.addElement(null, new LotsOfDots());  
-    this.addElement(new subtraction(), new LotsOfDots());
-    //this.singleElement(myCoord, 1);
+    this.addElement(new VCmap(), new VectorField());
+    this.addElement(null, new LotsOfDots());
   }
 }
 
@@ -185,6 +185,29 @@ public class subtraction implements Transform { // Subtraction
   }
 }
 
+public class VCmap implements Transform { // Subtraction
+  public Coord apply(Coord inputCoord) {
+    int signX = constrain(int(inputCoord.getX()),-1,1);
+    int signY = constrain(int(inputCoord.getY()),-1,1);
+    
+    float outputX = ((inputCoord.getX() * signX)-15)*signX;
+    outputX = int(outputX * 127 / 56);
+    outputX /= 127;
+    outputX = 1 - sqrt(1 - abs(outputX));
+    outputX *= 127;
+    outputX *= signX;
+    
+    float outputY = ((inputCoord.getY() * signY)-15)*signY; 
+    outputY = int(outputY * 127 / 56);
+    outputY /= 127;
+    outputY = 1 - sqrt(1 - abs(outputY));
+    outputY *= 127;
+    outputY *= signY;
+    
+    return new Coord(int(outputX),int(outputY));
+  }
+}
+
 // Types of Visualizers ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 public static enum TypesOfVisualizers { 
   dots, lines;
@@ -219,16 +242,13 @@ void selectVisualizer() {
   case dots:
     visualizer = new LotsOfDots();
     break;
-
-  case lines:
-    visualizer = new ManyLines();
-    break;
   }
 }
 
 // Visualizer Interface & Definitions ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 public interface Visualizer {
   public void display(Coord inputCoord, int setting1);
+  public void display(Coord inputCoord1, Coord inputCoord2, int setting1);
 }
 
 public class LotsOfDots implements Visualizer { // DOTS
@@ -237,17 +257,45 @@ public class LotsOfDots implements Visualizer { // DOTS
     fill(0);
     ellipse(inputCoord.scaledX, inputCoord.scaledY, setting1, setting1);
   }
+  
+  public void display(Coord inputCoord1, Coord inputCoord2, int setting1) {
+    stroke(0);
+    fill(0);
+    ellipse(inputCoord2.scaledX, inputCoord2.scaledY, setting1, setting1);
+  }
 }
 
-public class ManyLines implements Visualizer { // LINES
-  public void display(Coord inputCoord, int setting1) {
-    stroke(0);
-    noFill();
-
-    // Need to call next transform in list?
-
-    // line(inputCoord.getX, inputCoord.getY, outputCoord.getX, outputCoord.getY);
+public class VectorField implements Visualizer {
+  
+  public void display(Coord inputCoord, int setting1){
+    println("Hey this needs two coords!");
+    exit();  
   }
+  
+  public void display(Coord inputCoord1, Coord inputCoord2, int setting1) {
+   
+    float dist = inputCoord1.distanceFrom(mouseX+mouseX*zoom-width/2, mouseY+mouseY*zoom-height/2);
+    lineBrightness = int(constrain(100-100*dist/(zoom*proximity)+10,0,100));
+    
+    if ((inputCoord2.getX()!=0) && (inputCoord2.getY()!=0) && (dist <= proximity*zoom) && (lineBrightness!=0)) {
+      lineFromTo(inputCoord1,inputCoord2);
+      //inputCoord2.drawCoord(color(25,100,100,lineBrightness));
+    }
+    
+    if (dist <= 2*zoom) {
+      //inputCoord1.drawCoord(color(50,100,100));
+      text("x" + inputCoord1.getX() + " y" + inputCoord1.getY(),inputCoord1.scaledX,inputCoord1.scaledY-3*zoom);
+    }
+  }
+}
+
+void lineFromTo(Coord inputFrom, Coord inputTo) {
+  pushStyle();
+  stroke(64-abs(inputFrom.mag-inputTo.mag)*2,100,100,lineBrightness);
+  strokeWeight(1+zoom);
+  noFill();
+  line(inputFrom.scaledX, inputFrom.scaledY, inputTo.scaledX, inputTo.scaledY);
+  popStyle(); 
 }
 
 //Globals ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -266,7 +314,7 @@ int lineBrightness = 50;
 void setup() {
   colorMode(HSB, 100, 100, 100, 100);
   size(1024, 1024);   
-  background(255);
+  background(0);
 
   activeTransform = TypesOfTransforms.first();
   selectTransform();
@@ -278,15 +326,15 @@ void setup() {
 
 // Draw ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 void draw() {
-  background(255);
+  background(0);
   coord = new Coord(-100,-100);
   pushMatrix();
   translate(-mouseX*zoom+width/2,-mouseY*zoom+height/2);
   //translate(width/2,height/2);
   
   WiiVCmap test = new WiiVCmap();
-  for(coord.setY(-100);coord.getY()<100;coord.incY(7)) {
-    for(coord.setX(-100);coord.getX()<100;coord.incX(7)) {
+  for(coord.setY(-100);coord.getY()<100;coord.incY(3)) {
+    for(coord.setX(-100);coord.getX()<100;coord.incX(3)) {
       test.iterateDeep(coord);
     }
   }
