@@ -8,17 +8,28 @@
  extending the Sequence class is a "pregen" a custom list of transforms/visualizer steps.
  calling singleElement(Coord, index) or iterateAll(Coord) will apply and display the steps.
  
-
+ 
  TODO: a way to open pregens from files.
  TODO: handle SETs either dynamically, or predefined data.
  TODO: make some array list of PREGEN transforms for known uses.
- pregen that is just one of each transform/visualizer for demo mode.
+ -pregen that is just one of each transform/visualizer for demo mode.
  ENUM of pregens: swap between pregens with keys.
  TODO: Colormode argument vs Colormode interface and sequence array?
-   dot/line size?
+ -dot/line size?
  TODO: renderDistance? maybe local to vector field
  TODO: generalize render distance to mouse.
+ TODO: inputCoord to visualizer is the ORIGINAL coords, and not the sequential coords. this might be an issue for multi-transformed visuals.
+ -might want to pass the previous output as next input.
  
+ Render distance is calculated by sequence,
+ Color is calculated by Transform, but stored in outputCoord
+ Alpha is calculated by sequence, but stored in inputCoord
+ I kinda dont like this.
+ It makes sense to calc color from transform difference, but maybe it can be moved elsewhere.
+ It makes sense that the color is stored in outputCoord.
+ It does not make sense that Alpha is stored in input,
+ but currently inRenderDistance does not have access to outputCoord
+ maybe colormode is a type of visualization?
  
  */
 
@@ -37,11 +48,12 @@ public class Coord {
   public int scaledY=0;
   public color HSBcolor = color(0, 100, 100);
   public int Acolor = 100;
+  public boolean isRendered = true;
 
   // Constructors
-  Coord(){
+  Coord() {
   }
-  
+
   Coord(int inputX, int inputY) { 
     this.setXY(inputX, inputY);
   } 
@@ -49,7 +61,7 @@ public class Coord {
   Coord(Coord inputCoord) { 
     this.setXY(inputCoord.getX(), inputCoord.getY());
   }
-  
+
   Coord(int inputX, int inputY, color inputColor) { 
     this.setXY(inputX, inputY);
     HSBcolor = inputColor;
@@ -69,7 +81,7 @@ public class Coord {
   public float getMag() { 
     return mag;
   }
-  
+
   public float distToCoord(Coord inputCoord) {
     return abs(this.mag - inputCoord.getMag());
   }
@@ -128,13 +140,13 @@ public class Sequence {
     transformList.add(transform);
     visualizerList.add(visualizer);
   }
-  
+
   // applies single transform. Used to render all coordinates of a given transform before applying the next.
   public void singleElement(Coord inputCoord, int index) {
     Coord outputCoord = inputCoord; // Transform returns new coord as to not accidentally edit original inputCoord by reference.
     Transform transform = transformList.get(index);
     if (transform != null) {
-      outputCoord = transform.apply(outputCoord); 
+      outputCoord = transform.apply(outputCoord);
     }
 
     Visualizer visualizer = visualizerList.get(index);
@@ -142,11 +154,13 @@ public class Sequence {
       visualizer.display(inputCoord, outputCoord, zoom);
     }
   }
-  
+
   // Applies all Transforms and Visualizations to a single Coord before continuing.
   public void iterateDeep(Coord inputCoord) { 
     Iterator<Transform> transformIterator = transformList.iterator();
     Iterator<Visualizer> visualizerIterator = visualizerList.iterator();
+    
+    // Consider moving this inside first while loop if sequential transform visualization does not look right!!!!
     Coord outputCoord = inputCoord; // Transform returns new coord as to not accidentally edit original inputCoord by reference.
 
 
@@ -162,12 +176,14 @@ public class Sequence {
       }
     }
   }
-  
+
   boolean inRenderDistance(Coord inputCoord) { // Calculates the distance from the scaled XY coordinate and the mouse position.
     float dist = inputCoord.distanceFrom(mouseX+mouseX*zoom-width/2, mouseY+mouseY*zoom-height/2); // Need to offset mouse transform, so wierd maths.
-    inputCoord.Acolor = int(constrain(100-100*dist/(zoom*renderDistance), 0, 100));
-    
-    return (dist<=renderDistance*zoom && inputCoord.Acolor!=0) ? true : false; 
+    //inputCoord.Acolor = int(constrain(100-100*dist/(zoom*renderDistance), 0, 100));
+
+    //return (dist<=renderDistance*zoom && inputCoord.Acolor!=0) ? true : false;
+    inputCoord.isRendered = (dist<=renderDistance*zoom) ? true : false;
+    return inputCoord.isRendered;
   }
 }
 
@@ -242,6 +258,7 @@ public class subtraction implements Transform { // Subtraction
 public class VCmap implements Transform { // Subtraction
   public Coord apply(Coord inputCoord) {
     Coord outputCoord = new Coord();
+    outputCoord.isRendered = inputCoord.isRendered;
 
     int signX = constrain(int(inputCoord.getX()), -1, 1);
     int signY = constrain(int(inputCoord.getY()), -1, 1);
@@ -259,7 +276,7 @@ public class VCmap implements Transform { // Subtraction
     outputY = 1 - sqrt(1 - abs(outputY));
     outputY *= 127;
     outputY *= signY;
-    
+
     outputCoord.setXY(int(outputX), int(outputY));
     outputCoord.HSBcolor = color(40-inputCoord.distToCoord(outputCoord)*2, 100, 100);
     return outputCoord;
@@ -333,6 +350,16 @@ public class VectorField implements Visualizer { // Draws a line from inputCoord
       line(inputCoord1.scaledX, inputCoord1.scaledY, inputCoord2.scaledX, inputCoord2.scaledY);
       popStyle();
     }
+  }
+}
+
+// Calculate render distance, magnitude color shift, and alpha
+// Unlike the other Visualizers, we are actually editing the coordinate colors/alpha via reference.
+public class colorMode implements Visualizer { 
+  public void display(Coord inputCoord1, Coord inputCoord2, int setting1) {
+    inputCoord2.HSBcolor = color(40-inputCoord1.distToCoord(inputCoord2)*2, 100, 100);
+    float dist = inputCoord1.distanceFrom(mouseX+mouseX*zoom-width/2, mouseY+mouseY*zoom-height/2); // Need to offset mouse transform, so wierd maths.
+    inputCoord2.Acolor = int(constrain(100-100*dist/(zoom*renderDistance), 0, 100));
   }
 }
 
