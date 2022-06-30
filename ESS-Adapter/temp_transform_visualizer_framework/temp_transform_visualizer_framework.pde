@@ -9,11 +9,11 @@
  calling singleElement(Coord, index) or iterateAll(Coord) will apply and display the steps.
  
  a pregen might look something like this:
-this.addElement(null, new plotAsPoints());                     // No transform, plot all intial coordinate points as dots.
-this.addElement(new myTransform(), new Color_GradientFade());  // Apply first transform, apply color scheme based on change of input to output coordinates 
-this.addElement(null, new VectorField());                      // No transform, plot as lines from input to output coord
-this.addElement(null, new Color_SolidColor());                 // No transform, apply solid color scheme to output coordiantes.
-this.addElement(null, new plotAsPoints());                     // No transform, plot all coordinate points as dots.
+ this.addElement(null, new plotAsPoints());                     // No transform, plot all intial coordinate points as dots.
+ this.addElement(new myTransform(), new Color_GradientFade());  // Apply first transform, apply color scheme based on change of input to output coordinates 
+ this.addElement(null, new VectorField());                      // No transform, plot as lines from input to output coord
+ this.addElement(null, new Color_SolidColor());                 // No transform, apply solid color scheme to output coordiantes.
+ this.addElement(null, new plotAsPoints());                     // No transform, plot all coordinate points as dots.
  
  
  TODO: a way to open pregens from files.
@@ -21,12 +21,10 @@ this.addElement(null, new plotAsPoints());                     // No transform, 
  TODO: make some array list of PREGEN transforms for known uses.
  -pregen that is just one of each transform/visualizer for demo mode.
  ENUM of pregens: swap between pregens with keys.
- TODO: Color_GradientFade argument vs Color_GradientFade interface and sequence array?
- -dot/line size?
- TODO: renderDistance? maybe local to vector field
- TODO: generalize render distance to mouse.
+ TODO: vizualizer option1 pas color/alpha/drawSize?
  TODO: inputCoord to visualizer is the ORIGINAL coords, and not the sequential coords. this might be an issue for multi-transformed visuals.
  -might want to pass the previous output as next input.
+ TODO: XY diagonal visualizer for monotonic test.
  
  Render distance is calculated by sequence,
  Color is calculated by Transform, but stored in outputCoord
@@ -151,10 +149,12 @@ public class Coord {
 // Sequence Class ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 public class Sequence {
   private ArrayList<Transform> transformList = new ArrayList<Transform>();
+  private ArrayList<Coloring> coloringList = new ArrayList<Coloring>();
   private ArrayList<Visualizer> visualizerList = new ArrayList<Visualizer>();
 
-  public void addElement(Transform transform, Visualizer visualizer) {
+  public void addElement(Transform transform, Coloring coloring, Visualizer visualizer) {
     transformList.add(transform);
+    coloringList.add(coloring);
     visualizerList.add(visualizer);
   }
 
@@ -165,31 +165,41 @@ public class Sequence {
     if (transform != null) {
       outputCoord = transform.apply(outputCoord);
     }
-
+    
+    Coloring coloring = coloringList.get(index);
+    if (coloring != null) {
+      coloring.change(inputCoord, outputCoord);
+    }
+    
     Visualizer visualizer = visualizerList.get(index);
     if ((visualizer != null) && inputCoord.isRendered) {
-      visualizer.display(inputCoord, outputCoord, zoom);
+      visualizer.display(inputCoord, outputCoord);
     }
   }
 
   // Applies all Transforms and Visualizations to a single Coord before continuing.
   public void iterateDeep(Coord inputCoord) { 
     Iterator<Transform> transformIterator = transformList.iterator();
+    Iterator<Coloring> coloringIterator = coloringList.iterator();
     Iterator<Visualizer> visualizerIterator = visualizerList.iterator();
-    
+
     // Consider moving this inside first while loop if sequential transform visualization does not look right!!!!
     Coord outputCoord = inputCoord; // Transform returns new coord as to not accidentally edit original inputCoord by reference.
 
-
-    while (transformIterator.hasNext() && visualizerIterator.hasNext()) {
+    while (transformIterator.hasNext() && visualizerIterator.hasNext() && coloringIterator.hasNext()) {
       Transform transform = transformIterator.next();
       if (transform != null) {
         outputCoord = transform.apply(outputCoord); // applies transforms sequentially while preserving original inputCoord object.
       }
-
+      
+      Coloring coloring = coloringIterator.next();
+      if (coloring != null) {
+        coloring.change(inputCoord, outputCoord);
+      }
+      
       Visualizer visualizer = visualizerIterator.next();
       if ((visualizer != null) && inputCoord.isRendered && outputCoord.isRendered) { // and output isRendered???
-        visualizer.display(inputCoord, outputCoord, zoom);
+        visualizer.display(inputCoord, outputCoord);
       }
     }
   }
@@ -197,14 +207,10 @@ public class Sequence {
 
 // "Pregen" assembled lists of pregenerated transforms and visualizations ~~~~~~~~~~~~~~~~~~~~~
 public class WiiVCmap extends Sequence {
-
   WiiVCmap() {
-    //this.addElement(null, new plotAsPoints()); 
-    //this.addElement(null, new Color_GradientFade());
-    this.addElement(new VCmap(), new Color_GradientFade());
-    //this.addElement(new VCmap(), new plotAsPoints());
-    this.addElement(null, new VectorField());
-    this.addElement(null, new plotAsPoints());
+    //this.addElement(null,        new SolidColor(),    new plotAsPoints());
+    this.addElement(new VCmap(), new GradientFade(),  new VectorField());
+    this.addElement(null,        new SolidFade(),                new plotAsPoints());
   }
 }
 
@@ -235,18 +241,18 @@ public static enum TypesOfTransforms {
 }
 
 // Select Transform ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-void selectTransform() {
-  switch (activeTransform) {
+//void selectTransform() {
+//  switch (activeTransform) {
 
-  case addition:
-    transform = new addition();
-    break;
+//  case addition:
+//    transform = new addition();
+//    break;
 
-  case subtraction:
-    transform = new subtraction();
-    break;
-  }
-}
+//  case subtraction:
+//    transform = new subtraction();
+//    break;
+//  }
+//}
 
 // Transforms Interface & Definitions ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 public interface Transform {
@@ -293,61 +299,53 @@ public class VCmap implements Transform { // Subtraction
   }
 }
 
-// Types of Visualizers ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-public static enum TypesOfVisualizers { 
-  dots, lines;
+// Coloring Interface & Definitions ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+public interface Coloring {
+  public void change(Coord inputCoord1, Coord inputCoord2);
+}
 
-  private static TypesOfVisualizers[] vals = values();
-
-  public static TypesOfVisualizers first()
-  {
-    return vals[0];
-  }
-
-  public static int length()
-  {
-    return vals.length;
-  }
-
-  public TypesOfVisualizers next()
-  {
-    return vals[(this.ordinal()+1) % vals.length];
-  }
-  public TypesOfVisualizers prev()
-  {
-    return vals[(this.ordinal()+vals.length-1) % vals.length];
+public class GradientFade implements Coloring { 
+  public void change(Coord inputCoord1, Coord inputCoord2) {
+    inputCoord2.HSBcolor = color(40-inputCoord1.distToCoord(inputCoord2)*2, 100, 100);
+    float dist1 = inputCoord1.distanceFrom(mouseX+mouseX*zoom-width/2, mouseY+mouseY*zoom-height/2); // Need to offset mouse transform, so wierd maths.
+    float dist2 = inputCoord2.distanceFrom(mouseX+mouseX*zoom-width/2, mouseY+mouseY*zoom-height/2); // Need to offset mouse transform, so wierd maths.
+    inputCoord2.Acolor = int(constrain(100-100*max(dist1, dist2)/(zoom*renderDistance), 0, 100)); // Set to fade in/out basd on renderDistance.
   }
 }
 
-// Select Visualizer ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+public class SolidColor implements Coloring { 
+  public void change(Coord inputCoord1, Coord inputCoord2) {
+    inputCoord2.HSBcolor = color(66, 100, 100);
+    inputCoord2.Acolor = 100;
+  }
+}
 
-void selectVisualizer() {
-  switch (activeVisualizer) {
-
-  case dots:
-    visualizer = new plotAsPoints();
-    break;
+public class SolidFade implements Coloring { 
+  public void change(Coord inputCoord1, Coord inputCoord2) {
+    inputCoord2.HSBcolor = color(0, 0, 100);
+    float dist1 = inputCoord1.distanceFrom(mouseX+mouseX*zoom-width/2, mouseY+mouseY*zoom-height/2); // Need to offset mouse transform, so wierd maths.
+    float dist2 = inputCoord2.distanceFrom(mouseX+mouseX*zoom-width/2, mouseY+mouseY*zoom-height/2); // Need to offset mouse transform, so wierd maths.
+    inputCoord2.Acolor = int(constrain(100-100*max(dist1, dist2)/(zoom*renderDistance), 0, 100)); // Set to fade in/out basd on renderDistance.;
   }
 }
 
 // Visualizer Interface & Definitions ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 public interface Visualizer {
-  public void display(Coord inputCoord1, Coord inputCoord2, int setting1);
+  public void display(Coord inputCoord1, Coord inputCoord2);
 }
 
 public class plotAsPoints implements Visualizer { // DOTS
-  public void display(Coord inputCoord1, Coord inputCoord2, int setting1) {
-    setting1*=2;
+  public void display(Coord inputCoord1, Coord inputCoord2) {
     pushStyle();
     noStroke();
     fill(inputCoord2.HSBcolor, inputCoord2.Acolor);
-    ellipse(inputCoord2.scaledX, inputCoord2.scaledY, setting1, setting1);
+    ellipse(inputCoord2.scaledX, inputCoord2.scaledY, inputCoord2.drawSize*zoom*2, inputCoord2.drawSize*zoom*2);
     popStyle();
   }
 }
 
 public class VectorField implements Visualizer { // Draws a line from inputCoord1 to inputCoord2
-  public void display(Coord inputCoord1, Coord inputCoord2, int setting1) {
+  public void display(Coord inputCoord1, Coord inputCoord2) {
 
     //float dist = inputCoord1.distanceFrom(mouseX+mouseX*zoom-width/2, mouseY+mouseY*zoom-height/2);
     //int colorAlpha = int(constrain(100-100*dist/(zoom*renderDistance), 0, 100));
@@ -360,17 +358,6 @@ public class VectorField implements Visualizer { // Draws a line from inputCoord
       line(inputCoord1.scaledX, inputCoord1.scaledY, inputCoord2.scaledX, inputCoord2.scaledY);
       popStyle();
     }
-  }
-}
-
-// Calculate render distance, magnitude color shift, and alpha
-// Unlike the other Visualizers, we are actually editing the coordinate colors/alpha via reference.
-public class Color_GradientFade implements Visualizer { 
-  public void display(Coord inputCoord1, Coord inputCoord2, int setting1) {
-    inputCoord2.HSBcolor = color(40-inputCoord1.distToCoord(inputCoord2)*2, 100, 100);
-    float dist1 = inputCoord1.distanceFrom(mouseX+mouseX*zoom-width/2, mouseY+mouseY*zoom-height/2); // Need to offset mouse transform, so wierd maths.
-    float dist2 = inputCoord2.distanceFrom(mouseX+mouseX*zoom-width/2, mouseY+mouseY*zoom-height/2); // Need to offset mouse transform, so wierd maths.
-    inputCoord2.Acolor = int(constrain(100-100*max(dist1,dist2)/(zoom*renderDistance), 0, 100)); // Set to fade in/out basd on renderDistance.
   }
 }
 
@@ -390,11 +377,6 @@ void drawAxisLines() {
 }
 
 //Globals ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-TypesOfTransforms activeTransform;
-Transform transform;
-
-TypesOfVisualizers activeVisualizer;
-Visualizer visualizer;
 Coord coord;
 
 int zoom = 1;
@@ -406,11 +388,6 @@ void setup() {
   size(1024, 1024);   
   background(0);
 
-  activeTransform = TypesOfTransforms.first();
-  selectTransform();
-  activeVisualizer = TypesOfVisualizers.first();
-  selectVisualizer();
-  println("TRANSFORM: " + activeTransform + " | VISUALIZER: " + activeVisualizer);
   coord = new Coord();
 }
 
