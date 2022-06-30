@@ -9,11 +9,13 @@
  calling singleElement(Coord, index) or iterateAll(Coord) will apply and display the steps.
  
  a pregen might look something like this:
- this.addElement(null, new plotAsPoints());                     // No transform, plot all intial coordinate points as dots.
- this.addElement(new myTransform(), new Color_GradientFade());  // Apply first transform, apply color scheme based on change of input to output coordinates 
- this.addElement(null, new VectorField());                      // No transform, plot as lines from input to output coord
- this.addElement(null, new Color_SolidColor());                 // No transform, apply solid color scheme to output coordiantes.
- this.addElement(null, new plotAsPoints());                     // No transform, plot all coordinate points as dots.
+ this.addElement(null,         new SolidColor,      new plotAsPoints()); // No transform, change color scheme, display intial coordinate points as dots.
+ this.addElement(new trans1(), new Gradient_Fade(), new VectorField());  // apply first transform, change color scheme, display as lines.  
+ this.addElement(null,         new Solid_Fade(),    new plotAsPoints()); // No transform, change color scheme, display coordinate points as dots.
+ 
+ isRendered is a property of each coord and is calc each time coord is updated 
+ Color is calculated by coloreScheme, stored in outputCoord
+ Alpha is calculated by colorScheme, stored in outputCoord
  
  
  TODO: a way to open pregens from files.
@@ -25,16 +27,7 @@
  TODO: inputCoord to visualizer is the ORIGINAL coords, and not the sequential coords. this might be an issue for multi-transformed visuals.
  -might want to pass the previous output as next input.
  TODO: XY diagonal visualizer for monotonic test.
- 
- Render distance is calculated by sequence,
- Color is calculated by Transform, but stored in outputCoord
- Alpha is calculated by sequence, but stored in inputCoord
- I kinda dont like this.
- It makes sense to calc color from transform difference, but maybe it can be moved elsewhere.
- It makes sense that the color is stored in outputCoord.
- It does not make sense that Alpha is stored in input,
- but currently inRenderDistance does not have access to outputCoord
- maybe Color_GradientFade is a type of visualization?
+
  
  */
 
@@ -149,12 +142,12 @@ public class Coord {
 // Sequence Class ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 public class Sequence {
   private ArrayList<Transform> transformList = new ArrayList<Transform>();
-  private ArrayList<Coloring> coloringList = new ArrayList<Coloring>();
+  private ArrayList<ColorScheme> colorSchemeList = new ArrayList<ColorScheme>();
   private ArrayList<Visualizer> visualizerList = new ArrayList<Visualizer>();
 
-  public void addElement(Transform transform, Coloring coloring, Visualizer visualizer) {
+  public void addElement(Transform transform, ColorScheme colorScheme, Visualizer visualizer) {
     transformList.add(transform);
-    coloringList.add(coloring);
+    colorSchemeList.add(colorScheme);
     visualizerList.add(visualizer);
   }
 
@@ -166,9 +159,9 @@ public class Sequence {
       outputCoord = transform.apply(outputCoord);
     }
     
-    Coloring coloring = coloringList.get(index);
-    if (coloring != null) {
-      coloring.change(inputCoord, outputCoord);
+    ColorScheme colorScheme = colorSchemeList.get(index);
+    if (colorScheme != null) {
+      colorScheme.change(inputCoord, outputCoord);
     }
     
     Visualizer visualizer = visualizerList.get(index);
@@ -180,21 +173,21 @@ public class Sequence {
   // Applies all Transforms and Visualizations to a single Coord before continuing.
   public void iterateDeep(Coord inputCoord) { 
     Iterator<Transform> transformIterator = transformList.iterator();
-    Iterator<Coloring> coloringIterator = coloringList.iterator();
+    Iterator<ColorScheme> colorSchemeIterator = colorSchemeList.iterator();
     Iterator<Visualizer> visualizerIterator = visualizerList.iterator();
 
     // Consider moving this inside first while loop if sequential transform visualization does not look right!!!!
     Coord outputCoord = inputCoord; // Transform returns new coord as to not accidentally edit original inputCoord by reference.
 
-    while (transformIterator.hasNext() && visualizerIterator.hasNext() && coloringIterator.hasNext()) {
+    while (transformIterator.hasNext() && visualizerIterator.hasNext() && colorSchemeIterator.hasNext()) {
       Transform transform = transformIterator.next();
       if (transform != null) {
         outputCoord = transform.apply(outputCoord); // applies transforms sequentially while preserving original inputCoord object.
       }
       
-      Coloring coloring = coloringIterator.next();
-      if (coloring != null) {
-        coloring.change(inputCoord, outputCoord);
+      ColorScheme colorScheme = colorSchemeIterator.next();
+      if (colorScheme != null) {
+        colorScheme.change(inputCoord, outputCoord);
       }
       
       Visualizer visualizer = visualizerIterator.next();
@@ -206,11 +199,17 @@ public class Sequence {
 }
 
 // "Pregen" assembled lists of pregenerated transforms and visualizations ~~~~~~~~~~~~~~~~~~~~~
-public class WiiVCmap extends Sequence {
-  WiiVCmap() {
+public class PREGEN_WiiVCmap extends Sequence {
+  PREGEN_WiiVCmap() {
     //this.addElement(null,        new SolidColor(),    new plotAsPoints());
-    this.addElement(new VCmap(), new GradientFade(),  new VectorField());
-    this.addElement(null,        new SolidFade(),                new plotAsPoints());
+    this.addElement(new VCmap(), new Gradient_Fade(), new VectorField());
+    this.addElement(null,        new Solid_Fade(),    new plotAsPoints());
+  }
+}
+
+public class PREGEN_MonotonicTest extends Sequence {
+  PREGEN_MonotonicTest() {
+    this.addElement(new VCmap(), new Gradient_Fade(), new MonotonicTest());
   }
 }
 
@@ -299,12 +298,12 @@ public class VCmap implements Transform { // Subtraction
   }
 }
 
-// Coloring Interface & Definitions ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-public interface Coloring {
+// ColorScheme Interface & Definitions ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+public interface ColorScheme {
   public void change(Coord inputCoord1, Coord inputCoord2);
 }
 
-public class GradientFade implements Coloring { 
+public class Gradient_Fade implements ColorScheme { 
   public void change(Coord inputCoord1, Coord inputCoord2) {
     inputCoord2.HSBcolor = color(40-inputCoord1.distToCoord(inputCoord2)*2, 100, 100);
     float dist1 = inputCoord1.distanceFrom(mouseX+mouseX*zoom-width/2, mouseY+mouseY*zoom-height/2); // Need to offset mouse transform, so wierd maths.
@@ -313,14 +312,14 @@ public class GradientFade implements Coloring {
   }
 }
 
-public class SolidColor implements Coloring { 
+public class SolidColor implements ColorScheme { 
   public void change(Coord inputCoord1, Coord inputCoord2) {
     inputCoord2.HSBcolor = color(66, 100, 100);
     inputCoord2.Acolor = 100;
   }
 }
 
-public class SolidFade implements Coloring { 
+public class Solid_Fade implements ColorScheme { 
   public void change(Coord inputCoord1, Coord inputCoord2) {
     inputCoord2.HSBcolor = color(0, 0, 100);
     float dist1 = inputCoord1.distanceFrom(mouseX+mouseX*zoom-width/2, mouseY+mouseY*zoom-height/2); // Need to offset mouse transform, so wierd maths.
@@ -347,9 +346,6 @@ public class plotAsPoints implements Visualizer { // DOTS
 public class VectorField implements Visualizer { // Draws a line from inputCoord1 to inputCoord2
   public void display(Coord inputCoord1, Coord inputCoord2) {
 
-    //float dist = inputCoord1.distanceFrom(mouseX+mouseX*zoom-width/2, mouseY+mouseY*zoom-height/2);
-    //int colorAlpha = int(constrain(100-100*dist/(zoom*renderDistance), 0, 100));
-
     if ((inputCoord2.getX()!=0) && (inputCoord2.getY()!=0)) {
       pushStyle();
       stroke(inputCoord2.HSBcolor, inputCoord2.Acolor);
@@ -358,6 +354,17 @@ public class VectorField implements Visualizer { // Draws a line from inputCoord
       line(inputCoord1.scaledX, inputCoord1.scaledY, inputCoord2.scaledX, inputCoord2.scaledY);
       popStyle();
     }
+  }
+}
+
+public class MonotonicTest implements Visualizer { // Draws a line from inputCoord1 to inputCoord2
+  public void display(Coord inputCoord1, Coord inputCoord2) {
+
+    pushStyle();
+    noStroke();
+    fill(inputCoord2.HSBcolor, 100);
+    ellipse(inputCoord1.scaledX, inputCoord2.scaledY, inputCoord2.drawSize*zoom*2, inputCoord2.drawSize*zoom*2);
+    popStyle();
   }
 }
 
@@ -380,7 +387,7 @@ void drawAxisLines() {
 Coord coord;
 
 int zoom = 1;
-int renderDistance = 200;
+int renderDistance = 256;
 
 // Setup ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 void setup() {
@@ -400,12 +407,18 @@ void draw() {
   //translate(width/2,height/2);
   drawAxisLines();
 
-  WiiVCmap test = new WiiVCmap();
-  for (coord.setY(-100); coord.getY()<100; coord.incY(1)) {
-    for (coord.setX(-100); coord.getX()<100; coord.incX(1)) {
+  PREGEN_WiiVCmap test = new PREGEN_WiiVCmap();
+  for (coord.setY(-100); coord.getY()<=100; coord.incY(1)) {
+    for (coord.setX(-100); coord.getX()<=100; coord.incX(1)) {
       test.iterateDeep(coord);
     }
   }
+  
+  //PREGEN_MonotonicTest test = new PREGEN_MonotonicTest();
+  //for (coord.setX(0); coord.getX()<=128; coord.incX(1)) {
+  //  coord.setY(coord.getX());
+  //  test.iterateDeep(coord);
+  //}
 
   popMatrix();
 }
@@ -427,13 +440,15 @@ void draw() {
 
 void mouseClicked() {
   if (mouseButton==LEFT) {
-    renderDistance+=10;
+    // renderDistance+=10;
+    renderDistance=renderDistance<<1;
   }
 
   if (mouseButton==RIGHT) {
-    renderDistance-=10;
+    //renderDistance-=10;
+    renderDistance=renderDistance>>1;
   }
-  renderDistance = constrain(renderDistance, 5, 1025);
+  renderDistance = constrain(renderDistance, 5, 1024);
 }
 
 void mouseWheel(MouseEvent event) {
