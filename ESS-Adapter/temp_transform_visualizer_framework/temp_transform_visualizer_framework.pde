@@ -8,13 +8,20 @@
  extending the Sequence class is a "pregen" a custom list of transforms/visualizer steps.
  calling singleElement(Coord, index) or iterateAll(Coord) will apply and display the steps.
  
+ a pregen might look something like this:
+this.addElement(null, new plotAsPoints());                     // No transform, plot all intial coordinate points as dots.
+this.addElement(new myTransform(), new Color_GradientFade());  // Apply first transform, apply color scheme based on change of input to output coordinates 
+this.addElement(null, new VectorField());                      // No transform, plot as lines from input to output coord
+this.addElement(null, new Color_SolidColor());                 // No transform, apply solid color scheme to output coordiantes.
+this.addElement(null, new plotAsPoints());                     // No transform, plot all coordinate points as dots.
+ 
  
  TODO: a way to open pregens from files.
  TODO: handle SETs either dynamically, or predefined data.
  TODO: make some array list of PREGEN transforms for known uses.
  -pregen that is just one of each transform/visualizer for demo mode.
  ENUM of pregens: swap between pregens with keys.
- TODO: Colormode argument vs Colormode interface and sequence array?
+ TODO: Color_GradientFade argument vs Color_GradientFade interface and sequence array?
  -dot/line size?
  TODO: renderDistance? maybe local to vector field
  TODO: generalize render distance to mouse.
@@ -29,7 +36,7 @@
  It makes sense that the color is stored in outputCoord.
  It does not make sense that Alpha is stored in input,
  but currently inRenderDistance does not have access to outputCoord
- maybe colormode is a type of visualization?
+ maybe Color_GradientFade is a type of visualization?
  
  */
 
@@ -46,6 +53,7 @@ public class Coord {
 
   public int scaledX=0; // scaled coord values for graphing porportional to window size and zoom level
   public int scaledY=0;
+  public int drawSize=1;
   public color HSBcolor = color(0, 100, 100);
   public int Acolor = 100;
   public boolean isRendered = true;
@@ -67,11 +75,20 @@ public class Coord {
     HSBcolor = inputColor;
   } 
 
+  void isRendered() { // Calculates the distance from the scaled XY coordinate and the mouse position.
+    float dist = this.distanceFrom(mouseX+mouseX*zoom-width/2, mouseY+mouseY*zoom-height/2); // Need to offset mouse transform, so wierd maths.
+    //inputCoord.Acolor = int(constrain(100-100*dist/(zoom*renderDistance), 0, 100));
+
+    //return (dist<=renderDistance*zoom && inputCoord.Acolor!=0) ? true : false;
+    this.isRendered = (dist<=renderDistance*zoom) ? true : false;
+  }
+
   // Updater
   private void update() {
     scaledX = int(map(X, -127, 128, 0, width*zoom));
     scaledY = int(map(Y, -127, 128, height*zoom, 0));
     mag = sqrt(pow(X, 2) + pow(Y, 2));
+    isRendered();
   }
 
   public float distanceFrom(int inputX, int inputY) { 
@@ -150,7 +167,7 @@ public class Sequence {
     }
 
     Visualizer visualizer = visualizerList.get(index);
-    if ((visualizer != null) && inRenderDistance(inputCoord)) {
+    if ((visualizer != null) && inputCoord.isRendered) {
       visualizer.display(inputCoord, outputCoord, zoom);
     }
   }
@@ -171,19 +188,10 @@ public class Sequence {
       }
 
       Visualizer visualizer = visualizerIterator.next();
-      if ((visualizer != null) && inRenderDistance(inputCoord)) {
+      if ((visualizer != null) && inputCoord.isRendered && outputCoord.isRendered) { // and output isRendered???
         visualizer.display(inputCoord, outputCoord, zoom);
       }
     }
-  }
-
-  boolean inRenderDistance(Coord inputCoord) { // Calculates the distance from the scaled XY coordinate and the mouse position.
-    float dist = inputCoord.distanceFrom(mouseX+mouseX*zoom-width/2, mouseY+mouseY*zoom-height/2); // Need to offset mouse transform, so wierd maths.
-    //inputCoord.Acolor = int(constrain(100-100*dist/(zoom*renderDistance), 0, 100));
-
-    //return (dist<=renderDistance*zoom && inputCoord.Acolor!=0) ? true : false;
-    inputCoord.isRendered = (dist<=renderDistance*zoom) ? true : false;
-    return inputCoord.isRendered;
   }
 }
 
@@ -191,10 +199,12 @@ public class Sequence {
 public class WiiVCmap extends Sequence {
 
   WiiVCmap() {
-    //this.addElement(null, new LotsOfDots());  
-    this.addElement(new VCmap(), new VectorField());
-    //this.addElement(new VCmap(), new LotsOfDots());
-    this.addElement(null, new LotsOfDots());
+    //this.addElement(null, new plotAsPoints()); 
+    //this.addElement(null, new Color_GradientFade());
+    this.addElement(new VCmap(), new Color_GradientFade());
+    //this.addElement(new VCmap(), new plotAsPoints());
+    this.addElement(null, new VectorField());
+    this.addElement(null, new plotAsPoints());
   }
 }
 
@@ -278,7 +288,7 @@ public class VCmap implements Transform { // Subtraction
     outputY *= signY;
 
     outputCoord.setXY(int(outputX), int(outputY));
-    outputCoord.HSBcolor = color(40-inputCoord.distToCoord(outputCoord)*2, 100, 100);
+    //outputCoord.HSBcolor = color(40-inputCoord.distToCoord(outputCoord)*2, 100, 100);
     return outputCoord;
   }
 }
@@ -315,7 +325,7 @@ void selectVisualizer() {
   switch (activeVisualizer) {
 
   case dots:
-    visualizer = new LotsOfDots();
+    visualizer = new plotAsPoints();
     break;
   }
 }
@@ -325,12 +335,12 @@ public interface Visualizer {
   public void display(Coord inputCoord1, Coord inputCoord2, int setting1);
 }
 
-public class LotsOfDots implements Visualizer { // DOTS
+public class plotAsPoints implements Visualizer { // DOTS
   public void display(Coord inputCoord1, Coord inputCoord2, int setting1) {
     setting1*=2;
     pushStyle();
     noStroke();
-    fill(inputCoord2.HSBcolor, inputCoord1.Acolor);
+    fill(inputCoord2.HSBcolor, inputCoord2.Acolor);
     ellipse(inputCoord2.scaledX, inputCoord2.scaledY, setting1, setting1);
     popStyle();
   }
@@ -344,7 +354,7 @@ public class VectorField implements Visualizer { // Draws a line from inputCoord
 
     if ((inputCoord2.getX()!=0) && (inputCoord2.getY()!=0)) {
       pushStyle();
-      stroke(inputCoord2.HSBcolor, inputCoord1.Acolor);
+      stroke(inputCoord2.HSBcolor, inputCoord2.Acolor);
       strokeWeight(1+zoom);
       noFill();
       line(inputCoord1.scaledX, inputCoord1.scaledY, inputCoord2.scaledX, inputCoord2.scaledY);
@@ -355,11 +365,12 @@ public class VectorField implements Visualizer { // Draws a line from inputCoord
 
 // Calculate render distance, magnitude color shift, and alpha
 // Unlike the other Visualizers, we are actually editing the coordinate colors/alpha via reference.
-public class colorMode implements Visualizer { 
+public class Color_GradientFade implements Visualizer { 
   public void display(Coord inputCoord1, Coord inputCoord2, int setting1) {
     inputCoord2.HSBcolor = color(40-inputCoord1.distToCoord(inputCoord2)*2, 100, 100);
-    float dist = inputCoord1.distanceFrom(mouseX+mouseX*zoom-width/2, mouseY+mouseY*zoom-height/2); // Need to offset mouse transform, so wierd maths.
-    inputCoord2.Acolor = int(constrain(100-100*dist/(zoom*renderDistance), 0, 100));
+    float dist1 = inputCoord1.distanceFrom(mouseX+mouseX*zoom-width/2, mouseY+mouseY*zoom-height/2); // Need to offset mouse transform, so wierd maths.
+    float dist2 = inputCoord2.distanceFrom(mouseX+mouseX*zoom-width/2, mouseY+mouseY*zoom-height/2); // Need to offset mouse transform, so wierd maths.
+    inputCoord2.Acolor = int(constrain(100-100*max(dist1,dist2)/(zoom*renderDistance), 0, 100)); // Set to fade in/out basd on renderDistance.
   }
 }
 
