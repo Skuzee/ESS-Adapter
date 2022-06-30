@@ -82,7 +82,7 @@ void setup()
 {
   size(1024, 1024);        
   
-  colorMode(HSB, 256, 100, 100);
+  colorMode(HSB, 256, 100, 100, 100);
   frameRate(10);
   
   background(0);
@@ -150,10 +150,10 @@ void drawVCVectorField(){
       VCcoord.setXY(VCmapTransform(xValue),VCmapTransform(yValue));
 
       float dist = workingCoord.distanceFrom(mouseX+mouseX*zoom-width/2, mouseY+mouseY*zoom-height/2);
-      lineBrightness = int(constrain(100-100*dist/(zoom*proximity),0,100));
+      lineBrightness = int(constrain(100-100*dist/(zoom*proximity)+10,0,100));
       
-      if ((VCmapTransform(xValue)!=0) && (VCmapTransform(yValue)!=0) && (dist <= proximity*zoom) && (lineBrightness>0)) { // && (lineBrightness>=25)
-        println(lineBrightness);
+      if ((VCmapTransform(xValue)!=0) && (VCmapTransform(yValue)!=0) && (dist <= proximity*zoom) && (lineBrightness!=0)) { // && (lineBrightness>=25)
+        //println(lineBrightness);
         //workingCoord.drawCoord(color(50,100,100));
         lineFromTo(workingCoord,VCcoord);
         VCcoord.drawCoord(color(25,100,100,lineBrightness));
@@ -214,8 +214,8 @@ void mouseWheel(MouseEvent event) {
 
 int VCmapTransform(int input) {
   int sign = constrain(int(input),-1,1);
-  input = ((input * sign)-15)*sign; 
-  float output = int(input * 127 / 56);
+  float output = ((input * sign)-15)*sign; 
+  output = int(output * 127 / 56.0);
   output /= 127;
   output = 1 - sqrt(1 - abs(output));
   output *= 127;
