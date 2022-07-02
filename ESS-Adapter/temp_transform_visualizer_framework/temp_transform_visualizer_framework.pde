@@ -23,16 +23,11 @@
  TODO: make some array list of PREGEN transforms for known uses.
  -pregen that is just one of each transform/visualizer for demo mode.
  ENUM of pregens: swap between pregens with keys.
- TODO: vizualizer option1 pas color/alpha/drawSize?
  TODO: inputCoord to visualizer is the ORIGINAL coords, and not the sequential coords. this might be an issue for multi-transformed visuals.
  -might want to pass the previous output as next input.
  TODO: XY diagonal visualizer for monotonic test.
-  stroke color
-  fill color
-  strokeweight
-  dot/line size. (could be same as strokeweight?)
-  display/color mode?
  TODO: consider a FORCERENDER option for visualizer?
+ ERROR: why does my DataSet.next() not remain static? it keeps resetting indexX/Y
   
  */
 
@@ -190,11 +185,13 @@ public class Sequence {
   }
 
   // Applies all Transforms and Visualizations to a single Coord before continuing.
+  public void iterateDeep() {
+    iterateDeep(dataSet.next());
+  }
   public void iterateDeep(Coord inputCoord) { 
     Iterator<Transform> transformIterator = transformList.iterator();
     Iterator<ColorScheme> colorSchemeIterator = colorSchemeList.iterator();
     Iterator<Visualizer> visualizerIterator = visualizerList.iterator();
-
     // Consider moving this inside first while loop if sequential transform visualization does not look right!!!!
     Coord outputCoord = inputCoord; // Transform returns new coord as to not accidentally edit original inputCoord by reference.
 
@@ -203,7 +200,7 @@ public class Sequence {
       if (transform != null) {
         outputCoord = transform.apply(outputCoord); // applies transforms sequentially while preserving original inputCoord object.
       }
-      
+
       ColorScheme colorScheme = colorSchemeIterator.next();
       if (colorScheme != null) {
         colorScheme.change(inputCoord, outputCoord);
@@ -220,9 +217,10 @@ public class Sequence {
 // "Pregen" assembled lists of pregenerated transforms and visualizations ~~~~~~~~~~~~~~~~~~~~~
 public class PREGEN_WiiVCmap extends Sequence { 
   PREGEN_WiiVCmap() {
+    dataSet = new SweepXY();
     //this.addElement(null,        new SolidColor(),    new plotAsPoints());
-    this.addElement(new VCmap(), new Gradient_Fade(), new VectorField());
-    this.addElement(null,        new Solid_Fade(),    new plotAsPoints());
+    this.addElement(new VCmap(), new Gradient_Fade(), new VectorField()); // new VCmap()
+    //this.addElement(null,        new Solid_Fade(),    new plotAsPoints());
   }
 }
 
@@ -317,6 +315,7 @@ public class SweepXY implements DataSet { // Subtraction
       indexY+=stepY;
       if(indexY>=maxY) {
         indexY=minY;
+
       }
     }
     return coord;
@@ -371,6 +370,7 @@ public class VCmap implements Transform { // Subtraction
     outputCoord.setXY(int(outputX), int(outputY));
     //outputCoord.HSBcolor = color(40-inputCoord.distToCoord(outputCoord)*2, 100, 100);
     return outputCoord;
+
   }
 }
 
@@ -435,8 +435,9 @@ public class plotAsPoints implements Visualizer { // DOTS
 
 public class VectorField implements Visualizer { // Draws a line from inputCoord to outputCoord
   public void display(Coord inputCoord, Coord outputCoord) {
-    
-    if ((outputCoord.getX()!=0) && (outputCoord.getY()!=0) && inputCoord.isRendered) {
+
+    //println(outputCoord.getX() + " " + outputCoord.getY());
+    if ((outputCoord.getX()!=0) && (outputCoord.getY()!=0) && outputCoord.isRendered) {
       pushStyle();
       stroke(outputCoord.HSBcolor, outputCoord.Acolor);
       strokeWeight(1+zoom);
@@ -479,18 +480,19 @@ void drawAxisLines() {
 }
 
 //Globals ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-Coord coord;
-
 int zoom = 1;
 int renderDistance = 256;
+  PREGEN_WiiVCmap pregen;
+//PREGEN_MonotonicXYPlot pregen;
+Coord coord = new Coord();
 
 // Setup ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 void setup() {
   colorMode(HSB, 100, 100, 100, 100);
   size(1024, 1024);   
   background(0);
-
-  coord = new Coord();
+  pregen = new PREGEN_WiiVCmap();
+  //pregen = new PREGEN_MonotonicXYPlot();
 }
 
 // Draw ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -502,15 +504,15 @@ void draw() {
   //translate(width/2,height/2);
   drawAxisLines();
   
-  //PREGEN_WiiVCmap test = new PREGEN_WiiVCmap();
-  //for (coord.setY(-100); coord.getY()<=100; coord.incY(1)) {
-  //  for (coord.setX(-100); coord.getX()<=100; coord.incX(1)) {
-  //    test.iterateDeep(coord);
-  //  }
-  //}
+
+  for (coord.setY(-100); coord.getY()<=100; coord.incY(1)) {
+    for (coord.setX(-100); coord.getX()<=100; coord.incX(1)) {
+      pregen.iterateDeep(coord);
+    }
+  }
   
-  PREGEN_MonotonicXYPlot test = new PREGEN_MonotonicXYPlot();
-  test.run();
+  //PREGEN_MonotonicXYPlot test = new PREGEN_MonotonicXYPlot();
+  //test.iterateDeep();
   //for (coord.setXY(0,0); coord.getX()<=128; coord.incXY()) {
   //  test.iterateDeep(coord);
   //}
