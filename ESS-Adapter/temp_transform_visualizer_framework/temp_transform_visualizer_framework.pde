@@ -28,7 +28,7 @@
  TODO: XY diagonal visualizer for monotonic test.
  TODO: consider a FORCERENDER option for visualizer?
  ERROR: why does my DataSet.next() not remain static? it keeps resetting indexX/Y
-  
+ 
  */
 
 
@@ -67,6 +67,7 @@ public class Coord {
     HSBcolor = inputColor;
   } 
 
+
   void isRendered() { // Calculates the distance from the scaled XY coordinate and the mouse position.
     float dist = this.distanceFrom(mouseX+mouseX*zoom-width/2, mouseY+mouseY*zoom-height/2); // Need to offset mouse transform, so wierd maths.
     //inputCoord.Acolor = int(constrain(100-100*dist/(zoom*renderDistance), 0, 100));
@@ -87,12 +88,12 @@ public class Coord {
     return sqrt(pow(inputX-scaledX, 2) + pow(inputY-scaledY, 2));
   }
 
-  public float getMag() { 
-    return mag;
-  }
-
   public float distToCoord(Coord inputCoord) {
     return abs(this.mag - inputCoord.getMag());
+  }
+  
+  public float getMag() { 
+    return mag;
   }
 
   public int getX() { 
@@ -172,12 +173,12 @@ public class Sequence {
     if (transform != null) {
       outputCoord = transform.apply(outputCoord);
     }
-    
+
     ColorScheme colorScheme = colorSchemeList.get(index);
     if (colorScheme != null) {
       colorScheme.change(inputCoord, outputCoord);
     }
-    
+
     Visualizer visualizer = visualizerList.get(index);
     if ((visualizer != null)) {
       visualizer.display(inputCoord, outputCoord);
@@ -205,7 +206,7 @@ public class Sequence {
       if (colorScheme != null) {
         colorScheme.change(inputCoord, outputCoord);
       }
-      
+
       Visualizer visualizer = visualizerIterator.next();
       if ((visualizer != null)) { // and output isRendered???
         visualizer.display(inputCoord, outputCoord);
@@ -227,9 +228,8 @@ public class PREGEN_WiiVCmap extends Sequence {
 public class PREGEN_MonotonicXYPlot extends Sequence {
   PREGEN_MonotonicXYPlot() {
     dataSet = new SweepXY();
-    this.addElement(new VCmap(), new SolidColor(color(33,100,100)), new MonotonicXYPlot());
+    this.addElement(new VCmap(), new SolidColor(color(33, 100, 100)), new MonotonicXYPlot());
   }
-  
 }
 
 // Types of Transforms ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -284,44 +284,42 @@ public class SweepXY implements DataSet { // Subtraction
   private int maxX=128; 
   private int stepX=1; 
   private int indexX=minX;
-  
+
   private int minY=-127; 
   private int maxY=128; 
   private int stepY=1;
   private int indexY=minY;
-  
-  SweepXY() {
 
+  SweepXY() {
   }
-  
+
   SweepXY(int i_minX, int i_maxX, int i_stepX, int i_minY, int i_maxY, int i_stepY) {
     minX=-i_minX; 
     maxX=i_maxX; 
     stepX=i_stepX; 
     indexX=i_minX;
-  
+
     minY=i_minY; 
     maxY=i_maxY; 
     stepY=i_stepY;
     indexY=i_minY;
   }
-  
+
   public Coord next() {
-    coord.setXY(indexX,indexY);
-    
+    coord.setXY(indexX, indexY);
+
     indexX+=stepX;
-    if(indexX>=maxX) {
+    if (indexX>=maxX) {
       indexX=minX;
       indexY+=stepY;
-      if(indexY>=maxY) {
+      if (indexY>=maxY) {
         indexY=minY;
-
       }
     }
     return coord;
   }
-  
-  
+
+
   public void reset() {
     indexX=minX;
     indexY=minY;
@@ -370,7 +368,6 @@ public class VCmap implements Transform { // Subtraction
     outputCoord.setXY(int(outputX), int(outputY));
     //outputCoord.HSBcolor = color(40-inputCoord.distToCoord(outputCoord)*2, 100, 100);
     return outputCoord;
-
   }
 }
 
@@ -391,16 +388,16 @@ public class Gradient_Fade implements ColorScheme {
 public class SolidColor implements ColorScheme { 
   private color solidColor=0;
   private int colorAlpha=100;
-  
+
   SolidColor(color inputColor) {
     solidColor = inputColor;
   }
-  
+
   SolidColor(color inputColor, int inputAlpha) {
     solidColor = inputColor;
     colorAlpha = inputAlpha;
   }
-  
+
   public void change(Coord inputCoord, Coord outputCoord) {
     outputCoord.HSBcolor = solidColor;
     outputCoord.Acolor = colorAlpha;
@@ -408,8 +405,8 @@ public class SolidColor implements ColorScheme {
 }
 
 public class Solid_Fade implements ColorScheme { 
-  public color fillColor=color(0,0,100);
-  
+  public color fillColor=color(0, 0, 100);
+
   public void change(Coord inputCoord, Coord outputCoord) {
     outputCoord.HSBcolor = this.fillColor;
     float dist1 = outputCoord.distanceFrom(mouseX+mouseX*zoom-width/2, mouseY+mouseY*zoom-height/2); // Need to offset mouse transform, so wierd maths.
@@ -457,7 +454,7 @@ public class MonotonicXYPlot implements Visualizer { // Draws a line from inputC
     strokeWeight(1+zoom);
     noFill();
     line(lastCoord.scaledX, lastCoord.scaledY, inputCoord.scaledX, outputCoord.scaledY); 
-    lastCoord.setXY(inputCoord.getX(),outputCoord.getY());
+    lastCoord.setXY(inputCoord.getX(), outputCoord.getY());
     //inputCoord.setY(inputCoord.getX());
     //outputCoord.setY(outputCoord.getX());
     popStyle();
@@ -482,7 +479,7 @@ void drawAxisLines() {
 //Globals ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 int zoom = 1;
 int renderDistance = 256;
-  PREGEN_WiiVCmap pregen;
+PREGEN_WiiVCmap pregen;
 //PREGEN_MonotonicXYPlot pregen;
 Coord coord = new Coord();
 
@@ -503,14 +500,14 @@ void draw() {
   translate(-mouseX*zoom+width/2, -mouseY*zoom+height/2);
   //translate(width/2,height/2);
   drawAxisLines();
-  
+
 
   for (coord.setY(-100); coord.getY()<=100; coord.incY(1)) {
     for (coord.setX(-100); coord.getX()<=100; coord.incX(1)) {
       pregen.iterateDeep(coord);
     }
   }
-  
+
   //PREGEN_MonotonicXYPlot test = new PREGEN_MonotonicXYPlot();
   //test.iterateDeep();
   //for (coord.setXY(0,0); coord.getX()<=128; coord.incXY()) {
