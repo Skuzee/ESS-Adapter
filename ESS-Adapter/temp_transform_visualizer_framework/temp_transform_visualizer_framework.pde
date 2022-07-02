@@ -27,8 +27,13 @@
  TODO: inputCoord to visualizer is the ORIGINAL coords, and not the sequential coords. this might be an issue for multi-transformed visuals.
  -might want to pass the previous output as next input.
  TODO: XY diagonal visualizer for monotonic test.
-
- 
+  stroke color
+  fill color
+  strokeweight
+  dot/line size. (could be same as strokeweight?)
+  display/color mode?
+ TODO: consider a FORCERENDER option for visualizer?
+  
  */
 
 
@@ -51,6 +56,7 @@ public class Coord {
 
   // Constructors
   Coord() {
+    this.update();
   }
 
   Coord(int inputX, int inputY) { 
@@ -123,8 +129,20 @@ public class Coord {
     this.update();
   }
 
+  public void incXY() { 
+    X++; 
+    Y++; 
+    this.update();
+  }
+
   public void incY() { 
     Y++; 
+    this.update();
+  }
+
+  public void incXY(int a) { 
+    X+=a; 
+    Y+=a; 
     this.update();
   }
 
@@ -144,6 +162,7 @@ public class Sequence {
   private ArrayList<Transform> transformList = new ArrayList<Transform>();
   private ArrayList<ColorScheme> colorSchemeList = new ArrayList<ColorScheme>();
   private ArrayList<Visualizer> visualizerList = new ArrayList<Visualizer>();
+  protected DataSet dataSet;
 
   public void addElement(Transform transform, ColorScheme colorScheme, Visualizer visualizer) {
     transformList.add(transform);
@@ -165,7 +184,7 @@ public class Sequence {
     }
     
     Visualizer visualizer = visualizerList.get(index);
-    if ((visualizer != null) && inputCoord.isRendered) {
+    if ((visualizer != null)) {
       visualizer.display(inputCoord, outputCoord);
     }
   }
@@ -191,7 +210,7 @@ public class Sequence {
       }
       
       Visualizer visualizer = visualizerIterator.next();
-      if ((visualizer != null) && inputCoord.isRendered && outputCoord.isRendered) { // and output isRendered???
+      if ((visualizer != null)) { // and output isRendered???
         visualizer.display(inputCoord, outputCoord);
       }
     }
@@ -199,7 +218,7 @@ public class Sequence {
 }
 
 // "Pregen" assembled lists of pregenerated transforms and visualizations ~~~~~~~~~~~~~~~~~~~~~
-public class PREGEN_WiiVCmap extends Sequence {
+public class PREGEN_WiiVCmap extends Sequence { 
   PREGEN_WiiVCmap() {
     //this.addElement(null,        new SolidColor(),    new plotAsPoints());
     this.addElement(new VCmap(), new Gradient_Fade(), new VectorField());
@@ -207,10 +226,12 @@ public class PREGEN_WiiVCmap extends Sequence {
   }
 }
 
-public class PREGEN_MonotonicTest extends Sequence {
-  PREGEN_MonotonicTest() {
-    this.addElement(new VCmap(), new SolidColor(), new MonotonicTest());
+public class PREGEN_MonotonicXYPlot extends Sequence {
+  PREGEN_MonotonicXYPlot() {
+    dataSet = new SweepXY();
+    this.addElement(new VCmap(), new SolidColor(color(33,100,100)), new MonotonicXYPlot());
   }
+  
 }
 
 // Types of Transforms ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -252,6 +273,61 @@ public static enum TypesOfTransforms {
 //    break;
 //  }
 //}
+
+// DataSet Interface & Definitions ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+public interface DataSet {
+  public Coord next();
+  public void reset();
+}
+
+public class SweepXY implements DataSet { // Subtraction
+  private Coord coord = new Coord();
+  private int minX=-127; 
+  private int maxX=128; 
+  private int stepX=1; 
+  private int indexX=minX;
+  
+  private int minY=-127; 
+  private int maxY=128; 
+  private int stepY=1;
+  private int indexY=minY;
+  
+  SweepXY() {
+
+  }
+  
+  SweepXY(int i_minX, int i_maxX, int i_stepX, int i_minY, int i_maxY, int i_stepY) {
+    minX=-i_minX; 
+    maxX=i_maxX; 
+    stepX=i_stepX; 
+    indexX=i_minX;
+  
+    minY=i_minY; 
+    maxY=i_maxY; 
+    stepY=i_stepY;
+    indexY=i_minY;
+  }
+  
+  public Coord next() {
+    coord.setXY(indexX,indexY);
+    
+    indexX+=stepX;
+    if(indexX>=maxX) {
+      indexX=minX;
+      indexY+=stepY;
+      if(indexY>=maxY) {
+        indexY=minY;
+      }
+    }
+    return coord;
+  }
+  
+  
+  public void reset() {
+    indexX=minX;
+    indexY=minY;
+  }
+}
 
 // Transforms Interface & Definitions ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 public interface Transform {
@@ -300,75 +376,89 @@ public class VCmap implements Transform { // Subtraction
 
 // ColorScheme Interface & Definitions ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 public interface ColorScheme {
-  public void change(Coord inputCoord1, Coord inputCoord2);
+  public void change(Coord inputCoord, Coord outputCoord);
 }
 
 public class Gradient_Fade implements ColorScheme { 
-  public void change(Coord inputCoord1, Coord inputCoord2) {
-    inputCoord2.HSBcolor = color(40-inputCoord1.distToCoord(inputCoord2)*2, 100, 100);
-    float dist1 = inputCoord1.distanceFrom(mouseX+mouseX*zoom-width/2, mouseY+mouseY*zoom-height/2); // Need to offset mouse transform, so wierd maths.
-    float dist2 = inputCoord2.distanceFrom(mouseX+mouseX*zoom-width/2, mouseY+mouseY*zoom-height/2); // Need to offset mouse transform, so wierd maths.
-    inputCoord2.Acolor = int(constrain(100-100*max(dist1, dist2)/(zoom*renderDistance), 0, 100)); // Set to fade in/out basd on renderDistance.
+  public void change(Coord inputCoord, Coord outputCoord) {
+    outputCoord.HSBcolor = color(40-inputCoord.distToCoord(outputCoord)*2, 100, 100);
+    float dist1 = inputCoord.distanceFrom(mouseX+mouseX*zoom-width/2, mouseY+mouseY*zoom-height/2); // Need to offset mouse transform, so wierd maths.
+    float dist2 = outputCoord.distanceFrom(mouseX+mouseX*zoom-width/2, mouseY+mouseY*zoom-height/2); // Need to offset mouse transform, so wierd maths.
+    outputCoord.Acolor = int(constrain(100-100*max(dist1, dist2)/(zoom*renderDistance), 0, 100)); // Set to fade in/out basd on renderDistance.
   }
 }
 
 public class SolidColor implements ColorScheme { 
-  public void change(Coord inputCoord1, Coord inputCoord2) {
-    inputCoord2.HSBcolor = color(66, 100, 100);
-    inputCoord2.Acolor = 100;
+  private color solidColor=0;
+  private int colorAlpha=100;
+  
+  SolidColor(color inputColor) {
+    solidColor = inputColor;
+  }
+  
+  SolidColor(color inputColor, int inputAlpha) {
+    solidColor = inputColor;
+    colorAlpha = inputAlpha;
+  }
+  
+  public void change(Coord inputCoord, Coord outputCoord) {
+    outputCoord.HSBcolor = solidColor;
+    outputCoord.Acolor = colorAlpha;
   }
 }
 
 public class Solid_Fade implements ColorScheme { 
-  public void change(Coord inputCoord1, Coord inputCoord2) {
-    inputCoord2.HSBcolor = color(0, 0, 100);
-    float dist1 = inputCoord1.distanceFrom(mouseX+mouseX*zoom-width/2, mouseY+mouseY*zoom-height/2); // Need to offset mouse transform, so wierd maths.
-    float dist2 = inputCoord2.distanceFrom(mouseX+mouseX*zoom-width/2, mouseY+mouseY*zoom-height/2); // Need to offset mouse transform, so wierd maths.
-    inputCoord2.Acolor = int(constrain(100-100*max(dist1, dist2)/(zoom*renderDistance), 0, 100)); // Set to fade in/out basd on renderDistance.;
+  public color fillColor=color(0,0,100);
+  
+  public void change(Coord inputCoord, Coord outputCoord) {
+    outputCoord.HSBcolor = this.fillColor;
+    float dist1 = outputCoord.distanceFrom(mouseX+mouseX*zoom-width/2, mouseY+mouseY*zoom-height/2); // Need to offset mouse transform, so wierd maths.
+    float dist2 = outputCoord.distanceFrom(mouseX+mouseX*zoom-width/2, mouseY+mouseY*zoom-height/2); // Need to offset mouse transform, so wierd maths.
+    outputCoord.Acolor = int(constrain(100-100*max(dist1, dist2)/(zoom*renderDistance), 0, 100)); // Set to fade in/out basd on renderDistance.;
   }
 }
 
 // Visualizer Interface & Definitions ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 public interface Visualizer {
-  public void display(Coord inputCoord1, Coord inputCoord2);
+  public void display(Coord inputCoord, Coord outputCoord);
 }
 
 public class plotAsPoints implements Visualizer { // DOTS
-  public void display(Coord inputCoord1, Coord inputCoord2) {
+  public void display(Coord inputCoord, Coord outputCoord) {
     pushStyle();
     noStroke();
-    fill(inputCoord2.HSBcolor, inputCoord2.Acolor);
-    ellipse(inputCoord2.scaledX, inputCoord2.scaledY, inputCoord2.drawSize*zoom*2, inputCoord2.drawSize*zoom*2);
+    fill(outputCoord.HSBcolor, outputCoord.Acolor);
+    ellipse(outputCoord.scaledX, outputCoord.scaledY, outputCoord.drawSize*zoom*2, outputCoord.drawSize*zoom*2);
     popStyle();
   }
 }
 
-public class VectorField implements Visualizer { // Draws a line from inputCoord1 to inputCoord2
-  public void display(Coord inputCoord1, Coord inputCoord2) {
-
-    if ((inputCoord2.getX()!=0) && (inputCoord2.getY()!=0)) {
+public class VectorField implements Visualizer { // Draws a line from inputCoord to outputCoord
+  public void display(Coord inputCoord, Coord outputCoord) {
+    
+    if ((outputCoord.getX()!=0) && (outputCoord.getY()!=0) && inputCoord.isRendered) {
       pushStyle();
-      stroke(inputCoord2.HSBcolor, inputCoord2.Acolor);
+      stroke(outputCoord.HSBcolor, outputCoord.Acolor);
       strokeWeight(1+zoom);
       noFill();
-      line(inputCoord1.scaledX, inputCoord1.scaledY, inputCoord2.scaledX, inputCoord2.scaledY);
+      line(inputCoord.scaledX, inputCoord.scaledY, outputCoord.scaledX, outputCoord.scaledY);
       popStyle();
     }
   }
 }
 
-public class MonotonicTest implements Visualizer { // Draws a line from inputCoord1 to inputCoord2
-  public void display(Coord inputCoord1, Coord inputCoord2) {
+public class MonotonicXYPlot implements Visualizer { // Draws a line from inputCoord to outputCoord
+  Coord lastCoord = new Coord();
 
+  public void display(Coord inputCoord, Coord outputCoord) {
     pushStyle();
-    stroke(inputCoord2.HSBcolor, 100);
+    stroke(outputCoord.HSBcolor, 100);
     strokeWeight(1+zoom);
     noFill();
-    ///////////////////// Need to juggle X f(X), and save previous coord for line drawing.
-    ///////////////////// sequential outputCoords (in DEEP or SINGLE)??
-    line(inputCoord1.scaledX, inputCoord2.scaledX, inputCoord1.scaledX, inputCoord2.scaledX); //inputCoord1.scaledY, inputCoord2.scaledY);
-    inputCoord1.setY(inputCoord1.getX());
-    inputCoord2.setY(inputCoord2.getX());
+    line(lastCoord.scaledX, lastCoord.scaledY, inputCoord.scaledX, outputCoord.scaledY); 
+    lastCoord.setXY(inputCoord.getX(),outputCoord.getY());
+    //inputCoord.setY(inputCoord.getX());
+    //outputCoord.setY(outputCoord.getX());
     popStyle();
   }
 }
@@ -411,15 +501,17 @@ void draw() {
   translate(-mouseX*zoom+width/2, -mouseY*zoom+height/2);
   //translate(width/2,height/2);
   drawAxisLines();
-  PREGEN_WiiVCmap test = new PREGEN_WiiVCmap();
-  for (coord.setY(-100); coord.getY()<=100; coord.incY(1)) {
-    for (coord.setX(-100); coord.getX()<=100; coord.incX(1)) {
-      test.iterateDeep(coord);
-    }
-  }
   
-  //PREGEN_MonotonicTest test = new PREGEN_MonotonicTest();
-  //for (coord.setXY(0,0); coord.getX()<=128; coord.incX(1)) {
+  //PREGEN_WiiVCmap test = new PREGEN_WiiVCmap();
+  //for (coord.setY(-100); coord.getY()<=100; coord.incY(1)) {
+  //  for (coord.setX(-100); coord.getX()<=100; coord.incX(1)) {
+  //    test.iterateDeep(coord);
+  //  }
+  //}
+  
+  PREGEN_MonotonicXYPlot test = new PREGEN_MonotonicXYPlot();
+  test.run();
+  //for (coord.setXY(0,0); coord.getX()<=128; coord.incXY()) {
   //  test.iterateDeep(coord);
   //}
 
