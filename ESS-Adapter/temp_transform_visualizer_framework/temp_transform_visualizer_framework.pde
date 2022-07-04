@@ -158,21 +158,25 @@ public class Coord {
     Y = inputY; 
     XneedsUpdate = true;
     YneedsUpdate = true;
+    MneedsUpdate = true;
   }
 
   public void setX(int inputX) { 
     X = inputX; 
     XneedsUpdate = true;
+    MneedsUpdate = true;
   }
 
   public void setY(int inputY) { 
     Y = inputY; 
     YneedsUpdate = true;
+    MneedsUpdate = true;
   }
 
   public void incX() { 
     X++; 
     XneedsUpdate = true;
+    MneedsUpdate = true;
   }
 
   public void incXY() { 
@@ -180,11 +184,13 @@ public class Coord {
     Y++; 
     XneedsUpdate = true;
     YneedsUpdate = true;
+    MneedsUpdate = true;
   }
 
   public void incY() { 
     Y++; 
     YneedsUpdate = true;
+    MneedsUpdate = true;
   }
 
   public void incXY(int a) { 
@@ -192,16 +198,19 @@ public class Coord {
     Y+=a; 
     XneedsUpdate = true;
     YneedsUpdate = true;
+    MneedsUpdate = true;
   }
 
   public void incX(int a) { 
     X+=a; 
     XneedsUpdate = true;
+    MneedsUpdate = true;
   }
 
   public void incY(int a) { 
     Y+=a; 
     YneedsUpdate = true;
+    MneedsUpdate = true;
   }
 }
 
@@ -243,26 +252,28 @@ public class Sequence {
     iterateDeep(inputCoord);
   }
   public void iterateDeep(Coord inputCoord) { 
-    Iterator<Transform> transformIterator = transformList.iterator();
-    Iterator<ColorScheme> colorSchemeIterator = colorSchemeList.iterator();
-    Iterator<Visualizer> visualizerIterator = visualizerList.iterator();
-    // Consider moving this inside first while loop if sequential transform visualization does not look right!!!!
-    Coord outputCoord = inputCoord; // Transform returns new coord as to not accidentally edit original inputCoord by reference.
+    while (dataSet.next(inputCoord)) { // get the next data point
+      Iterator<Transform> transformIterator = transformList.iterator();
+      Iterator<ColorScheme> colorSchemeIterator = colorSchemeList.iterator();
+      Iterator<Visualizer> visualizerIterator = visualizerList.iterator();
+      // Consider moving this inside first while loop if sequential transform visualization does not look right!!!!
+      Coord outputCoord = inputCoord; // Transform returns new coord as to not accidentally edit original inputCoord by reference.
 
-    while (transformIterator.hasNext() && visualizerIterator.hasNext() && colorSchemeIterator.hasNext() && dataSet.next(inputCoord)) {
-      Transform transform = transformIterator.next();
-      if (transform != null) {
-        outputCoord = transform.apply(outputCoord); // applies transforms sequentially while preserving original inputCoord object.
-      }
+      while (transformIterator.hasNext() && visualizerIterator.hasNext() && colorSchemeIterator.hasNext()) { // iterate through each transform/scheme/visulizer
+        Transform transform = transformIterator.next();
+        if (transform != null) {
+          outputCoord = transform.apply(outputCoord); // applies transforms sequentially while preserving original inputCoord object.
+        }
 
-      ColorScheme colorScheme = colorSchemeIterator.next();
-      if (colorScheme != null) {
-        colorScheme.change(inputCoord, outputCoord);
-      }
+        ColorScheme colorScheme = colorSchemeIterator.next();
+        if (colorScheme != null) {
+          colorScheme.change(inputCoord, outputCoord);
+        }
 
-      Visualizer visualizer = visualizerIterator.next();
-      if ((visualizer != null)) { // and output isRendered???
-        visualizer.display(inputCoord, outputCoord);
+        Visualizer visualizer = visualizerIterator.next();
+        if ((visualizer != null)) { // and output isRendered???
+          visualizer.display(inputCoord, outputCoord);
+        }
       }
     }
   }
@@ -271,7 +282,7 @@ public class Sequence {
 // "Pregen" assembled lists of pregenerated transforms and visualizations ~~~~~~~~~~~~~~~~~~~~~
 public class PREGEN_WiiVCmap extends Sequence { 
   PREGEN_WiiVCmap() {
-    dataSet = new SweepXY();
+    dataSet = new SweepRadar_Angle();
     //this.addElement(null,        new SolidColor(),    new plotAsPoints());
     this.addElement(new VCmap(), new Gradient_Fade(), new VectorField()); // new VCmap()
     //this.addElement(null,        new Solid_Fade(),    new plotAsPoints());
@@ -280,8 +291,9 @@ public class PREGEN_WiiVCmap extends Sequence {
 
 public class PREGEN_MonotonicXYPlot extends Sequence {
   PREGEN_MonotonicXYPlot() {
-    dataSet = new SweepXY();
-    this.addElement(new VCmap(), new SolidColor(color(33, 100, 100)), new MonotonicXYPlot());
+    //dataSet = new SweepXY(0,127,1,0,0,1);
+    dataSet = new SweepRadar_Mag();
+    this.addElement(new VCmap(), new Gradient_Fade(), new MonotonicXYPlot()); // new SolidColor(color(33, 100, 100))
   }
 }
 
@@ -381,6 +393,71 @@ public class SweepXY implements DataSet { // Subtraction
   }
 }
 
+public class SweepRadar_Angle implements DataSet { // Subtraction
+  private int maxMag=128; 
+  private int mag=0;
+  private int stepMag=1;
+  private float angle=0;
+  private int angleResolution=360;
+  private float stepAngle = 360/angleResolution;
+
+  private int outputX=0;
+  private int outputY=0;
+
+  public boolean next(Coord coord) {
+    outputX = int(sin(radians(angle))*mag);
+    outputY = int(cos(radians(angle))*mag);
+    
+    coord.setXY(outputX, outputY);
+    angle+=stepAngle;
+    if (angle>=360) {
+      angle=0;
+      mag+=stepMag;
+      if(mag>maxMag) {
+        mag=0;
+        return false;
+      }
+    }
+    return true;
+  }
+
+  public void reset() {
+  }
+}
+
+public class SweepRadar_Mag implements DataSet { // Subtraction
+  private int maxMag=128; 
+  private int mag=0;
+  private int stepMag=2;
+  private float angle=0;
+  private float angleResolution=360;
+  private float stepAngle = 360/angleResolution;
+
+  private int outputX=0;
+  private int outputY=0;
+
+  public boolean next(Coord coord) {
+    outputX = int(sin(radians(angle))*mag);
+    outputY = int(cos(radians(angle))*mag);
+    
+    coord.setXY(outputX, outputY);
+    
+    mag+=stepMag;
+    if (mag>maxMag) {
+      mag=0;
+      angle+=stepAngle;
+      if(angle>=360) {
+        angle=0;
+        return false;
+      }
+    }
+    return true;
+  }
+
+  public void reset() {
+  }
+}
+
 // Transforms Interface & Definitions ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 public interface Transform {
   public Coord apply(Coord inputCoord);
@@ -435,8 +512,14 @@ public class Gradient_Fade implements ColorScheme {
   public void change(Coord inputCoord, Coord outputCoord) {
     outputCoord.HSBcolor = color(40-inputCoord.distToCoord(outputCoord)*2, 100, 100);
     float dist1 = inputCoord.distanceFrom(mouseX+mouseX*zoom-width/2, mouseY+mouseY*zoom-height/2); // Need to offset mouse transform, so wierd maths.
-    float dist2 = outputCoord.distanceFrom(mouseX+mouseX*zoom-width/2, mouseY+mouseY*zoom-height/2); // Need to offset mouse transform, so wierd maths.
+    float dist2 = outputCoord.distanceFrom(mouseX+mouseX*zoom-width/2, mouseY+mouseY*zoom-height/2); // Need to offset mouse transform, so wierd maths.  
     outputCoord.Acolor = int(constrain(100-100*max(dist1, dist2)/(zoom*renderDistance), 0, 100)); // Set to fade in/out basd on renderDistance.
+    
+    if (outputCoord.Acolor <= 0) {
+      outputCoord.isRendered = false;  
+    } else {
+      outputCoord.isRendered = true;
+    }
   }
 }
 
@@ -508,10 +591,19 @@ public class MonotonicXYPlot implements Visualizer { // Draws a line from inputC
     stroke(outputCoord.HSBcolor, 100);
     strokeWeight(1+zoom);
     noFill();
-    line(lastCoord.getScaledX(), lastCoord.getScaledY(), inputCoord.getScaledX(), outputCoord.getScaledY()); 
-    lastCoord.setXY(inputCoord.getX(), outputCoord.getY());
+    pushMatrix();
+    translate(0,0,outputCoord.getMag());
+    //outputCoord.setY(outputCoord.getX());
+    ellipse(inputCoord.getScaledX(), inputCoord.getScaledY(),zoom,zoom);
+
+    //if ((outputCoord.getY()!=0)) {
+    //  //line(lastCoord.getScaledX(), lastCoord.getScaledY(), inputCoord.getScaledX(), outputCoord.getScaledY());
+    //line(lastCoord.getScaledX(), lastCoord.getScaledY(), lastCoord.getMag(),inputCoord.getScaledX(), inputCoord.getScaledY(),outputCoord.getMag());
+    //}
+    lastCoord.setXY(inputCoord.getX(), inputCoord.getY());
     //inputCoord.setY(inputCoord.getX());
     //outputCoord.setY(outputCoord.getX());
+    popMatrix();
     popStyle();
   }
 }
@@ -534,16 +626,16 @@ void drawAxisLines() {
 //Globals ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 int zoom = 1;
 int renderDistance = 256;
-PREGEN_WiiVCmap pregen;
+PREGEN_MonotonicXYPlot pregen;
 //PREGEN_MonotonicXYPlot pregen;
 Coord coord = new Coord();
 long startTime=0;
 // Setup ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 void setup() {
   colorMode(HSB, 100, 100, 100, 100);
-  size(1024, 1024);   
+  size(1024, 1024, P3D);   
   background(0);
-  pregen = new PREGEN_WiiVCmap();
+  pregen = new PREGEN_MonotonicXYPlot();
   //pregen = new PREGEN_MonotonicXYPlot();
 }
 
@@ -553,17 +645,18 @@ void draw() {
 
   pushMatrix();
   translate(-mouseX*zoom+width/2, -mouseY*zoom+height/2);
+  rotateX(PI/4);
   drawAxisLines();
-
+  
 
   //for (coord.setY(-100); coord.getY()<=100; coord.incY(1)) {
   //for (coord.setX(-100); coord.getX()<=100; coord.incX(1)) {
-  println(millis() - startTime);
-  
+  //println(millis() - startTime);
+
   pregen.iterateDeep(coord);
 
 
-  startTime = millis();
+  //startTime = millis();
   //PREGEN_MonotonicXYPlot test = new PREGEN_MonotonicXYPlot();
   //test.iterateDeep();
   //for (coord.setXY(0,0); coord.getX()<=128; coord.incXY()) {
