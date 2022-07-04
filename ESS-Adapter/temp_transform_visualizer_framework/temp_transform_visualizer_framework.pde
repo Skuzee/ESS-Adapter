@@ -27,7 +27,17 @@
  -might want to pass the previous output as next input.
  TODO: XY diagonal visualizer for monotonic test.
  TODO: consider a FORCERENDER option for visualizer?
+ 
  ERROR: why does my DataSet.next() not remain static? it keeps resetting indexX/Y
+ 
+ ERROR: the draw() function is SUPER slow. taking 17ms per cycle. need to call interateDeep in some sort of while loop,
+ until dataSet.next returns false. then draw it all at once. Review all the fucky changes I made to see what parts should stay changed.
+ grandient_fade color not correct.
+ 
+ TODO: https://processing.org/reference/thread_.html
+ threading for updating coord scaledXY. storing and syncing all the data sounds like an issue, but
+ perhaps every time a Coord setter is called it can update the scaledXY in a thread.
+ 
  
  */
 
@@ -42,16 +52,18 @@ public class Coord {
   private int Y=0;
   private float mag=0; // distance to origin
 
-  public int scaledX=0; // scaled coord values for graphing porportional to window size and zoom level
-  public int scaledY=0;
+  private int scaledX=0; // scaled coord values for graphing porportional to window size and zoom level
+  private int scaledY=0;
   public int drawSize=1;
   public color HSBcolor = color(0, 100, 100);
   public int Acolor = 100;
   public boolean isRendered = true;
+  public boolean XneedsUpdate = false;
+  public boolean YneedsUpdate = false;
+  public boolean MneedsUpdate = false;
 
   // Constructors
   Coord() {
-    this.update();
   }
 
   Coord(int inputX, int inputY) { 
@@ -67,7 +79,6 @@ public class Coord {
     HSBcolor = inputColor;
   } 
 
-
   void isRendered() { // Calculates the distance from the scaled XY coordinate and the mouse position.
     float dist = this.distanceFrom(mouseX+mouseX*zoom-width/2, mouseY+mouseY*zoom-height/2); // Need to offset mouse transform, so wierd maths.
     //inputCoord.Acolor = int(constrain(100-100*dist/(zoom*renderDistance), 0, 100));
@@ -77,22 +88,45 @@ public class Coord {
   }
 
   // Updater
-  private void update() {
+
+  private void updateX() {
     scaledX = int(map(X, -127, 128, 0, width*zoom));
+    XneedsUpdate = false;
+  }  
+
+  private void updateY() {
     scaledY = int(map(Y, -127, 128, height*zoom, 0));
-    mag = sqrt(pow(X, 2) + pow(Y, 2));
-    isRendered();
+    YneedsUpdate = false;
   }
 
+  private void updateM() {
+    mag = sqrt(pow(X, 2) + pow(Y, 2));
+    MneedsUpdate = false;
+  }
+
+
   public float distanceFrom(int inputX, int inputY) { 
+    if (this.XneedsUpdate) {
+      this.updateX();
+    }
+    if (this.YneedsUpdate) {
+      this.updateY();
+    }
     return sqrt(pow(inputX-scaledX, 2) + pow(inputY-scaledY, 2));
   }
 
   public float distToCoord(Coord inputCoord) {
+    if (this.MneedsUpdate) {
+      this.updateM();
+    } 
     return abs(this.mag - inputCoord.getMag());
   }
-  
+
+  // getters
   public float getMag() { 
+    if (this.MneedsUpdate) {
+      this.updateM();
+    }
     return mag;
   }
 
@@ -104,52 +138,70 @@ public class Coord {
     return Y;
   }
 
+  public int getScaledX() { 
+    if (this.XneedsUpdate) {
+      this.updateX();
+    }
+    return scaledX;
+  }
+
+  public int getScaledY() { 
+    if (this.YneedsUpdate) {
+      this.updateY();
+    }
+    return scaledY;
+  }
+
+  // setters
   public void setXY(int inputX, int inputY) { 
     X = inputX; 
     Y = inputY; 
-    this.update();
+    XneedsUpdate = true;
+    YneedsUpdate = true;
   }
 
   public void setX(int inputX) { 
     X = inputX; 
-    this.update();
+    XneedsUpdate = true;
   }
 
   public void setY(int inputY) { 
     Y = inputY; 
-    this.update();
+    YneedsUpdate = true;
   }
 
   public void incX() { 
     X++; 
-    this.update();
+    XneedsUpdate = true;
   }
 
   public void incXY() { 
     X++; 
     Y++; 
-    this.update();
+    XneedsUpdate = true;
+    YneedsUpdate = true;
   }
 
   public void incY() { 
     Y++; 
-    this.update();
+    YneedsUpdate = true;
   }
 
   public void incXY(int a) { 
     X+=a; 
     Y+=a; 
-    this.update();
+    XneedsUpdate = true;
+    YneedsUpdate = true;
   }
 
   public void incX(int a) { 
     X+=a; 
-    this.update();
+    XneedsUpdate = true;
   }
 
   public void incY(int a) { 
     Y+=a; 
-    this.update();
+    YneedsUpdate = true;
   }
 }
 
@@ -186,8 +238,9 @@ public class Sequence {
   }
 
   // Applies all Transforms and Visualizations to a single Coord before continuing.
-  public void iterateDeep() {
-    iterateDeep(dataSet.next());
+  public void iterate(Coord inputCoord) {
+    dataSet.next(inputCoord);
+    iterateDeep(inputCoord);
   }
   public void iterateDeep(Coord inputCoord) { 
     Iterator<Transform> transformIterator = transformList.iterator();
@@ -196,7 +249,7 @@ public class Sequence {
     // Consider moving this inside first while loop if sequential transform visualization does not look right!!!!
     Coord outputCoord = inputCoord; // Transform returns new coord as to not accidentally edit original inputCoord by reference.
 
-    while (transformIterator.hasNext() && visualizerIterator.hasNext() && colorSchemeIterator.hasNext()) {
+    while (transformIterator.hasNext() && visualizerIterator.hasNext() && colorSchemeIterator.hasNext() && dataSet.next(inputCoord)) {
       Transform transform = transformIterator.next();
       if (transform != null) {
         outputCoord = transform.apply(outputCoord); // applies transforms sequentially while preserving original inputCoord object.
@@ -274,12 +327,11 @@ public static enum TypesOfTransforms {
 
 // DataSet Interface & Definitions ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 public interface DataSet {
-  public Coord next();
+  public boolean next(Coord coord);
   public void reset();
 }
 
 public class SweepXY implements DataSet { // Subtraction
-  private Coord coord = new Coord();
   private int minX=-127; 
   private int maxX=128; 
   private int stepX=1; 
@@ -305,18 +357,21 @@ public class SweepXY implements DataSet { // Subtraction
     indexY=i_minY;
   }
 
-  public Coord next() {
+  public boolean next(Coord coord) {
     coord.setXY(indexX, indexY);
 
     indexX+=stepX;
+
     if (indexX>=maxX) {
       indexX=minX;
       indexY+=stepY;
+
       if (indexY>=maxY) {
         indexY=minY;
+        return false;
       }
     }
-    return coord;
+    return true;
   }
 
 
@@ -425,7 +480,7 @@ public class plotAsPoints implements Visualizer { // DOTS
     pushStyle();
     noStroke();
     fill(outputCoord.HSBcolor, outputCoord.Acolor);
-    ellipse(outputCoord.scaledX, outputCoord.scaledY, outputCoord.drawSize*zoom*2, outputCoord.drawSize*zoom*2);
+    ellipse(outputCoord.getScaledX(), outputCoord.getScaledY(), outputCoord.drawSize*zoom*2, outputCoord.drawSize*zoom*2);
     popStyle();
   }
 }
@@ -439,7 +494,7 @@ public class VectorField implements Visualizer { // Draws a line from inputCoord
       stroke(outputCoord.HSBcolor, outputCoord.Acolor);
       strokeWeight(1+zoom);
       noFill();
-      line(inputCoord.scaledX, inputCoord.scaledY, outputCoord.scaledX, outputCoord.scaledY);
+      line(inputCoord.getScaledX(), inputCoord.getScaledY(), outputCoord.getScaledX(), outputCoord.getScaledY());
       popStyle();
     }
   }
@@ -453,7 +508,7 @@ public class MonotonicXYPlot implements Visualizer { // Draws a line from inputC
     stroke(outputCoord.HSBcolor, 100);
     strokeWeight(1+zoom);
     noFill();
-    line(lastCoord.scaledX, lastCoord.scaledY, inputCoord.scaledX, outputCoord.scaledY); 
+    line(lastCoord.getScaledX(), lastCoord.getScaledY(), inputCoord.getScaledX(), outputCoord.getScaledY()); 
     lastCoord.setXY(inputCoord.getX(), outputCoord.getY());
     //inputCoord.setY(inputCoord.getX());
     //outputCoord.setY(outputCoord.getX());
@@ -482,7 +537,7 @@ int renderDistance = 256;
 PREGEN_WiiVCmap pregen;
 //PREGEN_MonotonicXYPlot pregen;
 Coord coord = new Coord();
-
+long startTime=0;
 // Setup ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 void setup() {
   colorMode(HSB, 100, 100, 100, 100);
@@ -498,16 +553,17 @@ void draw() {
 
   pushMatrix();
   translate(-mouseX*zoom+width/2, -mouseY*zoom+height/2);
-  //translate(width/2,height/2);
   drawAxisLines();
 
 
-  for (coord.setY(-100); coord.getY()<=100; coord.incY(1)) {
-    for (coord.setX(-100); coord.getX()<=100; coord.incX(1)) {
-      pregen.iterateDeep(coord);
-    }
-  }
+  //for (coord.setY(-100); coord.getY()<=100; coord.incY(1)) {
+  //for (coord.setX(-100); coord.getX()<=100; coord.incX(1)) {
+  println(millis() - startTime);
+  
+  pregen.iterateDeep(coord);
 
+
+  startTime = millis();
   //PREGEN_MonotonicXYPlot test = new PREGEN_MonotonicXYPlot();
   //test.iterateDeep();
   //for (coord.setXY(0,0); coord.getX()<=128; coord.incXY()) {
