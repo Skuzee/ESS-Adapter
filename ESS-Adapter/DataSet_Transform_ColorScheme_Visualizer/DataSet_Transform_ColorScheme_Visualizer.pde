@@ -9,9 +9,9 @@
  calling singleElement(Coord, index) or iterateAll(Coord) will apply and display the steps.
  
  a Pregen might look something like this:
- this.addElement(null,         new SolidColor,      new plotAsPoints()); // No transform, change color scheme, display intial coordinate points as dots.
+ this.addElement(null,         new SolidColor,      new PlotAsPoints()); // No transform, change color scheme, display intial coordinate points as dots.
  this.addElement(new trans1(), new Gradient_Fade(), new VectorField());  // apply first transform, change color scheme, display as lines.  
- this.addElement(null,         new Solid_Fade(),    new plotAsPoints()); // No transform, change color scheme, display coordinate points as dots.
+ this.addElement(null,         new Solid_Fade(),    new PlotAsPoints()); // No transform, change color scheme, display coordinate points as dots.
  
  isRendered is a property of each coord and is calc each time coord is updated 
  Color is calculated by coloreScheme, stored in outputCoord

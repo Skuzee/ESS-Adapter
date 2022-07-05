@@ -35,8 +35,11 @@ public class Sequence {
     dataSet.next(inputCoord);
     iterateDeep(inputCoord);
   }
-  public void iterateDeep(Coord inputCoord) { 
+  
+  public void iterateDeep(Coord inputCoord) {
+
     while (dataSet.next(inputCoord)) { // get the next data point
+      pushMatrix();
       Iterator<Transform> transformIterator = transformList.iterator();
       Iterator<ColorScheme> colorSchemeIterator = colorSchemeList.iterator();
       Iterator<Visualizer> visualizerIterator = visualizerList.iterator();
@@ -44,6 +47,7 @@ public class Sequence {
       Coord outputCoord = inputCoord; // Transform returns new coord as to not accidentally edit original inputCoord by reference.
 
       while (transformIterator.hasNext() && visualizerIterator.hasNext() && colorSchemeIterator.hasNext()) { // iterate through each transform/scheme/visulizer
+
         Transform transform = transformIterator.next();
         if (transform != null) {
           outputCoord = transform.apply(outputCoord); // applies transforms sequentially while preserving original inputCoord object.
@@ -55,10 +59,13 @@ public class Sequence {
         }
 
         Visualizer visualizer = visualizerIterator.next();
-        if ((visualizer != null)) { // and output isRendered???
+        if (visualizer != null) { // and output isRendered???
           visualizer.display(inputCoord, outputCoord);
         }
+        translate(0,0,1);
       }
+      popMatrix();
     }
+
   }
 }

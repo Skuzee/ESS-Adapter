@@ -18,16 +18,21 @@ public class SweepXY implements DataSet { // Subtraction
   SweepXY() {
   }
 
-  SweepXY(int i_minX, int i_maxX, int i_stepX, int i_minY, int i_maxY, int i_stepY) {
-    minX=-i_minX; 
-    maxX=i_maxX; 
-    stepX=i_stepX; 
-    indexX=i_minX;
+  SweepXY(int stepXY) {
+    this.stepX=stepXY; 
+    this.stepY=stepXY;
+  }
 
-    minY=i_minY; 
-    maxY=i_maxY; 
-    stepY=i_stepY;
-    indexY=i_minY;
+  SweepXY(int minX, int maxX, int stepX, int minY, int maxY, int stepY) {
+    this.minX=minX; 
+    this.maxX=maxX; 
+    this.stepX=stepX; 
+    this.indexX=minX;
+
+    this.minY=minY; 
+    this.maxY=maxY; 
+    this.stepY=stepY;
+    this.indexY=minY;
   }
 
   public boolean next(Coord coord) {
@@ -35,11 +40,11 @@ public class SweepXY implements DataSet { // Subtraction
 
     indexX+=stepX;
 
-    if (indexX>=maxX) {
+    if (indexX>maxX) {
       indexX=minX;
       indexY+=stepY;
 
-      if (indexY>=maxY) {
+      if (indexY>maxY) {
         indexY=minY;
         return false;
       }

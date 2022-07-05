@@ -3,20 +3,28 @@ public interface Visualizer {
   public void display(Coord inputCoord, Coord outputCoord);
 }
 
-public class plotAsPoints implements Visualizer { // DOTS
+public class PlotAsPoints implements Visualizer { // DOTS
+  private int drawMultiplier = 1;
+  
+  PlotAsPoints() {
+
+  }
+  
+  PlotAsPoints(int inputDrawSize) {
+    drawMultiplier = inputDrawSize;
+  }
+
   public void display(Coord inputCoord, Coord outputCoord) {
     pushStyle();
     noStroke();
     fill(outputCoord.HSBcolor, outputCoord.Acolor);
-    ellipse(outputCoord.getScaledX(), outputCoord.getScaledY(), outputCoord.drawSize*zoom*2, outputCoord.drawSize*zoom*2);
+    ellipse(outputCoord.getScaledX(), outputCoord.getScaledY(), outputCoord.drawSize*zoom*drawMultiplier, outputCoord.drawSize*zoom*drawMultiplier);
     popStyle();
   }
 }
 
 public class VectorField implements Visualizer { // Draws a line from inputCoord to outputCoord
   public void display(Coord inputCoord, Coord outputCoord) {
-
-    //println(outputCoord.getX() + " " + outputCoord.getY());
     if ((outputCoord.getX()!=0) && (outputCoord.getY()!=0) && outputCoord.isRendered) {
       pushStyle();
       stroke(outputCoord.HSBcolor, outputCoord.Acolor);
@@ -26,6 +34,7 @@ public class VectorField implements Visualizer { // Draws a line from inputCoord
       popStyle();
     }
   }
+
 }
 
 public class MonotonicXYPlot implements Visualizer { // Draws a line from inputCoord to outputCoord

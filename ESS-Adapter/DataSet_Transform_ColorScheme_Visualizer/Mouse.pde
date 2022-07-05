@@ -1,26 +1,27 @@
 // Mouse Events ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-void mousePressed() {
+void mouseClicked() {
   if (mouseButton==LEFT) {
-    activePregen = activePregen.next();
-    selectPregen();
+    //renderDistance-=10;
+    renderDistance=renderDistance>>1;
   }
-  println("Pregen: " + activePregen);
+  if (mouseButton==RIGHT) {
+    // renderDistance+=10;
+    renderDistance=renderDistance<<1;
+  }
+  renderDistance = constrain(renderDistance, 5, 1024);
 }
-
-//void mouseClicked() {
-//  if (mouseButton==LEFT) {
-//    // renderDistance+=10;
-//    renderDistance=renderDistance<<1;
-//  }
-
-//  if (mouseButton==RIGHT) {
-//    //renderDistance-=10;
-//    renderDistance=renderDistance>>1;
-//  }
-//  renderDistance = constrain(renderDistance, 5, 1024);
-//}
 
 void mouseWheel(MouseEvent event) {
   zoom -= event.getCount();
   zoom = constrain(zoom, 1, 40);
+}
+
+void keyPressed() {
+  switch(key) {
+  case ' ':
+    activePregen = activePregen.next();
+    selectPregen();
+    println("Pregen: " + activePregen);
+    break;
+  }
 }

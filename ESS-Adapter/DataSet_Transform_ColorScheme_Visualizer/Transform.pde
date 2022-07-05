@@ -3,18 +3,6 @@ public interface Transform {
   public Coord apply(Coord inputCoord);
 }
 
-public class addition implements Transform { // Addition 
-  public Coord apply(Coord inputCoord) {
-    return new Coord(inputCoord.getX()+10, inputCoord.getY()+10);
-  }
-}
-
-public class subtraction implements Transform { // Subtraction
-  public Coord apply(Coord inputCoord) {
-    return new Coord(inputCoord.getX()-10, inputCoord.getY()-10);
-  }
-}
-
 public class VCmap implements Transform { // Subtraction
   public Coord apply(Coord inputCoord) {
     Coord outputCoord = new Coord();
