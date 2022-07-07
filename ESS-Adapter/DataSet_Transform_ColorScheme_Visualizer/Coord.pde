@@ -42,6 +42,18 @@ public class Coord {
 
   // Updater
 
+  public void updateAll() {
+    if (this.XneedsUpdate) {
+      this.updateX();
+    }
+    if (this.YneedsUpdate) {
+      this.updateY();
+    }
+    if (this.MneedsUpdate) {
+      this.updateM();
+    } 
+  }
+
   private void updateX() {
     scaledX = int(map(X, -127, 128, 0, width*zoom));
     XneedsUpdate = false;
@@ -72,7 +84,7 @@ public class Coord {
     if (this.MneedsUpdate) {
       this.updateM();
     } 
-    return abs(this.mag - inputCoord.getMag());
+    return (this.mag - inputCoord.getMag());
   }
 
   // getters
@@ -149,6 +161,14 @@ public class Coord {
   public void incXY(int a) { 
     X+=a; 
     Y+=a; 
+    XneedsUpdate = true;
+    YneedsUpdate = true;
+    MneedsUpdate = true;
+  }
+  
+  public void incXY(int a, int b) { 
+    X+=a; 
+    Y+=b; 
     XneedsUpdate = true;
     YneedsUpdate = true;
     MneedsUpdate = true;

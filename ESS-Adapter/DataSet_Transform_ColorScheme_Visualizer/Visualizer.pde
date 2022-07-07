@@ -27,10 +27,13 @@ public class VectorField implements Visualizer { // Draws a line from inputCoord
   public void display(Coord inputCoord, Coord outputCoord) {
     if ((outputCoord.getX()!=0) && (outputCoord.getY()!=0) && outputCoord.isRendered) {
       pushStyle();
+      pushMatrix();
+      translate(0,0,hue(outputCoord.HSBcolor)/10.0);
       stroke(outputCoord.HSBcolor, outputCoord.Acolor);
       strokeWeight(1+zoom);
       noFill();
       line(inputCoord.getScaledX(), inputCoord.getScaledY(), outputCoord.getScaledX(), outputCoord.getScaledY());
+      popMatrix();
       popStyle();
     }
   }

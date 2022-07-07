@@ -10,7 +10,7 @@
  
  a Pregen might look something like this:
  this.addElement(null,         new SolidColor,      new PlotAsPoints()); // No transform, change color scheme, display intial coordinate points as dots.
- this.addElement(new trans1(), new Gradient_Fade(), new VectorField());  // apply first transform, change color scheme, display as lines.  
+ this.addElement(new trans1(), new Gradient_Mag_Fade(), new VectorField());  // apply first transform, change color scheme, display as lines.  
  this.addElement(null,         new Solid_Fade(),    new PlotAsPoints()); // No transform, change color scheme, display coordinate points as dots.
  
  isRendered is a property of each coord and is calc each time coord is updated 
@@ -23,6 +23,8 @@
  -Pregen that is just one of each transform/visualizer for demo mode.
  TODO: inputCoord to visualizer is the ORIGINAL coords, and not the sequential coords. this might be an issue for multi-transformed visuals.
  -might want to pass the previous output as next input.
+ -seems to work as-is for now. sequential transforms are additive.
+ 
  TODO: FIX XY diagonal visualizer for monotonic test.
  TODO: consider a FORCERENDER option for visualizer?
  
@@ -85,7 +87,7 @@ void draw() {
   //for (coord.setX(-100); coord.getX()<=100; coord.incX(1)) {
   //println(millis() - startTime);
 
-  pregen.test(coord);
+  pregen.run(coord);
 
 
   //startTime = millis();
