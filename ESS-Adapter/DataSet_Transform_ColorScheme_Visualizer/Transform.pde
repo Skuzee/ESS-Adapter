@@ -4,8 +4,9 @@ public interface Transform {
 }
 
 public class VCmap implements Transform { // Subtraction
+  private Coord outputCoord = new Coord();
+
   public Coord apply(Coord inputCoord) {
-    Coord outputCoord = new Coord();
     outputCoord.isRendered = inputCoord.isRendered;
 
     int signX = constrain(int(inputCoord.getX()), -1, 1);
@@ -31,10 +32,32 @@ public class VCmap implements Transform { // Subtraction
   }
 }
 
+public class FoldQuads implements Transform {
+    private Coord outputCoord = new Coord();
+    
+    public Coord apply(Coord inputCoord) {
+      if (inputCoord.getX() < 0) {
+        outputCoord.setX(-1-inputCoord.getX());
+      } else {
+        outputCoord.setX(inputCoord.getX());
+      }
+      
+      if (inputCoord.getY() < 0) {
+        outputCoord.setY(-1-inputCoord.getY());
+      } else {
+        outputCoord.setY(inputCoord.getY());
+      }
+
+      return outputCoord;
+    }
+}
+
 public class NotchSnapping implements Transform {
+  private Coord outputCoord = new Coord();
   private int notch_Snap_Strength = 2;
   private CornerNotch gateArray[];
   private Coord correctionVector = new Coord();
+  
   NotchSnapping() {
   }
 
@@ -62,7 +85,7 @@ public class NotchSnapping implements Transform {
   }
 
   public Coord apply(Coord inputCoord) {
-    Coord outputCoord = new Coord(inputCoord);
+    outputCoord.setXY(inputCoord.getX(), inputCoord.getY());
     int quadrant = findQuandrant(inputCoord);
     // inputX - unsigned NotchX - Correction
     if(quadrant!=-1) {

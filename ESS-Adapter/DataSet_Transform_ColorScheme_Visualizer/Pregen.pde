@@ -6,10 +6,10 @@ public interface Pregen {
 
 public class Pregen_WiiVCmap extends Sequence implements Pregen { 
   Pregen_WiiVCmap() {
-    dataSet = new SweepXY(2);
-    //this.addElement(null,        new Solid_Fade(color(0,0,100)),      new PlotAsPoints());
-    this.addElement(new VCmap(), new Gradient_Disp_Fade(), new VectorField()); // new VCmap()
-    this.addElement(null, new Solid_Fade(color(0, 0, 100)), new PlotAsPoints(2));
+    dataSet = new SweepXY(-1,1,1,-1,1,1);
+    this.addElement(null,        new Solid_Fade(color(0,0,100)),      new PlotAsPoints());
+    //this.addElement(new VCmap(), new Gradient_Disp_Fade(), new VectorField()); // new VCmap()
+    //this.addElement(null, new Solid_Fade(color(0, 0, 100)), new PlotAsPoints(2));
   }
   void run(Coord inputCoord) {
     this.iterateDeep(inputCoord);
@@ -40,6 +40,7 @@ public class Pregen_NotchSnapping extends Sequence implements Pregen {
     //this.addElement(new NotchSnapping(gateArray, 20), new SolidColor(color(33, 100, 100)), new PlotAsPoints(2));
     this.addElement(new NotchSnapping(gateArray, 20),  new Gradient_Disp_Fade(), new VectorField());
     this.addElement(null, new Solid_Fade(color(33, 100, 100)), new PlotAsPoints(3)); // new SolidColor(color(33, 100, 100))
+    this.addElement(new FoldQuads(), new Solid_Fade(color(66, 100, 100)), new PlotAsPoints(1));
   }
   void run(Coord inputCoord) {
     this.iterateDeep(inputCoord);

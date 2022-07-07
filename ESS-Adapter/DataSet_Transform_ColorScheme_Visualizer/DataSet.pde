@@ -5,13 +5,13 @@ public interface DataSet {
 }
 
 public class SweepXY implements DataSet { // Subtraction
-  private int minX=-127; 
-  private int maxX=128; 
+  private int minX=-128; 
+  private int maxX=127; 
   private int stepX=1; 
   private int indexX=minX;
 
-  private int minY=-127; 
-  private int maxY=128; 
+  private int minY=-128; 
+  private int maxY=127; 
   private int stepY=1;
   private int indexY=minY;
 
@@ -60,7 +60,7 @@ public class SweepXY implements DataSet { // Subtraction
 }
 
 public class SweepRadar_Angle implements DataSet { // Subtraction
-  private int maxMag=128; 
+  private int maxMag=127; 
   private int mag=0;
   private int stepMag=1;
   private float angle=0;
@@ -92,7 +92,7 @@ public class SweepRadar_Angle implements DataSet { // Subtraction
 }
 
 public class SweepRadar_Mag implements DataSet { // Subtraction
-  private int maxMag=128; 
+  private int maxMag=127; 
   private int mag=0;
   private int stepMag=2;
   private float angle=0;

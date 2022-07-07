@@ -32,6 +32,10 @@
  threading for updating coord scaledXY. storing and syncing all the data sounds like an issue, but
  perhaps every time a Coord setter is called it can update the scaledXY in a thread.
  
+ ERROR: While correcting the range of -128 to 127 I seem to have offset the 0 of everything. Only the X is off rn. DataSet seems correct?
+ 0,0 registers correctly at origin of axis lines, but plot is shifted. oopsies.
+ 
+ 
  
  */
 
@@ -46,7 +50,8 @@ void drawAxisLines() {
   stroke(0, 0, 120);
   strokeWeight(1);
   line((width-4)*zoom/2, 0, (width-4)*zoom/2, height*zoom);
-  line(0, (height+4)*zoom/2, width*zoom, (height+4)*zoom/2);
+  line(0, (height-4)*zoom/2, width*zoom, (height-4)*zoom/2);
+
 
   // white diagonal lines
   //line(0,4*zoom,width*zoom,(height+4)*zoom);

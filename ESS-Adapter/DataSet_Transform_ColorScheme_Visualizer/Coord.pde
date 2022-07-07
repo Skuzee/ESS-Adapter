@@ -1,6 +1,6 @@
 // Coord Class ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 public class Coord {
-  // signed -127 to 128
+  // signed -128 to 127
   private int X=0;
   private int Y=0;
   private float mag=0; // distance to origin
@@ -55,12 +55,12 @@ public class Coord {
   }
 
   private void updateX() {
-    scaledX = int(map(X, -127, 128, 0, width*zoom));
+    scaledX = int(map(X, -128, 127, 0, width*zoom));
     XneedsUpdate = false;
   }  
 
   private void updateY() {
-    scaledY = int(map(Y, -127, 128, height*zoom, 0));
+    scaledY = int(map(Y, -128, 127, height*zoom, 0));
     YneedsUpdate = false;
   }
 
