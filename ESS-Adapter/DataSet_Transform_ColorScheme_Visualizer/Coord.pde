@@ -55,12 +55,12 @@ public class Coord {
   }
 
   private void updateX() {
-    scaledX = int(map(X, -128, 127, 0, width*zoom));
+    scaledX = int(map(X, -128, 128, -width*zoom/2, width*zoom/2));
     XneedsUpdate = false;
   }  
 
   private void updateY() {
-    scaledY = int(map(Y, -128, 127, height*zoom, 0));
+    scaledY = int(map(Y, -128, 128, height*zoom/2, -height*zoom/2));
     YneedsUpdate = false;
   }
 
@@ -121,6 +121,14 @@ public class Coord {
   public void setXY(int inputX, int inputY) { 
     X = inputX; 
     Y = inputY; 
+    XneedsUpdate = true;
+    YneedsUpdate = true;
+    MneedsUpdate = true;
+  }
+  
+  public void setXY(Coord inputCoord) { 
+    X = inputCoord.getX(); 
+    Y = inputCoord.getY(); 
     XneedsUpdate = true;
     YneedsUpdate = true;
     MneedsUpdate = true;

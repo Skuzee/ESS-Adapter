@@ -6,10 +6,10 @@ public interface Pregen {
 
 public class Pregen_WiiVCmap extends Sequence implements Pregen { 
   Pregen_WiiVCmap() {
-    dataSet = new SweepXY(-1,1,1,-1,1,1);
-    this.addElement(null,        new Solid_Fade(color(0,0,100)),      new PlotAsPoints());
-    //this.addElement(new VCmap(), new Gradient_Disp_Fade(), new VectorField()); // new VCmap()
-    //this.addElement(null, new Solid_Fade(color(0, 0, 100)), new PlotAsPoints(2));
+    dataSet = new SweepXY(1);
+    this.addElement(new Deadzone15(), null,                             null);
+    this.addElement(new VCmap(),      new Gradient_Disp_Fade(),         new VectorField());
+    this.addElement(null,             new Solid_Fade(color(0, 0, 100)), new PlotAsPoints(2));
   }
   void run(Coord inputCoord) {
     this.iterateDeep(inputCoord);
@@ -28,6 +28,7 @@ public class Pregen_MonotonicXYPlot extends Sequence implements Pregen {
   }
 }
 
+
 public class Pregen_NotchSnapping extends Sequence implements Pregen {
   Pregen_NotchSnapping() {
     dataSet = new SweepRadar_Angle();
@@ -40,7 +41,18 @@ public class Pregen_NotchSnapping extends Sequence implements Pregen {
     //this.addElement(new NotchSnapping(gateArray, 20), new SolidColor(color(33, 100, 100)), new PlotAsPoints(2));
     this.addElement(new NotchSnapping(gateArray, 20),  new Gradient_Disp_Fade(), new VectorField());
     this.addElement(null, new Solid_Fade(color(33, 100, 100)), new PlotAsPoints(3)); // new SolidColor(color(33, 100, 100))
-    this.addElement(new FoldQuads(), new Solid_Fade(color(66, 100, 100)), new PlotAsPoints(1));
+    this.addElement(new InvertVC(), new Solid_Fade(color(66, 100, 100)), new PlotAsPoints(1));
+  }
+  void run(Coord inputCoord) {
+    this.iterateDeep(inputCoord);
+  }
+}
+
+
+public class Pregen_test extends Sequence implements Pregen {
+  Pregen_test() {
+    dataSet = new SweepRadar_Angle();
+    this.addElement(new InvertVC(), new SolidColor(color(66, 100, 100)), new PlotAsPoints(1));
   }
   void run(Coord inputCoord) {
     this.iterateDeep(inputCoord);
@@ -50,7 +62,7 @@ public class Pregen_NotchSnapping extends Sequence implements Pregen {
 
 // Types of Pregens ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 public static enum TypesOfPregens { 
-  Pregen_WiiVCmap, Pregen_MonotonicXYPlot, Pregen_NotchSnapping;
+  Pregen_test, Pregen_WiiVCmap, Pregen_MonotonicXYPlot, Pregen_NotchSnapping;
 
   private static TypesOfPregens[] vals = values();
 
@@ -77,6 +89,10 @@ public static enum TypesOfPregens {
 // Select Pregen ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 void selectPregen() {
   switch (activePregen) {
+  case Pregen_test:
+    pregen = new Pregen_test();
+    break; 
+    
   case Pregen_WiiVCmap:
     pregen = new Pregen_WiiVCmap();
     break;

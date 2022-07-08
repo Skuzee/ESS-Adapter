@@ -28,7 +28,7 @@ public class VectorField implements Visualizer { // Draws a line from inputCoord
     if ((outputCoord.getX()!=0) && (outputCoord.getY()!=0) && outputCoord.isRendered) {
       pushStyle();
       pushMatrix();
-      translate(0,0,hue(outputCoord.HSBcolor)/10.0);
+      translate(0,0,hue(outputCoord.HSBcolor)/5.0);
       stroke(outputCoord.HSBcolor, outputCoord.Acolor);
       strokeWeight(1+zoom);
       noFill();

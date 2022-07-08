@@ -32,20 +32,90 @@ public class VCmap implements Transform { // Subtraction
   }
 }
 
-public class FoldQuads implements Transform {
+public class Deadzone15 implements Transform {
     private Coord outputCoord = new Coord();
     
     public Coord apply(Coord inputCoord) {
-      if (inputCoord.getX() < 0) {
-        outputCoord.setX(-1-inputCoord.getX());
+      if (abs(inputCoord.getX()) <= 15) {
+        outputCoord.setX(0);
       } else {
         outputCoord.setX(inputCoord.getX());
       }
       
-      if (inputCoord.getY() < 0) {
-        outputCoord.setY(-1-inputCoord.getY());
+      if (abs(inputCoord.getY()) <= 15) {
+        outputCoord.setY(0);
       } else {
         outputCoord.setY(inputCoord.getY());
+      }
+
+      return outputCoord;
+    }
+}
+
+public class InvertVC implements Transform {
+    private Coord outputCoord = new Coord();
+    private boolean x_positive = true;
+    private boolean y_positive = true;
+    private boolean swap = false;
+    private int X=0;
+    private int Y=0;
+    private final int OOT_MAX=  80;
+    private final int BOUNDARY = 39;
+    
+    final char one_dimensional_map[] = "adsad";
+    final char triangular_map[] = 
+    
+    // Fold the quadrants into a 1/8th slice.
+    public Coord apply(Coord inputCoord) {
+      if (inputCoord.getX() < 0) {
+        x_positive = false;
+        X = -1-inputCoord.getX();
+      } else {
+        X= inputCoord.getX();
+      }
+      
+      if (inputCoord.getY() < 0) {
+        y_positive = false;
+        Y = -1-inputCoord.getY();
+      } else {
+        Y = inputCoord.getY();
+      }
+      
+      if (Y > X) {
+        swap = true;
+        int temp = X;
+        X = Y;
+        Y = temp;
+      }
+
+      // INVERT VC HERE
+      /* Assume 0 <= y <= x <= 2*127 - double resolution */
+      /* Approach is documented in the python implementation */
+      if (X > 2 * OOT_MAX) X = 2 * OOT_MAX;
+      if (Y > 2 * OOT_MAX) Y = 2 * OOT_MAX;
+    
+      if (X >= 2 * BOUNDARY && Y >= 2 * BOUNDARY) {
+        int remainder = OOT_MAX + 1 - BOUNDARY;
+        X = (X / 2) - BOUNDARY;
+        Y = (X / 2) - BOUNDARY;
+        int  index = triangular_to_linear_index(Y, X, remainder);
+        X = pgm_read_byte(triangular_map + 2 * index);
+        Y = pgm_read_byte(triangular_map + 2 * index + 1);
+      } else {
+        outputCoord.setXY(pgm_read_byte(one_dimensional_map + X),pgm_read_byte(one_dimensional_map + Y));
+      }
+      
+      // Restore coord to correct quadrants.
+      if (swap) {
+        outputCoord.setXY(outputCoord.getY(),outputCoord.getX());
+      }
+      
+      if(!x_positive) {
+        outputCoord.setX(-outputCoord.getX());
+      }
+      
+      if(!y_positive) {
+        outputCoord.setY(-outputCoord.getY());
       }
 
       return outputCoord;

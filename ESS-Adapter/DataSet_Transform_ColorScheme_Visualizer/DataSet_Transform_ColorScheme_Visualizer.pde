@@ -28,14 +28,8 @@
  TODO: FIX XY diagonal visualizer for monotonic test.
  TODO: consider a FORCERENDER option for visualizer?
  
- TODO: https://processing.org/reference/thread_.html
- threading for updating coord scaledXY. storing and syncing all the data sounds like an issue, but
- perhaps every time a Coord setter is called it can update the scaledXY in a thread.
- 
- ERROR: While correcting the range of -128 to 127 I seem to have offset the 0 of everything. Only the X is off rn. DataSet seems correct?
- 0,0 registers correctly at origin of axis lines, but plot is shifted. oopsies.
- 
- 
+ TODO: VCmap, do not render inputs that are below 15.
+ perhaps a simple transform that returns 0 if below 16?
  
  */
 
@@ -49,8 +43,8 @@ void drawAxisLines() {
   pushStyle();
   stroke(0, 0, 120);
   strokeWeight(1);
-  line((width-4)*zoom/2, 0, (width-4)*zoom/2, height*zoom);
-  line(0, (height-4)*zoom/2, width*zoom, (height-4)*zoom/2);
+  line(-(width)*zoom/2, 0, (width)*zoom/2, 0);
+  line(0, (height)*zoom/2, 0, -(height)*zoom/2);
 
 
   // white diagonal lines
@@ -70,6 +64,7 @@ TypesOfPregens activePregen;
 
 // Setup ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 void setup() {
+  ortho();
   colorMode(HSB, 100, 100, 100, 100);
   size(1024, 1024, P3D);   
   background(0);
@@ -83,7 +78,8 @@ void draw() {
   background(0);
 
   pushMatrix();
-  translate(-mouseX*zoom+width/2, -mouseY*zoom+height/2);
+  translate(width/2, height/2);
+  translate((-mouseX+width/2)*zoom, (-mouseY+height/2)*zoom);
   //rotateX(PI/4);
   drawAxisLines();
   

@@ -7,9 +7,10 @@ public class Gradient_Mag_Fade implements ColorScheme { // Shows a shift in fina
   public void change(Coord inputCoord, Coord outputCoord) {
     
     outputCoord.HSBcolor = color(30-(inputCoord.getMag()-outputCoord.getMag())*3/2, 100, 100);
-    
-    float dist1 = inputCoord.distanceFrom(mouseX+mouseX*zoom-width/2, mouseY+mouseY*zoom-height/2); // Need to offset mouse transform, so wierd maths.
-    float dist2 = outputCoord.distanceFrom(mouseX+mouseX*zoom-width/2, mouseY+mouseY*zoom-height/2); // Need to offset mouse transform, so wierd maths.  
+    int valueX = 2*mouseX-width*zoom+(width/2+mouseX)*(zoom-1);
+    int valueY = 2*mouseY-height*zoom+(height/2+mouseY)*(zoom-1);
+    float dist1 = inputCoord.distanceFrom(valueX,valueY); // Need to offset mouse transform, so wierd maths.
+    float dist2 = outputCoord.distanceFrom(valueX,valueY); // Need to offset mouse transform, so wierd maths.  
     outputCoord.Acolor = int(constrain(100-100*max(dist1, dist2)/(zoom*renderDistance), 0, 100)); // Set to fade in/out basd on renderDistance.
 
     if (outputCoord.Acolor <= 0) {
@@ -25,9 +26,10 @@ public class Gradient_Disp_Fade implements ColorScheme { // Shows the relative d
     Coord tempCoord = new Coord(inputCoord.getX()-outputCoord.getX(),inputCoord.getY()-outputCoord.getY());
     
     outputCoord.HSBcolor = color(35-tempCoord.getMag(), 100, 100);
-    
-    float dist1 = inputCoord.distanceFrom(mouseX+mouseX*zoom-width/2, mouseY+mouseY*zoom-height/2); // Need to offset mouse transform, so wierd maths.
-    float dist2 = outputCoord.distanceFrom(mouseX+mouseX*zoom-width/2, mouseY+mouseY*zoom-height/2); // Need to offset mouse transform, so wierd maths.  
+    int valueX = 2*mouseX-width*zoom+(width/2+mouseX)*(zoom-1);
+    int valueY = 2*mouseY-height*zoom+(height/2+mouseY)*(zoom-1);
+    float dist1 = inputCoord.distanceFrom(valueX,valueY); // Need to offset mouse transform, so wierd maths.
+    float dist2 = outputCoord.distanceFrom(valueX,valueY); // Need to offset mouse transform, so wierd maths.  
     outputCoord.Acolor = int(constrain(100-100*max(dist1, dist2)/(zoom*renderDistance), 0, 100)); // Set to fade in/out basd on renderDistance.
 
     if (outputCoord.Acolor <= 0) {
@@ -66,8 +68,10 @@ public class Solid_Fade implements ColorScheme {
 
   public void change(Coord inputCoord, Coord outputCoord) {
     outputCoord.HSBcolor = this.fillColor;
-    float dist1 = outputCoord.distanceFrom(mouseX+mouseX*zoom-width/2, mouseY+mouseY*zoom-height/2); // Need to offset mouse transform, so wierd maths.
-    float dist2 = outputCoord.distanceFrom(mouseX+mouseX*zoom-width/2, mouseY+mouseY*zoom-height/2); // Need to offset mouse transform, so wierd maths.
+    int valueX = 2*mouseX-width*zoom+(width/2+mouseX)*(zoom-1);
+    int valueY = 2*mouseY-height*zoom+(height/2+mouseY)*(zoom-1);
+    float dist1 = inputCoord.distanceFrom(valueX,valueY); // Need to offset mouse transform, so wierd maths.
+    float dist2 = outputCoord.distanceFrom(valueX,valueY); // Need to offset mouse transform, so wierd maths.  
     outputCoord.Acolor = int(constrain(100-100*max(dist1, dist2)/(zoom*renderDistance), 0, 100)); // Set to fade in/out basd on renderDistance.;
   }
 }
