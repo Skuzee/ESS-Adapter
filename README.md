@@ -1,13 +1,13 @@
 ﻿**I am considering selling assembled adapters. I want them to be affordable, accessable, and quality. If you're interested in purchasing one, you should contact me on discord; Angst#4857, or email me at angst4857@gmail.com**
 
+# **Youtube Video Click Below**  
+[![youtube video](https://img.youtube.com/vi/suW19im2Xqk/0.jpg)](https://www.youtube.com/watch?v=suW19im2Xqk)
+
 # Introduction
 This adapter modifies analog stick input values. For use with Legend of Zelda: Ocarina of Time.  
 This version supports both N64 and Gamecube controllers. Selection is automatic. Just plug in a controller.  
 This version has an input display and works with the newest version of nintendospy (not the 2014 release).  
 This adapter also functions as a generic n64 to gamecube controller adapter, although I cannot guarantee that the button mapping will work for all games.  
-
-**Youtube Video Click Here**  
-[![youtube video](https://img.youtube.com/vi/suW19im2Xqk/0.jpg)](https://www.youtube.com/watch?v=suW19im2Xqk)
 
 ## About
 Ocarina of Time (OOT) on Gamecube (GC) and Wii run on Nintendo’s emulator called Virtual Console (VC). VC maps the GC controller values to certain in-game values. The algorithm poorly recreates the feel of the N64 version of OOT. This ESS-Adapter interprets controller input and scales/maps it to compensate for the VC map. Applying the inverse of the function means that we cancel out the bad VC map and get a result as close as possible to the original N64 analog stick range.  
@@ -25,11 +25,13 @@ Currently this code only works with 16MHz Atmel AVR boards due to some of the su
 Support for this adapter, and adapters using Nicohood's Nintendo Controller Library has been added to the newest verions of Nintendospy, and Retrospy but must be downloaded and compiled.  
 I have compiled my fork of retrospy so you don't have to:  
 https://github.com/Skuzee/RetroSpy/releases
-You may need to uncheck Options-> Don't Filter COM Ports. To see the arduino.  
+You may need to check Options-> Don't Filter COM Ports. To see the arduino.  
+![retrospy - don't filter ports](https://raw.githubusercontent.com/Skuzee/ESS-Adapter/master/retrospy-dont-filter.png "retrospy-dont-filter.png")  
+
 
 ## Downloading Arduino IDE and Uploading firmware to arduino.  
 
-**Youtube Video Click Here**  
+**Youtube Video Click Below**  
 [![youtube video](https://img.youtube.com/vi/iTfaGLxnyhg/0.jpg)](https://www.youtube.com/watch?v=iTfaGLxnyhg)
 
 Download Arduino IDE  
