@@ -51,8 +51,8 @@ public class Pregen_NotchSnapping extends Sequence implements Pregen {
 
 public class Pregen_test extends Sequence implements Pregen {
   Pregen_test() {
-    dataSet = new SweepRadar_Angle();
-    this.addElement(new InvertVC(), new SolidColor(color(66, 100, 100)), new PlotAsPoints(1));
+    dataSet = new SweepXY(1);
+    this.addElement(new InvertVC(), new Gradient_Disp_Fade(), new PlotAsPoints(1));
   }
   void run(Coord inputCoord) {
     this.iterateDeep(inputCoord);

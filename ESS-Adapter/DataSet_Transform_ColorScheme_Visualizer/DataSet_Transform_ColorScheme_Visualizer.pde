@@ -28,45 +28,33 @@
  TODO: FIX XY diagonal visualizer for monotonic test.
  TODO: consider a FORCERENDER option for visualizer?
  
- TODO: VCmap, do not render inputs that are below 15.
- perhaps a simple transform that returns 0 if below 16?
  
  */
-
-
 // Imports ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 import java.util.Iterator;
-
-// Draw Axis Lines ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-void drawAxisLines() {  
-  // white x and Y axis lines
-  pushStyle();
-  stroke(0, 0, 120);
-  strokeWeight(1);
-  line(-(width)*zoom/2, 0, (width)*zoom/2, 0);
-  line(0, (height)*zoom/2, 0, -(height)*zoom/2);
-
-
-  // white diagonal lines
-  //line(0,4*zoom,width*zoom,(height+4)*zoom);
-  //line(width*zoom,0,0,height*zoom);
-  popStyle();
-}
 
 //Globals ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 int zoom = 1;
 int renderDistance = 256;
 Pregen pregen;
-//Pregen_MonotonicXYPlot Pregen;
 Coord coord = new Coord();
-long startTime=0;
+long startTime = 0;
 TypesOfPregens activePregen;
 
+// Settings ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+final int WINDOW_WIDTH = 1024;
+final int WINDOW_HEIGHT = 1024;
+final int DISPLAY_X_RANGE = 128; // full range will be from -(RANGE) to +(RANGE)
+final int DISPLAY_Y_RANGE = 128; // full range will be from -(RANGE) to +(RANGE)
+
+void settings() {
+  size(WINDOW_WIDTH, WINDOW_HEIGHT, P3D);
+}
+
 // Setup ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-void setup() {
+void setup() { 
   ortho();
   colorMode(HSB, 100, 100, 100, 100);
-  size(1024, 1024, P3D);   
   background(0);
   activePregen = TypesOfPregens.first();
   selectPregen();
@@ -82,14 +70,12 @@ void draw() {
   translate((-mouseX+width/2)*zoom, (-mouseY+height/2)*zoom);
   //rotateX(PI/4);
   drawAxisLines();
-  
 
   //for (coord.setY(-100); coord.getY()<=100; coord.incY(1)) {
   //for (coord.setX(-100); coord.getX()<=100; coord.incX(1)) {
   //println(millis() - startTime);
 
   pregen.run(coord);
-
 
   //startTime = millis();
   //Pregen_MonotonicXYPlot test = new Pregen_MonotonicXYPlot();
@@ -99,4 +85,19 @@ void draw() {
   //}
 
   popMatrix();
+}
+
+// Draw Axis Lines ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+void drawAxisLines() {  
+  // white x and Y axis lines
+  pushStyle();
+  stroke(0, 0, 120);
+  strokeWeight(1);
+  line(-(width)*zoom/2, 0, (width)*zoom/2, 0);
+  line(0, (height)*zoom/2, 0, -(height)*zoom/2);
+
+  // white diagonal lines
+  //line(0,4*zoom,width*zoom,(height+4)*zoom);
+  //line(width*zoom,0,0,height*zoom);
+  popStyle();
 }

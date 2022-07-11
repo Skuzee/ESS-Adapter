@@ -510,10 +510,16 @@ class OOTVCMap:
         """ Print out the generated tables for inclusion in C code """
         print("\nBoundary:")
         print(self.one_dimensional_boundary)
-        print("One dimensional map:")
-        print('"{}"'.format(self.c_style(self.one_dimensional_map.tobytes())))
-        print("Triangular map:")
-        print('"{}"'.format(self.c_style(self.triangular_map.tobytes())))
+        print("//~~~~~~~~~~~~Copy the Following Exactly~~~~~~~~~~~~")
+        print("")		
+        print("const PROGMEM char one_dimensional_map[] = ", end="")
+        print('"{}"'.format(self.c_style(self.one_dimensional_map[0].toChar())), end="")
+        print(";")
+        print("const PROGMEM char triangular_map[] = ", end="")
+        print('"{}"'.format(self.c_style(self.triangular_map.tobytes())), end="")
+        print(";")
+        print("")		
+        print("//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~")
 
 def main():
     """ Invert 10 random coordinates """
