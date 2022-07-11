@@ -18,13 +18,13 @@ By taking the typical Gamecube analog stick values (top left) and applying the i
 Unreachable VC analog values:  
 8,13,17,22,25,28,31,34,37,39,42,45,46,49,51,53,55,57,59,61,62,64,66,68,69,71,73,74,76,78,79,80  
 
-## Usage & Limitations
+## Usage & Limitations	
 Currently this code only works with 16MHz Atmel AVR boards due to some of the supporting libraries having AVR specific assembly code.
 
 ## Input Display
 Support for this adapter, and adapters using Nicohood's Nintendo Controller Library has been added to the newest verions of Nintendospy, and Retrospy but must be downloaded and compiled.  
 I have compiled my fork of retrospy so you don't have to:  
-https://github.com/Skuzee/RetroSpy/releases
+https://github.com/Skuzee/RetroSpy/releases  
 You may need to check Options-> Don't Filter COM Ports. To see the arduino.  
 ![retrospy - don't filter ports](https://raw.githubusercontent.com/Skuzee/ESS-Adapter/master/retrospy-dont-filter.png "retrospy-dont-filter.png")  
 
