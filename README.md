@@ -24,7 +24,7 @@ Currently this code only works with 16MHz Atmel AVR boards due to some of the su
 ## Input Display
 Support for this adapter, and adapters using Nicohood's Nintendo Controller Library has been added to the newest verions of Nintendospy, and Retrospy but must be downloaded and compiled.  
 I have compiled my fork of retrospy so you don't have to:  
-https://github.com/Skuzee/RetroSpy/releases/tag/v5.0.4  
+https://github.com/Skuzee/RetroSpy/releases
 You may need to uncheck Options-> Don't Filter COM Ports. To see the arduino.  
 
 ## Downloading Arduino IDE and Uploading firmware to arduino.  
