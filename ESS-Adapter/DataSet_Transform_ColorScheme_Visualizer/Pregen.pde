@@ -62,7 +62,7 @@ public class Pregen_test extends Sequence implements Pregen {
 
 // Types of Pregens ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 public static enum TypesOfPregens { 
-  Pregen_test, Pregen_WiiVCmap, Pregen_MonotonicXYPlot, Pregen_NotchSnapping;
+ Pregen_WiiVCmap, Pregen_MonotonicXYPlot, Pregen_NotchSnapping;
 
   private static TypesOfPregens[] vals = values();
 
@@ -89,10 +89,7 @@ public static enum TypesOfPregens {
 // Select Pregen ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 void selectPregen() {
   switch (activePregen) {
-  case Pregen_test:
-    pregen = new Pregen_test();
-    break; 
-    
+
   case Pregen_WiiVCmap:
     pregen = new Pregen_WiiVCmap();
     break;
