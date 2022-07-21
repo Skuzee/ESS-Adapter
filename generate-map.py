@@ -506,6 +506,10 @@ class OOTVCMap:
         """
         return str(byte_array)[:-1].replace("\\'", "'").replace('b\'', '', 1).replace('"', '\\"')
 
+    @staticmethod
+    def java_style(map: np.ndarray):
+        return str(map.flatten().tolist()).replace('[', '{').replace(']', '}')
+
     def print_factorized_tables(self):
         """ Print out the generated tables for inclusion in C code """
         print("\nBoundary:")
@@ -514,6 +518,9 @@ class OOTVCMap:
         print('"{}"'.format(self.c_style(self.one_dimensional_map.tobytes())))
         print("Triangular map:")
         print('"{}"'.format(self.c_style(self.triangular_map.tobytes())))
+        # print("For Java:")
+        # print('byte[] one_dimensional_map = {};'.format(self.java_style(self.one_dimensional_map)))
+        # print('byte[] triangular_map = {};'.format(self.java_style(self.triangular_map)))
 
 def main():
     """ Invert 10 random coordinates """
