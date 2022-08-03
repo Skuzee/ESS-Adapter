@@ -1,12 +1,13 @@
 /* This is a framework for a more complicated plotter / visualizer program.
- The program will take a SET of data points (analog stick coordinates) and apply
- a TRANSFORM to the coordinate (one at a time) and plot / display the output with
+ The program will take a DATASET of  points (analog stick coordinates) and apply
+ a TRANSFORM to the coordinate (one at a time) and then it will
+ colorize the coordinates with by some COLORSCHEME and then plot / display the output with
  a VISUALIZER. The design is modular such that any transform and any visualizer can 
- be used on any set of coordinate points. 
+ be used on any set of coordinate points, and transforms/visualizers can be chained together.
  Currently there is a Sequence class that holds a lists of Transforms and Visualizer objects.
  use NULL to skip transform or visualizations. 
  extending the Sequence class is a "Pregen" a custom list of transforms/visualizer steps.
- calling singleElement(Coord, index) or iterateAll(Coord) will apply and display the steps.
+ Define a PREGEN and add the required elements, then add the name to TypesOfPregens and selectPregen functions. call pregen.run(coord) to render an image.
  
  a Pregen might look something like this:
  this.addElement(null,         new SolidColor,      new PlotAsPoints()); // No transform, change color scheme, display intial coordinate points as dots.
@@ -17,16 +18,15 @@
  Color is calculated by coloreScheme, stored in outputCoord
  Alpha is calculated by colorScheme, stored in outputCoord
  
- 
+
  TODO: a way to open Pregens from files.
- TODO: make some array list of Pregen transforms for known uses.
- -Pregen that is just one of each transform/visualizer for demo mode.
- TODO: inputCoord to visualizer is the ORIGINAL coords, and not the sequential coords. this might be an issue for multi-transformed visuals.
- -might want to pass the previous output as next input.
- -seems to work as-is for now. sequential transforms are additive.
+
  
  TODO: FIX XY diagonal visualizer for monotonic test.
  TODO: consider a FORCERENDER option for visualizer?
+ 
+ ERRORS: InvertVC is not symetrical, I suspect folding math?
+ ERROR: outline of the final VC shape is a octogon, as I would expect, but perhaps we can make it better fit the n64 gate shape.
  
  
  */
@@ -36,10 +36,14 @@ import java.util.Iterator;
 //Globals ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 int zoom = 1;
 int renderDistance = 256;
+float rotateX=0;
+float rotateY=0;
+float rotateZ=0;
 Pregen pregen;
 Coord coord = new Coord();
 long startTime = 0;
 TypesOfPregens activePregen;
+
 
 // Settings ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 final int WINDOW_WIDTH = 1024;
@@ -68,8 +72,13 @@ void draw() {
   pushMatrix();
   translate(width/2, height/2);
   translate((-mouseX+width/2)*zoom, (-mouseY+height/2)*zoom);
+  rotateX(rotateX);
+  rotateY(rotateY);
+  rotateZ(rotateZ);
   //rotateX(PI/4);
   drawAxisLines();
+  drawN64octo();
+  drawGCocto();
 
   //for (coord.setY(-100); coord.getY()<=100; coord.incY(1)) {
   //for (coord.setX(-100); coord.getX()<=100; coord.incX(1)) {
@@ -91,7 +100,7 @@ void draw() {
 void drawAxisLines() {  
   // white x and Y axis lines
   pushStyle();
-  stroke(0, 0, 120);
+  stroke(0, 0, 100);
   strokeWeight(1);
   line(-(width)*zoom/2, 0, (width)*zoom/2, 0);
   line(0, (height)*zoom/2, 0, -(height)*zoom/2);
@@ -99,5 +108,50 @@ void drawAxisLines() {
   // white diagonal lines
   //line(0,4*zoom,width*zoom,(height+4)*zoom);
   //line(width*zoom,0,0,height*zoom);
+  noFill();
+  for (int i=10; i<120; i+=10) {
+    ellipse(0,0,i*width/128*zoom,i*height/128*zoom);
+  }
+  ellipse(0,0,width*zoom,height*zoom);
   popStyle();
+}
+
+void drawN64octo() {
+  pushStyle();
+  noFill();
+  stroke(0,0,100);
+  line(scaleV(80),0,scaleV(63),scaleV(63));
+  line(0,scaleV(80),scaleV(63),scaleV(63));
+  
+  line(scaleV(80),0,scaleV(63),-scaleV(63));
+  line(0,scaleV(80),-scaleV(63),scaleV(63));
+  
+  line(-scaleV(80),0,-scaleV(63),-scaleV(63));
+  line(0,-scaleV(80),scaleV(63),-scaleV(63));
+  
+  line(-scaleV(80),0,-scaleV(63),scaleV(63));
+  line(0,-scaleV(80),-scaleV(63),-scaleV(63));
+  popStyle();
+}  
+
+void drawGCocto() {
+  pushStyle();
+  noFill();
+  stroke(0,0,100);
+  line(scaleV(105),0,scaleV(73),scaleV(73));
+  line(0,scaleV(105),scaleV(73),scaleV(73));
+  
+  line(scaleV(105),0,scaleV(73),-scaleV(73));
+  line(0,scaleV(105),-scaleV(73),scaleV(73));
+  
+  line(-scaleV(105),0,-scaleV(73),-scaleV(73));
+  line(0,-scaleV(105),scaleV(73),-scaleV(73));
+  
+  line(-scaleV(105),0,-scaleV(73),scaleV(73));
+  line(0,-scaleV(105),-scaleV(73),-scaleV(73));
+  popStyle();
+}  
+
+int scaleV(int V) {
+  return V*width/256*zoom;
 }

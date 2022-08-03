@@ -32,7 +32,7 @@ public class VectorField implements Visualizer { // Draws a line from inputCoord
       stroke(outputCoord.HSBcolor, outputCoord.Acolor);
       strokeWeight(1+zoom);
       noFill();
-      line(inputCoord.getScaledX(), inputCoord.getScaledY(), outputCoord.getScaledX(), outputCoord.getScaledY());
+      line(inputCoord.getScaledX(), inputCoord.getScaledY(), 0, outputCoord.getScaledX(), outputCoord.getScaledY(), hue(outputCoord.HSBcolor));
       popMatrix();
       popStyle();
     }

@@ -123,3 +123,58 @@ public class SweepRadar_Mag implements DataSet { // Subtraction
   public void reset() {
   }
 }
+
+public class RegularOct implements DataSet { // Subtraction 
+  private int mag=0;
+  private int magStep=10;
+  private int maxMag=105;
+  private int pointCounter=0;
+  private int linePointCounter=0;
+  
+  private float startPointX=0;
+  private float startPointY=0;
+  private float endPointX=0;
+  private float endPointY=0;
+  
+  private int outputX=0;
+  private int outputY=0;
+  
+  RegularOct() { 
+  }
+  
+  RegularOct(int magStep) {
+    this.magStep = magStep;
+  }
+
+  public boolean next(Coord coord) {
+    
+    startPointX = mag * cos(2*pointCounter*PI/8);
+    startPointY = mag * sin(2*pointCounter*PI/8);
+    endPointX = mag * cos(2*((pointCounter%8)+1)*PI/8);
+    endPointY = mag * sin(2*((pointCounter%8)+1)*PI/8);
+
+    
+    outputX=int(startPointX-(startPointX-endPointX)*linePointCounter/(mag/2));
+    outputY=int(startPointY-(startPointY-endPointY)*linePointCounter/(mag/2));
+    coord.setXY(outputX, outputY);
+    
+    linePointCounter++;
+    
+    if(linePointCounter>mag/2) {
+      linePointCounter=0;
+      pointCounter++;
+      if (pointCounter>8) {
+        pointCounter=0;
+        mag+=magStep;
+        if(mag>=maxMag) {
+          mag=0;
+          return false;
+        }
+      }
+    }
+    return true;
+  }
+
+  public void reset() {
+  }
+}
