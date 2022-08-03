@@ -1,5 +1,10 @@
-Arduino Nintendo Library 1.3.0
-==============================
+Modified! Arduino Nintendo Library 1337  
+==============================  
+This version of Nicohood's Library has been modified to work on 5v logic level 16MHz ARM processors without the use of a Logic Level Converter.  
+This version requires a 740ohm pullup resistor (500 to 1000ohm) between the controller data pin and 3.3v  
+By switching the data pin between OUTPUT LOW and INPUT (NO PUULUP) We can pull the data line low to communicate without outputting 5v to the 3.3 data line.  
+Checkout https://github.com/Skuzee/ESS-Adapter for my main hardware project where I use this library to make a n64/gamecube controller adapter and input display.  
+
 
 ![header](header.jpg)
 
