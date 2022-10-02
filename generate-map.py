@@ -1,5 +1,10 @@
+
+
 #!/usr/bin/env python
 """ Helper functions for creating ESS adapters """
+
+#The Following code is released under GNU GENERAL PUBLIC LICENSE Version 3 AND under MIT license.
+
 
 import sys
 import numpy as np

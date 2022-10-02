@@ -1,5 +1,7 @@
 //ESS.hpp
 
+//The Following code is released under GNU GENERAL PUBLIC LICENSE Version 3 and uses a nicohood's nintendo library released under MIT license.
+
 #pragma once
 #include <arduino.h>
 #include "src/Nintendo/src/Nintendo.h"

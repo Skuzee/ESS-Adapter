@@ -1,5 +1,7 @@
 //input-display.cpp
 
+//The Following code is released under GNU GENERAL PUBLIC LICENSE Version 3 and uses a nicohood's nintendo library released under MIT license.
+
 #include "input-display.hpp"
 #include "extra.hpp"
 
